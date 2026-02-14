@@ -1,0 +1,87 @@
+"use client";
+
+import { useEffect, useRef, useCallback } from "react";
+import { useEditorStore } from "@/stores/editor-store";
+import { renderStopwatch, renderSplitDisplay } from "@/lib/stopwatch/renderer";
+
+export function useCanvasCompositor(
+  canvasRef: React.RefObject<HTMLCanvasElement | null>,
+  videoRef: React.RefObject<HTMLVideoElement | null>
+) {
+  const animationRef = useRef<number>(0);
+  const { stopwatchConfig, startTime, splitTimes, isFinished, finishTime } = useEditorStore();
+
+  const renderRef = useRef<() => void>(() => {});
+
+  const render = useCallback(() => {
+    renderRef.current();
+  }, []);
+
+  useEffect(() => {
+    renderRef.current = () => {
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      if (!canvas || !video) return;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      // Match canvas size to video dimensions
+      if (
+        canvas.width !== video.videoWidth ||
+        canvas.height !== video.videoHeight
+      ) {
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 360;
+      }
+
+      // Draw video frame
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Compute elapsed from video position, but cap at finishTime if finished
+      let elapsed =
+        startTime !== null
+          ? Math.max(0, video.currentTime - startTime)
+          : 0;
+      if (isFinished && finishTime !== null && elapsed > finishTime) {
+        elapsed = finishTime;
+      }
+      renderStopwatch(ctx, stopwatchConfig, elapsed);
+
+      // Show split for 3 seconds after passing its time point
+      if (splitTimes.length > 0) {
+        const SPLIT_DISPLAY_DURATION = 3;
+        // Find the most recent split that we've passed
+        let activeSplit = null;
+        for (let i = splitTimes.length - 1; i >= 0; i--) {
+          const s = splitTimes[i];
+          if (elapsed >= s.time && elapsed < s.time + SPLIT_DISPLAY_DURATION) {
+            activeSplit = s;
+            break;
+          }
+        }
+        if (activeSplit) {
+          renderSplitDisplay(ctx, stopwatchConfig, elapsed, activeSplit);
+        }
+      }
+
+      animationRef.current = requestAnimationFrame(render);
+    };
+  }, [canvasRef, videoRef, stopwatchConfig, startTime, splitTimes, isFinished, finishTime, render]);
+
+  const start = useCallback(() => {
+    animationRef.current = requestAnimationFrame(render);
+  }, [render]);
+
+  const stop = useCallback(() => {
+    cancelAnimationFrame(animationRef.current);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      cancelAnimationFrame(animationRef.current);
+    };
+  }, []);
+
+  return { start, stop, render };
+}
