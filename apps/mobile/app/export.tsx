@@ -74,7 +74,7 @@ export default function ExportScreen() {
     } finally {
       setIsExporting(false);
     }
-  }, [videoUri, startTime, stopwatchConfig, splitTimes, isFinished, finishTime, exportSettings, duration]);
+  }, [videoUri, startTime, stopwatchConfig, splitTimes, isFinished, finishTime, exportSettings, duration, videoMetadata?.height]);
 
   const handleSaveToLibrary = useCallback(async () => {
     if (!outputPath) return;

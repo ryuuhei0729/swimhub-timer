@@ -15,7 +15,6 @@ export function VideoPlayer() {
   const pendingVideoSeek = useEditorStore((s) => s.pendingVideoSeek);
   const clearPendingSeek = useEditorStore((s) => s.clearPendingSeek);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [sliderValue, setSliderValue] = useState(0);
 
   const player = useVideoPlayer(videoUri ?? "", (p) => {
     p.loop = false;
@@ -27,7 +26,6 @@ export function VideoPlayer() {
     if (!player) return;
     const interval = setInterval(() => {
       setCurrentVideoTime(player.currentTime);
-      setSliderValue(player.currentTime);
     }, 50);
     return () => clearInterval(interval);
   }, [player, setCurrentVideoTime]);
@@ -65,7 +63,6 @@ export function VideoPlayer() {
   const duration = videoMetadata?.duration ?? 0;
   const progress = duration > 0 ? currentVideoTime / duration : 0;
   const seekBarWidth = useRef(0);
-  const [isSeeking, setIsSeeking] = useState(false);
 
   const seekToPosition = useCallback(
     (locationX: number) => {
@@ -74,7 +71,6 @@ export function VideoPlayer() {
       const targetTime = ratio * duration;
       player.currentTime = targetTime;
       setCurrentVideoTime(targetTime);
-      setSliderValue(targetTime);
     },
     [player, duration, setCurrentVideoTime]
   );
@@ -115,15 +111,12 @@ export function VideoPlayer() {
           onStartShouldSetResponder={() => true}
           onMoveShouldSetResponder={() => true}
           onResponderGrant={(e) => {
-            setIsSeeking(true);
             seekToPosition(e.nativeEvent.locationX);
           }}
           onResponderMove={(e) => {
             seekToPosition(e.nativeEvent.locationX);
           }}
-          onResponderRelease={() => {
-            setIsSeeking(false);
-          }}
+          onResponderRelease={() => {}}
         >
           <View style={StyleSheet.absoluteFill} pointerEvents="none">
             <View style={styles.seekBarInner}>
