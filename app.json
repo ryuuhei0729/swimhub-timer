@@ -1,0 +1,8 @@
+{
+  "android": {
+    "package": "com.ryuuhei0729.splitsync"
+  },
+  "ios": {
+    "bundleIdentifier": "com.ryuuhei0729.splitsync"
+  }
+}

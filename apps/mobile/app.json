@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "SplitSync",
+    "slug": "split-sync",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "splitsync",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0a0a0a"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.splitsync.app",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "動画をインポートするためにフォトライブラリへのアクセスが必要です",
+        "NSPhotoLibraryAddUsageDescription": "書き出した動画をフォトライブラリに保存するために必要です"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0a0a0a"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.splitsync.app"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-video",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "動画をインポートするためにフォトライブラリへのアクセスが必要です"
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "書き出した動画をフォトライブラリに保存するために必要です",
+          "savePhotosPermission": "書き出した動画をフォトライブラリに保存するために必要です"
+        }
+      ]
+    ]
+  }
+}
