@@ -94,6 +94,10 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        <script
+          async
+          src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"
+        />
       </head>
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
