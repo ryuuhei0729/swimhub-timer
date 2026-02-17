@@ -1,22 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
-import "../globals.css";
+import Script from "next/script";
 import { I18nProvider } from "@/components/I18nProvider";
 import {
   supportedLocales,
   i18nResources,
   type SupportedLocale,
 } from "@split-sync/i18n";
-
-const inter = Inter({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 const siteUrl = "https://split-sync.swim-hub.app";
 
@@ -104,24 +93,17 @@ export default async function LocaleLayout({
   };
 
   return (
-    <html lang={locale} className="h-full">
-      <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-        <script
-          async
-          src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"
-        />
-      </head>
-      <body
-        className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
-      >
-        <I18nProvider locale={locale as SupportedLocale}>
-          {children}
-        </I18nProvider>
-      </body>
-    </html>
+    <I18nProvider locale={locale as SupportedLocale}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <Script
+        async
+        src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"
+        strategy="afterInteractive"
+      />
+      {children}
+    </I18nProvider>
   );
 }

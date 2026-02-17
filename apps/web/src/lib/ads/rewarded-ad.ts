@@ -96,7 +96,9 @@ export function createRewardedAdController(): RewardedAdController | null {
 
   const onClosed = (event: GptRewardedEvent) => {
     if (event.slot !== slot) return;
-    // If closed without reward, state stays as-is (not "rewarded")
+    if (state !== "rewarded") {
+      setState("error");
+    }
   };
 
   return {
