@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import type * as SharingType from "expo-sharing";
+import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../stores/editor-store";
 import { formatTime } from "@split-sync/core";
 import {
@@ -16,13 +17,8 @@ import {
 } from "../lib/ads/rewarded-ad";
 import { colors, spacing, radius, fontSize } from "../lib/theme";
 
-const RESOLUTIONS = [
-  { key: "original", label: "オリジナル" },
-  { key: "1080", label: "1080p" },
-  { key: "720", label: "720p" },
-] as const;
-
 export default function ExportScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const {
     videoUri,
@@ -53,6 +49,12 @@ export default function ExportScreen() {
   const exportComplete = outputPath !== null;
   const canProceed = exportComplete && (adRewardEarned || adUnavailable);
   const duration = videoMetadata?.duration ?? 0;
+
+  const RESOLUTIONS = [
+    { key: "original" as const, label: t("exportScreen.original") },
+    { key: "1080" as const, label: "1080p" },
+    { key: "720" as const, label: "720p" },
+  ];
 
   // Preload ad on mount
   useEffect(() => {
@@ -100,7 +102,7 @@ export default function ExportScreen() {
 
   const handleExport = useCallback(async () => {
     if (!videoUri || startTime === null) {
-      Alert.alert("エラー", "動画とスタート時刻を設定してください");
+      Alert.alert(t("common.error"), t("exportScreen.needVideoAndStart"));
       return;
     }
 
@@ -144,7 +146,7 @@ export default function ExportScreen() {
       setProgress(1);
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "書き出し中にエラーが発生しました"
+        e instanceof Error ? e.message : t("exportScreen.errorDuringExport")
       );
     } finally {
       setIsExporting(false);
@@ -159,20 +161,21 @@ export default function ExportScreen() {
     exportSettings,
     duration,
     videoMetadata?.height,
+    t,
   ]);
 
   const handleSaveToLibrary = useCallback(async () => {
     if (!outputPath) return;
     try {
       await saveToPhotoLibrary(outputPath);
-      Alert.alert("保存完了", "フォトライブラリに保存しました");
+      Alert.alert(t("exportScreen.saveComplete"), t("exportScreen.savedToLibrary"));
     } catch (e) {
       Alert.alert(
-        "エラー",
-        e instanceof Error ? e.message : "保存に失敗しました"
+        t("common.error"),
+        e instanceof Error ? e.message : t("exportScreen.saveFailed")
       );
     }
-  }, [outputPath]);
+  }, [outputPath, t]);
 
   const handleShare = useCallback(async () => {
     if (!outputPath) return;
@@ -198,28 +201,30 @@ export default function ExportScreen() {
     <View style={styles.container}>
       {/* Summary */}
       <View style={styles.summaryCard}>
-        <Text style={styles.summaryTitle}>書き出し設定</Text>
+        <Text style={styles.summaryTitle}>{t("exportScreen.settings")}</Text>
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>動画</Text>
+          <Text style={styles.summaryLabel}>{t("exportScreen.video")}</Text>
           <Text style={styles.summaryValue} numberOfLines={1}>
             {videoMetadata?.name ?? "-"}
           </Text>
         </View>
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>スタート時刻</Text>
+          <Text style={styles.summaryLabel}>{t("exportScreen.startTime")}</Text>
           <Text style={styles.summaryValue}>
-            {startTime !== null ? formatTime(startTime) : "未設定"}
+            {startTime !== null ? formatTime(startTime) : t("exportScreen.notSet")}
           </Text>
         </View>
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>スプリット</Text>
-          <Text style={styles.summaryValue}>{splitTimes.length}件</Text>
+          <Text style={styles.summaryLabel}>{t("exportScreen.splitsLabel")}</Text>
+          <Text style={styles.summaryValue}>
+            {t("splits.count", { count: splitTimes.length })}
+          </Text>
         </View>
       </View>
 
       {/* Resolution */}
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>解像度</Text>
+        <Text style={styles.sectionLabel}>{t("exportScreen.resolution")}</Text>
         <View style={styles.resolutionRow}>
           {RESOLUTIONS.map((r) => {
             const active = exportSettings.resolution === r.key;
@@ -247,7 +252,7 @@ export default function ExportScreen() {
       {isExporting || (exportComplete && !canProceed) ? (
         <View style={styles.progressSection}>
           <Text style={styles.progressText}>
-            書き出し中... {progressPercent}%
+            {t("exportScreen.encodingPercent", { percent: progressPercent })}
           </Text>
           <View style={styles.progressBar}>
             <View
@@ -256,23 +261,23 @@ export default function ExportScreen() {
           </View>
           {exportComplete && !adRewardEarned && !adUnavailable && (
             <Text style={styles.adWaitText}>
-              広告の視聴が完了するまでお待ちください
+              {t("exportScreen.adWatchPrompt")}
             </Text>
           )}
         </View>
       ) : canProceed ? (
         <View style={styles.doneSection}>
-          <Text style={styles.doneText}>書き出し完了!</Text>
+          <Text style={styles.doneText}>{t("exportScreen.complete")}</Text>
           <View style={styles.actionRow}>
             <Pressable style={styles.saveBtn} onPress={handleSaveToLibrary}>
-              <Text style={styles.saveBtnText}>フォトライブラリに保存</Text>
+              <Text style={styles.saveBtnText}>{t("exportScreen.saveToLibrary")}</Text>
             </Pressable>
             <Pressable style={styles.shareBtn} onPress={handleShare}>
-              <Text style={styles.shareBtnText}>共有</Text>
+              <Text style={styles.shareBtnText}>{t("exportScreen.share")}</Text>
             </Pressable>
           </View>
           <Pressable style={styles.doneBtn} onPress={handleDone}>
-            <Text style={styles.doneBtnText}>完了</Text>
+            <Text style={styles.doneBtnText}>{t("common.done")}</Text>
           </Pressable>
         </View>
       ) : (
@@ -291,14 +296,14 @@ export default function ExportScreen() {
             onPress={handleExport}
             disabled={!startTime}
           >
-            <Text style={styles.exportBtnText}>書き出し開始</Text>
+            <Text style={styles.exportBtnText}>{t("exportScreen.startExport")}</Text>
           </Pressable>
           {adState === "loading" && (
-            <Text style={styles.adStatusText}>広告を読み込み中...</Text>
+            <Text style={styles.adStatusText}>{t("exportScreen.adLoading")}</Text>
           )}
           {adState === "error" && (
             <Text style={styles.adStatusText}>
-              広告の読み込みに失敗しました
+              {t("exportScreen.adFailed")}
             </Text>
           )}
         </View>

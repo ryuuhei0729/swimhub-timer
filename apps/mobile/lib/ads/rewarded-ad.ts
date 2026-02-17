@@ -51,6 +51,7 @@ export function createRewardedAdController(): RewardedAdController | null {
   let listeners: ((state: AdState) => void)[] = [];
   let unsubscribers: (() => void)[] = [];
   let rewardedAd: any = null;
+  let adRewardEarned = false;
 
   function setState(newState: AdState) {
     state = newState;
@@ -60,6 +61,7 @@ export function createRewardedAdController(): RewardedAdController | null {
   function setupAd() {
     unsubscribers.forEach((unsub) => unsub());
     unsubscribers = [];
+    adRewardEarned = false;
 
     rewardedAd = RewardedAd.createForAdRequest(adUnitId);
 
@@ -73,9 +75,18 @@ export function createRewardedAdController(): RewardedAdController | null {
       rewardedAd.addAdEventListener(
         RewardedAdEventType.EARNED_REWARD,
         () => {
+          adRewardEarned = true;
           setState("rewarded");
         }
       )
+    );
+
+    unsubscribers.push(
+      rewardedAd.addAdEventListener(AdEventType.CLOSED, () => {
+        if (!adRewardEarned) {
+          setState("error");
+        }
+      })
     );
 
     unsubscribers.push(
