@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useEditorStore } from "@/stores/editor-store";
 import { useVideoExport } from "@/hooks/useVideoExport";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,7 @@ export function ExportDialog() {
   const [adState, setAdState] = useState<AdState>("idle");
   const [adRewardEarned, setAdRewardEarned] = useState(false);
   const [adUnavailable, setAdUnavailable] = useState(false);
-  const exportTriggeredRef = useRef(false);
+  const [exportTriggered, setExportTriggered] = useState(false);
 
   // --- Derived ---
   const exportComplete = outputBlob !== null;
@@ -48,8 +48,8 @@ export function ExportDialog() {
   useEffect(() => {
     const controller = createRewardedAdController();
     if (!controller) {
-      setAdUnavailable(true);
-      return;
+      const timer = setTimeout(() => setAdUnavailable(true), 0);
+      return () => clearTimeout(timer);
     }
     adControllerRef.current = controller;
 
@@ -71,14 +71,14 @@ export function ExportDialog() {
   // If ad loads AFTER export was triggered, show it automatically
   useEffect(() => {
     if (
-      exportTriggeredRef.current &&
+      exportTriggered &&
       adState === "loaded" &&
       !adRewardEarned &&
       !adUnavailable
     ) {
       adControllerRef.current?.show();
     }
-  }, [adState, adRewardEarned, adUnavailable]);
+  }, [exportTriggered, adState, adRewardEarned, adUnavailable]);
 
   // Fallback: if ad fails, allow export without ad after delay
   useEffect(() => {
@@ -89,7 +89,7 @@ export function ExportDialog() {
   }, [adState, adUnavailable]);
 
   const handleExport = () => {
-    exportTriggeredRef.current = true;
+    setExportTriggered(true);
 
     // --- Show ad (parallel with encoding) ---
     const controller = adControllerRef.current;
@@ -146,7 +146,7 @@ export function ExportDialog() {
         </div>
 
         {/* Export button / progress / waiting for ad / done */}
-        {!isExporting && !outputBlob && !exportTriggeredRef.current && (
+        {!isExporting && !outputBlob && !exportTriggered && (
           <>
             <Button
               onClick={handleExport}

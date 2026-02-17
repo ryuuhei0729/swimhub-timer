@@ -26,50 +26,47 @@ export interface RewardedAdController {
   dispose: () => void;
 }
 
-declare global {
-  interface Window {
-    googletag?: typeof googletag;
-  }
+interface GptSlot {
+  addService(service: GptPubAdsService): GptSlot;
 }
 
-declare namespace googletag {
-  function cmd_push(fn: () => void): void;
-  const cmd: Array<() => void>;
-  function defineOutOfPageSlot(
-    adUnitPath: string,
-    format: number
-  ): Slot | null;
-  function enableServices(): void;
-  function display(slot: Slot): void;
-  function destroySlots(slots?: Slot[]): boolean;
-  function pubads(): PubAdsService;
+interface GptPubAdsService {
+  addEventListener(
+    eventType: string,
+    listener: (event: GptRewardedEvent) => void
+  ): GptPubAdsService;
+  removeEventListener(
+    eventType: string,
+    listener: (event: GptRewardedEvent) => void
+  ): void;
+}
 
-  const enums: {
+interface GptRewardedEvent {
+  slot: GptSlot;
+  makeRewardedVisible?: () => void;
+}
+
+interface Googletag {
+  cmd: Array<() => void>;
+  defineOutOfPageSlot(adUnitPath: string, format: number): GptSlot | null;
+  enableServices(): void;
+  display(slot: GptSlot): void;
+  destroySlots(slots?: GptSlot[]): boolean;
+  pubads(): GptPubAdsService;
+  enums: {
     OutOfPageFormat: {
       REWARDED: number;
     };
   };
+}
 
-  interface Slot {
-    addService(service: PubAdsService): Slot;
-  }
-
-  interface PubAdsService {
-    addEventListener(
-      eventType: string,
-      listener: (event: RewardedEvent) => void
-    ): PubAdsService;
-    removeEventListener(
-      eventType: string,
-      listener: (event: RewardedEvent) => void
-    ): void;
-  }
-
-  interface RewardedEvent {
-    slot: Slot;
-    makeRewardedVisible?: () => void;
+declare global {
+  interface Window {
+    googletag?: Googletag;
   }
 }
+
+let gptServicesEnabled = false;
 
 export function createRewardedAdController(): RewardedAdController | null {
   if (typeof window === "undefined" || !window.googletag) {
@@ -78,24 +75,26 @@ export function createRewardedAdController(): RewardedAdController | null {
 
   let state: AdState = "idle";
   let listeners: Array<(state: AdState) => void> = [];
-  let slot: googletag.Slot | null = null;
+  let slot: GptSlot | null = null;
+  let rewardedVisible: (() => void) | null = null;
 
   function setState(newState: AdState) {
     state = newState;
     listeners.forEach((cb) => cb(newState));
   }
 
-  const onReady = (event: googletag.RewardedEvent) => {
+  const onReady = (event: GptRewardedEvent) => {
     if (event.slot !== slot) return;
+    rewardedVisible = event.makeRewardedVisible ?? null;
     setState("loaded");
   };
 
-  const onGranted = (event: googletag.RewardedEvent) => {
+  const onGranted = (event: GptRewardedEvent) => {
     if (event.slot !== slot) return;
     setState("rewarded");
   };
 
-  const onClosed = (event: googletag.RewardedEvent) => {
+  const onClosed = (event: GptRewardedEvent) => {
     if (event.slot !== slot) return;
     // If closed without reward, state stays as-is (not "rewarded")
   };
@@ -123,36 +122,20 @@ export function createRewardedAdController(): RewardedAdController | null {
         gt.pubads().addEventListener("rewardedSlotGranted", onGranted);
         gt.pubads().addEventListener("rewardedSlotClosed", onClosed);
 
-        gt.enableServices();
+        if (!gptServicesEnabled) {
+          gt.enableServices();
+          gptServicesEnabled = true;
+        }
         gt.display(slot);
       });
     },
 
     show() {
-      // The "rewardedSlotReady" event provides makeRewardedVisible
-      // We re-listen to capture the event with the visibility trigger
-      if (state !== "loaded" || !slot) return;
+      if (state !== "loaded" || !slot || !rewardedVisible) return;
 
       setState("showing");
-
-      window.googletag!.cmd.push(() => {
-        const gt = window.googletag!;
-
-        // Remove the previous ready listener and add one that auto-shows
-        gt.pubads().removeEventListener("rewardedSlotReady", onReady);
-        gt.pubads().addEventListener(
-          "rewardedSlotReady",
-          (event: googletag.RewardedEvent) => {
-            if (event.slot !== slot) return;
-            event.makeRewardedVisible?.();
-          }
-        );
-
-        // Re-fetch to trigger the ready event again
-        if (slot) {
-          gt.display(slot);
-        }
-      });
+      rewardedVisible();
+      rewardedVisible = null;
     },
 
     getState() {
@@ -175,6 +158,7 @@ export function createRewardedAdController(): RewardedAdController | null {
           gt.pubads().removeEventListener("rewardedSlotClosed", onClosed);
           if (slot) gt.destroySlots([slot]);
           slot = null;
+          rewardedVisible = null;
         });
       }
       listeners = [];

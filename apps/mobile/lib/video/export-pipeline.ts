@@ -334,7 +334,7 @@ export async function exportVideoWithStopwatch(
     const iconX = `W-w-${gap}-${textWidthEstimate}-W*0.03`;
     const iconY = `H-h-H*0.03`;
 
-    command = `-y -i "${videoUri}" -i "${iconUri}" -filter_complex "[0:v]${filterChain}[bg];[1:v]scale=${iconSize}:${iconSize},format=rgba,colorchannelmixer=aa=0.30[icon];[bg][icon]overlay=${iconX}:${iconY}[v]" -map "[v]" -map 0:a -c:v libx264 -preset medium -crf ${crf} -c:a aac -b:a 128k -movflags +faststart "${outputPath}"`;
+    command = `-y -i "${videoUri}" -i "${iconUri}" -filter_complex "[0:v]${filterChain}[bg];[1:v]scale=${iconSize}:${iconSize},format=rgba,colorchannelmixer=aa=0.30[icon];[bg][icon]overlay=${iconX}:${iconY}[v]" -map "[v]" -map 0:a? -c:v libx264 -preset medium -crf ${crf} -c:a aac -b:a 128k -movflags +faststart "${outputPath}"`;
   } else {
     command = `-y -i "${videoUri}" -vf "${filterChain}" -c:v libx264 -preset medium -crf ${crf} -c:a aac -b:a 128k -movflags +faststart "${outputPath}"`;
   }

@@ -27,7 +27,6 @@ export function I18nProvider({
         });
     } else if (i18next.language !== locale) {
       i18next.changeLanguage(locale);
-      setReady(true);
     }
   }, [locale]);
 

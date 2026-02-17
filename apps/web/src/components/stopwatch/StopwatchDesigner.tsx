@@ -55,7 +55,7 @@ export function StopwatchDesigner() {
               0:00.00
             </div>
             <span className={`text-[10px] font-medium ${isActivePreset(preset.id) ? "text-primary" : "text-muted-foreground"}`}>
-              {t(`design.preset.${preset.id}` as any)}
+              {t(`design.preset.${preset.id}`)}
             </span>
           </button>
         ))}
