@@ -35,8 +35,8 @@ export function useCanvasCompositor(
         canvas.height = video.videoHeight || 360;
       }
 
-      // Draw video frame
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      // Clear canvas (video is rendered natively by <video> element underneath)
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Compute elapsed from video position, but cap at finishTime if finished
       let elapsed =

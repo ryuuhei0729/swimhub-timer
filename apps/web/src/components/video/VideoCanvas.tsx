@@ -132,10 +132,10 @@ export function VideoCanvas() {
     [duration]
   );
 
-  // Convert DOM mouse coordinates to canvas coordinates,
+  // Convert DOM coordinates to canvas coordinates,
   // accounting for object-contain letterboxing offset.
   const domToCanvas = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
+    (clientX: number, clientY: number) => {
       const canvas = canvasRef.current;
       if (!canvas) return null;
       const rect = canvas.getBoundingClientRect();
@@ -144,13 +144,11 @@ export function VideoCanvas() {
 
       let contentWidth: number, contentHeight: number, offsetX: number, offsetY: number;
       if (canvasAspect > elementAspect) {
-        // Wider canvas → letterbox top/bottom
         contentWidth = rect.width;
         contentHeight = rect.width / canvasAspect;
         offsetX = 0;
         offsetY = (rect.height - contentHeight) / 2;
       } else {
-        // Taller canvas → letterbox left/right
         contentHeight = rect.height;
         contentWidth = rect.height * canvasAspect;
         offsetX = (rect.width - contentWidth) / 2;
@@ -159,21 +157,22 @@ export function VideoCanvas() {
 
       const scaleX = canvas.width / contentWidth;
       const scaleY = canvas.height / contentHeight;
-      const mx = (e.clientX - rect.left - offsetX) * scaleX;
-      const my = (e.clientY - rect.top - offsetY) * scaleY;
+      const mx = (clientX - rect.left - offsetX) * scaleX;
+      const my = (clientY - rect.top - offsetY) * scaleY;
       return { mx, my };
     },
     []
   );
 
-  const handleCanvasMouseDown = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
+  // Shared pointer-down logic (mouse & touch)
+  const handlePointerDown = useCallback(
+    (clientX: number, clientY: number) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      const coords = domToCanvas(e);
+      const coords = domToCanvas(clientX, clientY);
       if (!coords) return;
       const { mx, my } = coords;
 
@@ -190,19 +189,19 @@ export function VideoCanvas() {
         setIsDragging(true);
         dragStartRef.current = { x: mx, y: my };
       } else {
-        // Click outside stopwatch → toggle play/pause
         togglePlay();
       }
     },
     [startTime, stopwatchConfig, togglePlay, domToCanvas]
   );
 
-  const handleCanvasMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
+  // Shared pointer-move logic (mouse & touch)
+  const handlePointerMove = useCallback(
+    (clientX: number, clientY: number) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
 
-      const coords = domToCanvas(e);
+      const coords = domToCanvas(clientX, clientY);
       if (!coords) return;
       const { mx, my } = coords;
 
@@ -218,7 +217,6 @@ export function VideoCanvas() {
         });
         dragStartRef.current = { x: mx, y: my };
       } else {
-        // Hover detection for cursor change
         const ctx = canvas.getContext("2d");
         const video = videoRef.current;
         if (ctx && video) {
@@ -236,11 +234,45 @@ export function VideoCanvas() {
     [isDragging, stopwatchConfig, startTime, updateStopwatchConfig, domToCanvas]
   );
 
-  const handleCanvasMouseUp = useCallback(() => {
+  const handlePointerUp = useCallback(() => {
     setIsDragging(false);
     setIsHoveringStopwatch(false);
     dragStartRef.current = null;
   }, []);
+
+  // Mouse handlers
+  const handleCanvasMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => handlePointerDown(e.clientX, e.clientY),
+    [handlePointerDown]
+  );
+  const handleCanvasMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => handlePointerMove(e.clientX, e.clientY),
+    [handlePointerMove]
+  );
+
+  // Touch handlers
+  const handleCanvasTouchStart = useCallback(
+    (e: React.TouchEvent<HTMLCanvasElement>) => {
+      if (e.touches.length !== 1) return;
+      e.preventDefault();
+      const t = e.touches[0];
+      handlePointerDown(t.clientX, t.clientY);
+    },
+    [handlePointerDown]
+  );
+  const handleCanvasTouchMove = useCallback(
+    (e: React.TouchEvent<HTMLCanvasElement>) => {
+      if (e.touches.length !== 1) return;
+      e.preventDefault();
+      const t = e.touches[0];
+      handlePointerMove(t.clientX, t.clientY);
+    },
+    [handlePointerMove]
+  );
+  const handleCanvasTouchEnd = useCallback(
+    () => handlePointerUp(),
+    [handlePointerUp]
+  );
 
   const formatTimeDisplay = (t: number) => {
     const m = Math.floor(t / 60);
@@ -255,17 +287,20 @@ export function VideoCanvas() {
         <video
           ref={videoRef}
           src={videoUrl ?? undefined}
-          className="absolute w-px h-px opacity-0 pointer-events-none"
+          className="w-full h-full object-contain"
           playsInline
           preload="auto"
         />
         <canvas
           ref={canvasRef}
-          className={`w-full h-full object-contain ${isDragging ? "cursor-grabbing" : isHoveringStopwatch ? "cursor-grab" : "cursor-default"}`}
+          className={`absolute inset-0 w-full h-full object-contain ${isDragging ? "cursor-grabbing" : isHoveringStopwatch ? "cursor-grab" : "cursor-default"}`}
           onMouseDown={handleCanvasMouseDown}
           onMouseMove={handleCanvasMouseMove}
-          onMouseUp={handleCanvasMouseUp}
-          onMouseLeave={handleCanvasMouseUp}
+          onMouseUp={handlePointerUp}
+          onMouseLeave={handlePointerUp}
+          onTouchStart={handleCanvasTouchStart}
+          onTouchMove={handleCanvasTouchMove}
+          onTouchEnd={handleCanvasTouchEnd}
         />
       </div>
 
