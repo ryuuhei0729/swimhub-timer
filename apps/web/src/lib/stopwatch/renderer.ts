@@ -1,6 +1,48 @@
 import type { StopwatchConfig, SplitTime } from "@split-sync/core";
 import { formatTime } from "@split-sync/core";
 
+/**
+ * Measure the maximum digit width for the current ctx.font,
+ * then draw/measure text with all digits at equal (max) width.
+ */
+function getDigitWidth(ctx: CanvasRenderingContext2D): number {
+  let max = 0;
+  for (let d = 0; d <= 9; d++) {
+    const w = ctx.measureText(String(d)).width;
+    if (w > max) max = w;
+  }
+  return max;
+}
+
+function measureTextTabular(ctx: CanvasRenderingContext2D, text: string): number {
+  const dw = getDigitWidth(ctx);
+  let total = 0;
+  for (const ch of text) {
+    total += ch >= "0" && ch <= "9" ? dw : ctx.measureText(ch).width;
+  }
+  return total;
+}
+
+function fillTextTabular(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number
+): void {
+  const dw = getDigitWidth(ctx);
+  let cx = x;
+  for (const ch of text) {
+    if (ch >= "0" && ch <= "9") {
+      const charW = ctx.measureText(ch).width;
+      ctx.fillText(ch, cx + (dw - charW) / 2, y);
+      cx += dw;
+    } else {
+      ctx.fillText(ch, cx, y);
+      cx += ctx.measureText(ch).width;
+    }
+  }
+}
+
 function calculatePosition(
   config: StopwatchConfig,
   boxWidth: number,
@@ -49,8 +91,7 @@ export function renderStopwatch(
   ctx.font = `bold ${config.fontSize}px ${config.fontFamily}`;
   ctx.textBaseline = "top";
 
-  const metrics = ctx.measureText(timeText);
-  const textWidth = metrics.width;
+  const textWidth = measureTextTabular(ctx, timeText);
   const textHeight = config.fontSize;
 
   const boxWidth = textWidth + config.padding * 2;
@@ -87,7 +128,7 @@ export function renderStopwatch(
 
   // Text
   ctx.fillStyle = config.textColor;
-  ctx.fillText(timeText, x + config.padding, y + config.padding);
+  fillTextTabular(ctx, timeText, x + config.padding, y + config.padding);
 }
 
 function formatSplitText(split: SplitTime): string {
@@ -114,9 +155,8 @@ export function renderSplitDisplay(
 
   ctx.font = `bold ${splitFontSize}px ${config.fontFamily}`;
   ctx.textBaseline = "top";
-  const splitMetrics = ctx.measureText(splitText);
 
-  let contentWidth = splitMetrics.width;
+  let contentWidth = measureTextTabular(ctx, splitText);
   if (hasMemo) {
     ctx.font = `${memoFontSize}px ${config.fontFamily}`;
     const memoMetrics = ctx.measureText(latestSplit.memo);
@@ -168,7 +208,7 @@ export function renderSplitDisplay(
   // Split text
   ctx.fillStyle = config.textColor;
   ctx.font = `bold ${splitFontSize}px ${config.fontFamily}`;
-  ctx.fillText(splitText, x + splitPadding, y + splitPadding);
+  fillTextTabular(ctx, splitText, x + splitPadding, y + splitPadding);
 
   // Memo text
   if (hasMemo) {
@@ -238,8 +278,7 @@ export function getStopwatchBounds(
 ): { x: number; y: number; width: number; height: number } {
   const timeText = formatTime(elapsedSeconds);
   ctx.font = `bold ${config.fontSize}px ${config.fontFamily}`;
-  const metrics = ctx.measureText(timeText);
-  const boxWidth = metrics.width + config.padding * 2;
+  const boxWidth = measureTextTabular(ctx, timeText) + config.padding * 2;
   const boxHeight = config.fontSize + config.padding * 2;
   const { x, y } = calculatePosition(
     config,
