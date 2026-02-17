@@ -9,7 +9,8 @@ import { ExportDialog } from "@/components/export/ExportDialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SplitsPanel } from "@/components/splits/SplitsPanel";
-import { ArrowRight, RotateCcw, Timer, Waves, Palette, ListOrdered } from "lucide-react";
+import { ArrowRight, RotateCcw, Waves, Palette, ListOrdered } from "lucide-react";
+import { SplitSyncIcon } from "@/components/icons/SplitSyncIcon";
 
 export default function Home() {
   const { step, startTime, clearVideo, setStep } = useEditorStore();
@@ -39,7 +40,7 @@ export default function Home() {
       <header className="h-14 shrink-0 border-b border-border bg-surface/80 backdrop-blur-xl px-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <Timer className="w-4 h-4 text-primary" />
+            <SplitSyncIcon className="w-4 h-4 text-primary" />
             <span className="font-semibold text-sm tracking-tight">SplitSync</span>
           </div>
           <div className="hidden sm:flex items-center gap-1 text-[11px] font-medium">

@@ -48,6 +48,10 @@ export const metadata: Metadata = {
     title,
     description,
   },
+  icons: {
+    icon: "/icon.svg",
+    apple: "/apple-touch-icon.png",
+  },
   robots: {
     index: true,
     follow: true,

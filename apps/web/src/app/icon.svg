@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="#0a0f1a"/>
+  <!-- Stopwatch crown -->
+  <rect x="232" y="68" width="48" height="26" rx="9" fill="#06b6d4"/>
+  <!-- Stopwatch body -->
+  <circle cx="256" cy="284" r="155" stroke="#06b6d4" stroke-width="16" fill="none"/>
+  <!-- Clock hand (12 o'clock) -->
+  <line x1="256" y1="284" x2="256" y2="156" stroke="#22d3ee" stroke-width="13" stroke-linecap="round"/>
+  <!-- Wave line - water + split -->
+  <path d="M108 284 Q158 244, 208 284 Q258 324, 308 284 Q358 244, 408 284" stroke="#06b6d4" stroke-width="11" fill="none" stroke-linecap="round"/>
+  <!-- Center dot -->
+  <circle cx="256" cy="284" r="10" fill="#22d3ee"/>
+</svg>
