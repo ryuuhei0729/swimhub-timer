@@ -103,6 +103,8 @@ export function createRewardedAdController(): RewardedAdController | null {
 
   return {
     load() {
+      if (state === "loading" || state === "loaded") return;
+
       setState("loading");
 
       window.googletag!.cmd.push(() => {

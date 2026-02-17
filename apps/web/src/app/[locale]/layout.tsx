@@ -1,11 +1,27 @@
 import type { Metadata, Viewport } from "next";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
+import { notFound } from "next/navigation";
 import { I18nProvider } from "@/components/I18nProvider";
 import {
   supportedLocales,
   i18nResources,
   type SupportedLocale,
 } from "@split-sync/i18n";
+
+const inter = Inter({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+function isSupportedLocale(locale: string): locale is SupportedLocale {
+  return (supportedLocales as readonly string[]).includes(locale);
+}
 
 const siteUrl = "https://split-sync.swim-hub.app";
 
@@ -19,7 +35,8 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const t = i18nResources[locale as SupportedLocale].translation;
+  if (!isSupportedLocale(locale)) notFound();
+  const t = i18nResources[locale].translation;
 
   return {
     title: t.meta.title,
@@ -73,8 +90,9 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  if (!isSupportedLocale(locale)) notFound();
 
-  const t = i18nResources[locale as SupportedLocale].translation;
+  const t = i18nResources[locale].translation;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -93,17 +111,23 @@ export default async function LocaleLayout({
   };
 
   return (
-    <I18nProvider locale={locale as SupportedLocale}>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <Script
-        async
-        src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"
-        strategy="afterInteractive"
-      />
-      {children}
-    </I18nProvider>
+    <html lang={locale} className="h-full">
+      <body
+        className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      >
+        <I18nProvider locale={locale}>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          />
+          <Script
+            async
+            src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"
+            strategy="afterInteractive"
+          />
+          {children}
+        </I18nProvider>
+      </body>
+    </html>
   );
 }
