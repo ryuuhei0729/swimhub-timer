@@ -7,6 +7,7 @@
     "packages/*"
   ],
   "scripts": {
+    "postinstall": "bash scripts/install-ffmpeg-frameworks.sh",
     "dev:web": "npm run dev -w @split-sync/web",
     "build:web": "npm run build -w @split-sync/web",
     "lint:web": "NODE_PATH=$PWD/apps/web/node_modules npm run lint -w @split-sync/web",

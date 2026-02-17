@@ -29,6 +29,7 @@ dist/
 *.key
 *.mobileprovision
 *.orig.*
+*.ipa
 
 # misc
 .DS_Store
