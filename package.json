@@ -9,7 +9,7 @@
   "scripts": {
     "dev:web": "npm run dev -w @split-sync/web",
     "build:web": "npm run build -w @split-sync/web",
-    "lint:web": "NODE_PATH=apps/web/node_modules npm run lint -w @split-sync/web",
+    "lint:web": "NODE_PATH=$PWD/apps/web/node_modules npm run lint -w @split-sync/web",
     "lint:mobile": "npm run lint -w @split-sync/mobile",
     "dev:mobile": "npm run start -w @split-sync/mobile",
     "android": "expo run:android",

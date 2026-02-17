@@ -1,4 +1,8 @@
 {
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-4640414097368188~2822606743",
+    "ios_app_id": "ca-app-pub-4640414097368188~9666392288"
+  },
   "expo": {
     "name": "SplitSync",
     "slug": "split-sync",
@@ -52,6 +56,21 @@
         {
           "photosPermission": "書き出した動画をフォトライブラリに保存するために必要です",
           "savePhotosPermission": "書き出した動画をフォトライブラリに保存するために必要です"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-4640414097368188~2822606743",
+          "iosAppId": "ca-app-pub-4640414097368188~9666392288"
         }
       ]
     ],

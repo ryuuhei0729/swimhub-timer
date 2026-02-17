@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import type * as SharingType from "expo-sharing";
@@ -9,6 +9,11 @@ import {
   saveToPhotoLibrary,
   cleanupExportFiles,
 } from "../lib/video/export-pipeline";
+import {
+  createRewardedAdController,
+  type AdState,
+  type RewardedAdController,
+} from "../lib/ads/rewarded-ad";
 import { colors, spacing, radius, fontSize } from "../lib/theme";
 
 const RESOLUTIONS = [
@@ -31,12 +36,67 @@ export default function ExportScreen() {
     finishTime,
   } = useEditorStore();
 
+  // --- Encoding state ---
   const [isExporting, setIsExporting] = useState(false);
   const [progress, setProgress] = useState(0);
   const [outputPath, setOutputPath] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // --- Ad state ---
+  const adControllerRef = useRef<RewardedAdController | null>(null);
+  const [adState, setAdState] = useState<AdState>("idle");
+  const [adRewardEarned, setAdRewardEarned] = useState(false);
+  const [adUnavailable, setAdUnavailable] = useState(false);
+  const exportTriggeredRef = useRef(false);
+
+  // --- Derived ---
+  const exportComplete = outputPath !== null;
+  const canProceed = exportComplete && (adRewardEarned || adUnavailable);
   const duration = videoMetadata?.duration ?? 0;
+
+  // Preload ad on mount
+  useEffect(() => {
+    const controller = createRewardedAdController();
+    if (!controller) {
+      setAdUnavailable(true);
+      return;
+    }
+    adControllerRef.current = controller;
+
+    const unsubscribe = controller.onStateChange((state) => {
+      setAdState(state);
+      if (state === "rewarded") {
+        setAdRewardEarned(true);
+      }
+    });
+
+    controller.load();
+
+    return () => {
+      unsubscribe();
+      controller.dispose();
+    };
+  }, []);
+
+  // If ad loads AFTER export was triggered, show it automatically
+  useEffect(() => {
+    if (
+      exportTriggeredRef.current &&
+      adState === "loaded" &&
+      !adRewardEarned &&
+      !adUnavailable
+    ) {
+      adControllerRef.current?.show().catch(() => setAdUnavailable(true));
+    }
+  }, [adState, adRewardEarned, adUnavailable]);
+
+  // Fallback: if ad fails to load, allow export without ad after delay
+  useEffect(() => {
+    if (adState === "error" && !adUnavailable) {
+      const timer = setTimeout(() => setAdUnavailable(true), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [adState, adUnavailable]);
 
   const handleExport = useCallback(async () => {
     if (!videoUri || startTime === null) {
@@ -47,7 +107,22 @@ export default function ExportScreen() {
     setIsExporting(true);
     setProgress(0);
     setError(null);
+    exportTriggeredRef.current = true;
 
+    // --- Show ad (fire-and-forget, runs in parallel with encoding) ---
+    const controller = adControllerRef.current;
+    if (controller) {
+      const currentState = controller.getState();
+      if (currentState === "loaded") {
+        controller.show().catch(() => setAdUnavailable(true));
+      } else if (currentState !== "loading") {
+        // Ad errored or idle — skip
+        setAdUnavailable(true);
+      }
+      // If still "loading", the useEffect above will auto-show when ready
+    }
+
+    // --- Start encoding ---
     try {
       const durationMs = duration * 1000;
       const path = await exportVideoWithStopwatch(
@@ -74,7 +149,17 @@ export default function ExportScreen() {
     } finally {
       setIsExporting(false);
     }
-  }, [videoUri, startTime, stopwatchConfig, splitTimes, isFinished, finishTime, exportSettings, duration, videoMetadata?.height]);
+  }, [
+    videoUri,
+    startTime,
+    stopwatchConfig,
+    splitTimes,
+    isFinished,
+    finishTime,
+    exportSettings,
+    duration,
+    videoMetadata?.height,
+  ]);
 
   const handleSaveToLibrary = useCallback(async () => {
     if (!outputPath) return;
@@ -158,17 +243,24 @@ export default function ExportScreen() {
         </View>
       </View>
 
-      {/* Progress / Export button */}
-      {isExporting ? (
+      {/* Progress / waiting for ad / done / export button */}
+      {isExporting || (exportComplete && !canProceed) ? (
         <View style={styles.progressSection}>
-          <Text style={styles.progressText}>書き出し中... {progressPercent}%</Text>
+          <Text style={styles.progressText}>
+            書き出し中... {progressPercent}%
+          </Text>
           <View style={styles.progressBar}>
             <View
               style={[styles.progressFill, { width: `${progressPercent}%` }]}
             />
           </View>
+          {exportComplete && !adRewardEarned && !adUnavailable && (
+            <Text style={styles.adWaitText}>
+              広告の視聴が完了するまでお待ちください
+            </Text>
+          )}
         </View>
-      ) : outputPath ? (
+      ) : canProceed ? (
         <View style={styles.doneSection}>
           <Text style={styles.doneText}>書き出し完了!</Text>
           <View style={styles.actionRow}>
@@ -201,6 +293,14 @@ export default function ExportScreen() {
           >
             <Text style={styles.exportBtnText}>書き出し開始</Text>
           </Pressable>
+          {adState === "loading" && (
+            <Text style={styles.adStatusText}>広告を読み込み中...</Text>
+          )}
+          {adState === "error" && (
+            <Text style={styles.adStatusText}>
+              広告の読み込みに失敗しました
+            </Text>
+          )}
         </View>
       )}
     </View>
@@ -376,5 +476,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: colors.white,
+  },
+  adWaitText: {
+    fontSize: fontSize.xs,
+    color: colors.muted,
+    marginTop: spacing.sm,
+    textAlign: "center",
+  },
+  adStatusText: {
+    fontSize: fontSize.xs,
+    color: colors.muted,
+    textAlign: "center",
   },
 });

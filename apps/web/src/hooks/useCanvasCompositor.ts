@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { useEditorStore } from "@/stores/editor-store";
-import { renderStopwatch, renderSplitDisplay } from "@/lib/stopwatch/renderer";
+import { renderStopwatch, renderSplitDisplay, renderWatermark } from "@/lib/stopwatch/renderer";
 
 export function useCanvasCompositor(
   canvasRef: React.RefObject<HTMLCanvasElement | null>,
@@ -47,6 +47,7 @@ export function useCanvasCompositor(
         elapsed = finishTime;
       }
       renderStopwatch(ctx, stopwatchConfig, elapsed);
+      renderWatermark(ctx);
 
       // Show split for 3 seconds after passing its time point
       if (splitTimes.length > 0) {

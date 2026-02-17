@@ -183,6 +183,54 @@ export function renderSplitDisplay(
   }
 }
 
+// Lazy-loaded watermark icon
+let _watermarkIcon: HTMLImageElement | null = null;
+let _iconLoadStarted = false;
+
+function getWatermarkIcon(): HTMLImageElement | null {
+  if (!_iconLoadStarted) {
+    _iconLoadStarted = true;
+    const img = new Image();
+    img.onload = () => {
+      _watermarkIcon = img;
+    };
+    img.src = "/apple-touch-icon.png";
+  }
+  return _watermarkIcon;
+}
+
+/**
+ * Render the "Split Sync" watermark with icon in the bottom-right corner.
+ */
+export function renderWatermark(ctx: CanvasRenderingContext2D): void {
+  const fontSize = Math.max(12, Math.round(ctx.canvas.height * 0.04));
+  const margin = 0.03;
+  const text = "Split Sync";
+  const gap = fontSize * 0.3;
+  const iconSize = fontSize;
+
+  ctx.save();
+  ctx.globalAlpha = 0.30;
+  ctx.font = `600 ${fontSize}px sans-serif`;
+  ctx.textBaseline = "bottom";
+  ctx.fillStyle = "white";
+
+  const textWidth = ctx.measureText(text).width;
+  const textX = ctx.canvas.width * (1 - margin) - textWidth;
+  const textY = ctx.canvas.height * (1 - margin);
+
+  // Draw icon to the left of text
+  const icon = getWatermarkIcon();
+  if (icon) {
+    const iconX = textX - gap - iconSize;
+    const iconY = textY - iconSize;
+    ctx.drawImage(icon, iconX, iconY, iconSize, iconSize);
+  }
+
+  ctx.fillText(text, textX, textY);
+  ctx.restore();
+}
+
 export function getStopwatchBounds(
   ctx: CanvasRenderingContext2D,
   config: StopwatchConfig,
