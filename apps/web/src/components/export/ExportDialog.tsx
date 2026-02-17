@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Download, Loader2, Check, ArrowLeft, Timer } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { ExportResolution } from "@split-sync/core";
 import {
   createRewardedAdController,
@@ -21,6 +22,7 @@ import {
 } from "@/lib/ads/rewarded-ad";
 
 export function ExportDialog() {
+  const { t } = useTranslation();
   const { exportSettings, setExportSettings, setStep } = useEditorStore();
   const {
     startExport: startEncoding,
@@ -112,9 +114,9 @@ export function ExportDialog() {
           <Timer className="w-7 h-7 text-primary" />
         </div>
         <div className="text-center space-y-1">
-          <h2 className="text-xl font-bold tracking-tight">Export Video</h2>
+          <h2 className="text-xl font-bold tracking-tight">{t("exportScreen.webTitle")}</h2>
           <p className="text-sm text-muted-foreground">
-            Create your final video with stopwatch overlay
+            {t("exportScreen.subtitle")}
           </p>
         </div>
       </div>
@@ -124,7 +126,7 @@ export function ExportDialog() {
         {/* Quality selection */}
         <div className="space-y-2">
           <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">
-            Quality
+            {t("exportScreen.quality")}
           </Label>
           <Select
             value={exportSettings.resolution}
@@ -137,8 +139,8 @@ export function ExportDialog() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="720">720p</SelectItem>
-              <SelectItem value="1080">1080p (Recommended)</SelectItem>
-              <SelectItem value="original">Original</SelectItem>
+              <SelectItem value="1080">1080p {t("exportScreen.recommended")}</SelectItem>
+              <SelectItem value="original">{t("exportScreen.original")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -152,16 +154,16 @@ export function ExportDialog() {
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90 glow-cyan h-11"
             >
               <Download className="w-4 h-4 mr-2" />
-              Export MP4
+              {t("exportScreen.exportMp4")}
             </Button>
             {adState === "loading" && (
               <p className="text-[11px] text-muted-foreground text-center">
-                Loading ad...
+                {t("exportScreen.adLoading")}
               </p>
             )}
             {adState === "error" && (
               <p className="text-[11px] text-muted-foreground text-center">
-                Ad failed to load
+                {t("exportScreen.adFailed")}
               </p>
             )}
           </>
@@ -172,7 +174,7 @@ export function ExportDialog() {
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                <span>Encoding...</span>
+                <span>{t("exportScreen.encoding")}</span>
               </div>
               <span className="font-mono text-primary tabular-nums">
                 {exportProgress}%
@@ -186,11 +188,11 @@ export function ExportDialog() {
             </div>
             {exportComplete && !adRewardEarned && !adUnavailable ? (
               <p className="text-[11px] text-muted-foreground text-center">
-                Please complete watching the ad to proceed
+                {t("exportScreen.adWatchPrompt")}
               </p>
             ) : (
               <p className="text-[11px] text-muted-foreground text-center">
-                This may take a few minutes depending on video length
+                {t("exportScreen.timeEstimate")}
               </p>
             )}
           </div>
@@ -203,7 +205,7 @@ export function ExportDialog() {
                 <Check className="w-4 h-4 text-emerald-400" />
               </div>
               <span className="font-medium text-emerald-400">
-                Export complete
+                {t("exportScreen.complete")}
               </span>
             </div>
             <Button
@@ -212,7 +214,9 @@ export function ExportDialog() {
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90 glow-cyan h-11"
             >
               <Download className="w-4 h-4 mr-2" />
-              Download MP4 ({(outputBlob!.size / 1024 / 1024).toFixed(1)} MB)
+              {t("exportScreen.downloadMp4", {
+                size: (outputBlob!.size / 1024 / 1024).toFixed(1),
+              })}
             </Button>
           </div>
         )}
@@ -226,7 +230,7 @@ export function ExportDialog() {
               onClick={handleExport}
               className="mt-3 text-xs"
             >
-              Retry
+              {t("common.retry")}
             </Button>
           </div>
         )}
@@ -238,7 +242,7 @@ export function ExportDialog() {
         className="flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
-        Back to editor
+        {t("exportScreen.backToEditor")}
       </button>
     </div>
   );

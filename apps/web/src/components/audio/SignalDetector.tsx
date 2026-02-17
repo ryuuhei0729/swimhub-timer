@@ -7,8 +7,10 @@ import { useStartSignalDetection } from "@/hooks/useStartSignalDetection";
 import { Button } from "@/components/ui/button";
 import { WaveformDisplay } from "./WaveformDisplay";
 import { Loader2, Zap, Minus, Plus, MousePointerClick, Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export function SignalDetector() {
+  const { t } = useTranslation();
   const {
     detectedSignalTime,
     startTime,
@@ -51,7 +53,7 @@ export function SignalDetector() {
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
         <Zap className="w-4 h-4 text-primary" />
-        <h3 className="font-semibold text-sm tracking-tight">Start Signal</h3>
+        <h3 className="font-semibold text-sm tracking-tight">{t("signal.title")}</h3>
       </div>
 
       {/* Waveform — manual click area */}
@@ -61,7 +63,7 @@ export function SignalDetector() {
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <MousePointerClick className="w-3 h-3" />
               <span className="text-[11px]">
-                Click waveform to set start point
+                {t("signal.clickWaveform")}
               </span>
             </div>
           </div>
@@ -83,12 +85,12 @@ export function SignalDetector() {
           {isLoading ? (
             <>
               <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
-              {isAnalyzing ? "Analyzing..." : "Detecting..."}
+              {isAnalyzing ? t("signal.analyzing") : t("signal.detecting")}
             </>
           ) : (
             <>
               <Zap className="w-3.5 h-3.5 mr-2" />
-              Auto-Detect
+              {t("signal.autoDetect")}
             </>
           )}
         </Button>
@@ -146,12 +148,12 @@ export function SignalDetector() {
             {isConfirmed ? (
               <>
                 <Check className="w-3.5 h-3.5 mr-2" />
-                Confirmed
+                {t("signal.confirmed")}
               </>
             ) : (
               <>
                 <Check className="w-3.5 h-3.5 mr-2" />
-                Set as Start Point
+                {t("signal.setAsStartPoint")}
               </>
             )}
           </Button>
@@ -162,7 +164,7 @@ export function SignalDetector() {
       {startTime !== null && detectedSignalTime !== startTime && (
         <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg border border-primary/20">
           <span className="text-[11px] uppercase tracking-wider text-primary/70">
-            Start confirmed
+            {t("signal.startConfirmed")}
           </span>
           <span className="text-sm font-mono font-bold text-primary tabular-nums">
             {startTime.toFixed(3)}s

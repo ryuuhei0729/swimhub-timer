@@ -11,6 +11,10 @@
   },
   "dependencies": {
     "@split-sync/core": "*",
+    "@split-sync/i18n": "*",
+    "expo-localization": "~55.0.6",
+    "i18next": "^24.0.0",
+    "react-i18next": "^15.0.0",
     "expo": "~54.0.33",
     "expo-build-properties": "~1.0.10",
     "expo-constants": "~18.0.13",

@@ -3,10 +3,12 @@ import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../stores/editor-store";
 import { colors, spacing, radius, fontSize } from "../lib/theme";
 
 export default function ImportScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { setVideoUri, setVideoMetadata } = useEditorStore();
   const [loading, setLoading] = useState(false);
@@ -36,20 +38,26 @@ export default function ImportScreen() {
       router.push("/editor");
     } catch (error) {
       Alert.alert(
-        "Error",
-        error instanceof Error ? error.message : "Failed to pick video"
+        t("common.error"),
+        error instanceof Error ? error.message : t("import.failedToPick")
       );
     } finally {
       setLoading(false);
     }
   };
 
+  const steps = [
+    t("import.stepImport"),
+    t("import.stepDetect"),
+    t("import.stepExport"),
+  ];
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>SplitSync</Text>
+        <Text style={styles.title}>{t("common.appName")}</Text>
         <Text style={styles.subtitle}>
-          水泳レース動画にストップウォッチオーバーレイを追加
+          {t("import.subtitle")}
         </Text>
       </View>
 
@@ -57,9 +65,9 @@ export default function ImportScreen() {
         <View style={styles.iconCircle}>
           <Ionicons name="videocam-outline" size={26} color={colors.muted} />
         </View>
-        <Text style={styles.cardTitle}>動画を選択</Text>
+        <Text style={styles.cardTitle}>{t("import.selectVideo")}</Text>
         <Text style={styles.cardDescription}>
-          フォトライブラリから水泳レースの動画を選んでください
+          {t("import.selectVideoDesc")}
         </Text>
 
         <Pressable
@@ -72,13 +80,13 @@ export default function ImportScreen() {
           disabled={loading}
         >
           <Text style={styles.buttonText}>
-            {loading ? "読み込み中..." : "動画を選択"}
+            {loading ? t("import.loading") : t("import.selectVideo")}
           </Text>
         </Pressable>
       </View>
 
       <View style={styles.steps}>
-        {["動画取り込み", "検出 & デザイン", "書き出し"].map((label, i) => (
+        {steps.map((label, i) => (
           <View key={label} style={styles.stepRow}>
             <View
               style={[

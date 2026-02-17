@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "SplitSync",
     short_name: "SplitSync",
     description: "Swimming race video stopwatch overlay tool",
-    start_url: "/",
+    start_url: "/ja",
     display: "standalone",
     background_color: "#000000",
     theme_color: "#000000",

@@ -2,9 +2,11 @@
 
 import { useCallback, useState, useRef } from "react";
 import { Upload, Timer, Waves, Zap } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useVideoFile } from "@/hooks/useVideoFile";
 
 export function VideoImporter() {
+  const { t } = useTranslation();
   const { handleFile } = useVideoFile();
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -16,10 +18,10 @@ export function VideoImporter() {
         setError(null);
         handleFile(file);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load video");
+        setError(err instanceof Error ? err.message : t("import.failedToLoad"));
       }
     },
-    [handleFile]
+    [handleFile, t]
   );
 
   const onDrop = useCallback(
@@ -50,9 +52,9 @@ export function VideoImporter() {
   );
 
   const steps = [
-    { icon: Upload, label: "Import", desc: "Upload video" },
-    { icon: Waves, label: "Detect", desc: "Find start signal" },
-    { icon: Zap, label: "Export", desc: "Download result" },
+    { icon: Upload, label: t("import.stepImport"), desc: t("import.stepImportDesc") },
+    { icon: Waves, label: t("import.stepDetect"), desc: t("import.stepDetectDesc") },
+    { icon: Zap, label: t("import.stepExport"), desc: t("import.stepExportDesc") },
   ];
 
   return (
@@ -64,7 +66,7 @@ export function VideoImporter() {
         </div>
         <h1 className="text-3xl font-bold tracking-tight">SplitSync</h1>
         <p className="text-muted-foreground text-sm max-w-xs mx-auto leading-relaxed">
-          Automatically overlay a stopwatch on your swimming race videos
+          {t("import.subtitle")}
         </p>
       </div>
 
@@ -100,14 +102,14 @@ export function VideoImporter() {
         </div>
         <div className="text-center space-y-1.5">
           <p className="font-medium text-sm">
-            Drop your race video here
+            {t("import.dropHere")}
           </p>
           <p className="text-xs text-muted-foreground">
-            or click to browse
+            {t("import.orClickToBrowse")}
           </p>
         </div>
         <span className="text-[11px] text-muted-foreground/60 tracking-wide uppercase">
-          MP4 / MOV / WebM
+          {t("import.supportedFormats")}
         </span>
         <input
           ref={inputRef}

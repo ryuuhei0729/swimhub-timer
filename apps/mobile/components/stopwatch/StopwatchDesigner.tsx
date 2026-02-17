@@ -1,5 +1,6 @@
 import { useRef, useCallback } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../../stores/editor-store";
 import { STOPWATCH_PRESETS } from "@split-sync/core";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
@@ -8,6 +9,7 @@ const SIZE_MIN = 20;
 const SIZE_MAX = 80;
 
 export function StopwatchDesigner() {
+  const { t } = useTranslation();
   const { stopwatchConfig, updateStopwatchConfig, setStopwatchConfig } =
     useEditorStore();
 
@@ -35,7 +37,7 @@ export function StopwatchDesigner() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>デザイン</Text>
+      <Text style={styles.sectionTitle}>{t("design.title")}</Text>
 
       {/* Presets */}
       <View style={styles.presetGrid}>
@@ -77,7 +79,7 @@ export function StopwatchDesigner() {
                   active && styles.presetNameActive,
                 ]}
               >
-                {preset.name}
+                {t(`design.preset.${preset.id}` as any)}
               </Text>
             </Pressable>
           );
@@ -87,7 +89,7 @@ export function StopwatchDesigner() {
       {/* Font Size */}
       <View style={styles.sliderSection}>
         <View style={styles.sliderHeader}>
-          <Text style={styles.sliderLabel}>サイズ</Text>
+          <Text style={styles.sliderLabel}>{t("design.size")}</Text>
           <Text style={styles.sliderValue}>{stopwatchConfig.fontSize}px</Text>
         </View>
         <View style={styles.sizeRow}>

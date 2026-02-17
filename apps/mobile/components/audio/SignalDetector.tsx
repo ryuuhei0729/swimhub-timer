@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, Modal } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../../stores/editor-store";
 import { formatTime } from "@split-sync/core";
 import { extractAudioFromVideo, generateWaveformData } from "../../lib/audio/extractor";
@@ -9,6 +10,7 @@ import { WaveformDisplay } from "./WaveformDisplay";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 
 export function SignalDetector() {
+  const { t } = useTranslation();
   const {
     videoUri,
     currentVideoTime,
@@ -46,7 +48,7 @@ export function SignalDetector() {
       } catch (e) {
         if (!cancelled) {
           setError(
-            e instanceof Error ? e.message : "音声抽出中にエラーが発生しました"
+            e instanceof Error ? e.message : t("signal.audioExtractionError")
           );
         }
       } finally {
@@ -57,7 +59,7 @@ export function SignalDetector() {
     return () => {
       cancelled = true;
     };
-  }, [videoUri, audioData, setAudioData, setWaveformData]);
+  }, [videoUri, audioData, setAudioData, setWaveformData, t]);
 
   const runAutoDetect = async () => {
     if (!audioData) return;
@@ -74,11 +76,11 @@ export function SignalDetector() {
         setDetectedSignalTime(result.time);
         seekVideoAndPause(result.time);
       } else {
-        setError("スタート合図を自動検出できませんでした。手動でセットしてください。");
+        setError(t("signal.notDetected"));
       }
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "音声解析中にエラーが発生しました"
+        e instanceof Error ? e.message : t("signal.audioAnalysisError")
       );
     } finally {
       setIsDetecting(false);
@@ -110,8 +112,8 @@ export function SignalDetector() {
 
   const isLoading = isExtracting || isDetecting;
   const loadingMessage = isExtracting
-    ? "音声を抽出中..."
-    : "スタート音を解析中...";
+    ? t("signal.extracting")
+    : t("signal.analyzingStart");
 
   return (
     <View style={styles.container}>
@@ -125,7 +127,7 @@ export function SignalDetector() {
         </View>
       </Modal>
 
-      <Text style={styles.sectionTitle}>スタート合図</Text>
+      <Text style={styles.sectionTitle}>{t("signal.title")}</Text>
 
       {/* Waveform (always visible once extracted) */}
       {waveformData && audioData && (
@@ -149,9 +151,9 @@ export function SignalDetector() {
         >
           <Ionicons name="scan" size={24} color={colors.primary} />
           <View>
-            <Text style={styles.autoDetectBtnText}>自動検出</Text>
+            <Text style={styles.autoDetectBtnText}>{t("signal.autoDetect")}</Text>
             <Text style={styles.autoDetectBtnSub}>
-              音声解析でスタート音を検出します
+              {t("signal.autoDetectDesc")}
             </Text>
           </View>
         </Pressable>
@@ -168,26 +170,25 @@ export function SignalDetector() {
       <View style={styles.statusCard}>
         {isConfirmed ? (
           <>
-            <Text style={styles.statusLabel}>スタート時刻（確定）</Text>
+            <Text style={styles.statusLabel}>{t("signal.confirmedTime")}</Text>
             <Text style={styles.statusTime}>{formatTime(startTime)}</Text>
             <Pressable
               style={styles.resetBtn}
               onPress={() => setStartTime(null)}
             >
-              <Text style={styles.resetBtnText}>変更する</Text>
+              <Text style={styles.resetBtnText}>{t("signal.change")}</Text>
             </Pressable>
           </>
         ) : detectedSignalTime !== null ? (
           <>
-            <Text style={styles.statusLabel}>候補時刻</Text>
+            <Text style={styles.statusLabel}>{t("signal.candidateTime")}</Text>
             <Text style={styles.statusTime}>
               {formatTime(detectedSignalTime)}
             </Text>
           </>
         ) : (
           <Text style={styles.statusHint}>
-            波形をタッチするか「自動検出」で{"\n"}
-            スタート音をセットしてください
+            {t("signal.hintText")}
           </Text>
         )}
       </View>
@@ -195,7 +196,7 @@ export function SignalDetector() {
       {/* Fine-tune + confirm */}
       {!isConfirmed && detectedSignalTime !== null && (
             <View style={styles.tuneSection}>
-              <Text style={styles.tuneLabel}>微調整</Text>
+              <Text style={styles.tuneLabel}>{t("signal.fineTune")}</Text>
               <View style={styles.tuneRow}>
                 {[
                   { label: "-100ms", delta: -0.1 },
@@ -214,7 +215,7 @@ export function SignalDetector() {
               </View>
 
               <Pressable style={styles.confirmBtn} onPress={confirmStart}>
-                <Text style={styles.confirmBtnText}>この時刻で確定</Text>
+                <Text style={styles.confirmBtnText}>{t("signal.setAsStartPoint")}</Text>
               </Pressable>
             </View>
       )}
