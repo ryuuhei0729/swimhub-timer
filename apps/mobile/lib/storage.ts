@@ -11,6 +11,15 @@ function getStorage() {
   }
 }
 
+function getLegacyStorage() {
+  try {
+    const { createMMKV } = require("react-native-mmkv");
+    return createMMKV({ id: "split-sync-settings" });
+  } catch {
+    return null;
+  }
+}
+
 let _storage: any = undefined;
 function storage() {
   if (_storage === undefined) {
@@ -21,7 +30,29 @@ function storage() {
 
 const KEYS = {
   STOPWATCH_CONFIG: "stopwatch-config",
+  MIGRATED: "migrated-from-legacy",
 } as const;
+
+function migrateFromLegacyStorage(): void {
+  const s = storage();
+  if (!s) return;
+
+  if (s.getBoolean(KEYS.MIGRATED)) return;
+
+  const legacy = getLegacyStorage();
+  if (!legacy) {
+    s.set(KEYS.MIGRATED, true);
+    return;
+  }
+
+  const legacyJson = legacy.getString(KEYS.STOPWATCH_CONFIG);
+  if (legacyJson) {
+    s.set(KEYS.STOPWATCH_CONFIG, legacyJson);
+    legacy.delete(KEYS.STOPWATCH_CONFIG);
+  }
+
+  s.set(KEYS.MIGRATED, true);
+}
 
 export function saveStopwatchConfig(config: StopwatchConfig): void {
   const s = storage();
@@ -32,6 +63,8 @@ export function saveStopwatchConfig(config: StopwatchConfig): void {
 export function loadStopwatchConfig(): StopwatchConfig {
   const s = storage();
   if (!s) return { ...DEFAULT_STOPWATCH_CONFIG };
+
+  migrateFromLegacyStorage();
 
   const json = s.getString(KEYS.STOPWATCH_CONFIG);
   if (!json) return { ...DEFAULT_STOPWATCH_CONFIG };

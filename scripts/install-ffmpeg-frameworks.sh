@@ -6,9 +6,9 @@
 set -e
 
 # Symlink next from apps/web to root node_modules for eslint-config-next resolution
-if [ -d "apps/web/node_modules/next" ] && [ ! -e "node_modules/next" ]; then
+if [ -d "apps/web/node_modules/next" ]; then
   echo "[postinstall] Symlinking next to root node_modules for eslint..."
-  ln -s ../apps/web/node_modules/next node_modules/next
+  ln -sfn ../apps/web/node_modules/next node_modules/next
 fi
 
 FFMPEG_DIR="node_modules/ffmpeg-kit-react-native/bundle-apple-framework-ios"
