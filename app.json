@@ -1,8 +1,16 @@
 {
   "android": {
-    "package": "com.ryuuhei0729.splitsync"
+    "package": "com.swimhubtimer.app"
   },
   "ios": {
-    "bundleIdentifier": "com.ryuuhei0729.splitsync"
+    "bundleIdentifier": "com.swimhubtimer.app",
+    "infoPlist": {
+      "ITSAppUsesNonExemptEncryption": false
+    }
+  },
+  "extra": {
+    "eas": {
+      "projectId": "f13631fc-c228-4b0f-be19-81e7d73942e9"
+    }
   }
 }

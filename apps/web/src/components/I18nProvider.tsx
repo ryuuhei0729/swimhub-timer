@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import i18next from "i18next";
 import { I18nextProvider, initReactI18next } from "react-i18next";
-import { getI18nOptions, type SupportedLocale } from "@split-sync/i18n";
+import { getI18nOptions, type SupportedLocale } from "@swimhub-timer/i18n";
 
 let initialized = false;
 

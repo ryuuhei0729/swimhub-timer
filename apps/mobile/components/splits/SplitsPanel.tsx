@@ -9,7 +9,7 @@ import {
 import * as Haptics from "expo-haptics";
 import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../../stores/editor-store";
-import { formatTime } from "@split-sync/core";
+import { formatTime } from "@swimhub-timer/core";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 
 export function SplitsPanel() {

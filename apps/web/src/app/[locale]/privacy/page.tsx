@@ -3,7 +3,7 @@ import {
   supportedLocales,
   i18nResources,
   type SupportedLocale,
-} from "@split-sync/i18n";
+} from "@swimhub-timer/i18n";
 import { PrivacyContent } from "./PrivacyContent";
 
 export function generateStaticParams() {

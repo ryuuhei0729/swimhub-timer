@@ -56,7 +56,7 @@ export function useVideoExport() {
     const url = URL.createObjectURL(outputBlob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `splitsync-${Date.now()}.mp4`;
+    a.download = `swimhub-timer-${Date.now()}.mp4`;
     a.click();
     URL.revokeObjectURL(url);
   }, [outputBlob]);

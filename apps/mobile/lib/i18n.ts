@@ -6,7 +6,7 @@ import {
   supportedLocales,
   defaultLocale,
   type SupportedLocale,
-} from "@split-sync/i18n";
+} from "@swimhub-timer/i18n";
 
 function getDeviceLocale(): SupportedLocale {
   const deviceLocales = getLocales();

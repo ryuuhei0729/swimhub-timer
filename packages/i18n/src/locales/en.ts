@@ -2,7 +2,7 @@ import type { TranslationShape } from "./ja";
 
 const en: TranslationShape = {
   common: {
-    appName: "SplitSync",
+    appName: "SwimHub Timer",
     export: "Export",
     back: "Back",
     retry: "Retry",
@@ -15,7 +15,7 @@ const en: TranslationShape = {
   },
 
   meta: {
-    title: "SplitSync – Auto-overlay stopwatch on swimming race videos",
+    title: "SwimHub Timer – Auto-overlay stopwatch on swimming race videos",
     description:
       "Automatically overlay a stopwatch on swimming race videos. Detect start signals via audio, display lap times on video, and export – free web tool.",
     ogLocale: "en_US",
@@ -29,7 +29,7 @@ const en: TranslationShape = {
       "swimming",
       "stopwatch",
       "race video",
-      "SplitSync",
+      "SwimHub Timer",
     ],
   },
 
@@ -144,12 +144,12 @@ const en: TranslationShape = {
 
   privacy: {
     title: "Privacy Policy",
-    metaTitle: "Privacy Policy | SplitSync",
-    metaDescription: "SplitSync Privacy Policy",
+    metaTitle: "Privacy Policy | SwimHub Timer",
+    metaDescription: "SwimHub Timer Privacy Policy",
     lastUpdated: "Last updated: February 17, 2026",
     introTitle: "Introduction",
     introBody:
-      "SplitSync (hereinafter \"the App\") is an application for overlaying a stopwatch on swimming race videos. This Privacy Policy explains how personal information is handled in the App.",
+      "SwimHub Timer (hereinafter \"the App\") is an application for overlaying a stopwatch on swimming race videos. This Privacy Policy explains how personal information is handled in the App.",
     collectionTitle: "Information We Collect",
     collectionBody:
       "The App does not collect personal information. All video processing is performed locally on your device, and no data is transmitted to external servers.",

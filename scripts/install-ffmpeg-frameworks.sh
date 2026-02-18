@@ -1,8 +1,15 @@
 #!/bin/bash
-# Download ffmpeg-kit xcframeworks for iOS builds
-# These are not included in the npm package and must be downloaded separately
+# Post-install setup for monorepo
+# 1. Symlink next to root node_modules so eslint-config-next can resolve it
+# 2. Download ffmpeg-kit xcframeworks for iOS builds
 
 set -e
+
+# Symlink next from apps/web to root node_modules for eslint-config-next resolution
+if [ -d "apps/web/node_modules/next" ]; then
+  echo "[postinstall] Symlinking next to root node_modules for eslint..."
+  ln -sfn ../apps/web/node_modules/next node_modules/next
+fi
 
 FFMPEG_DIR="node_modules/ffmpeg-kit-react-native/bundle-apple-framework-ios"
 MARKER="$FFMPEG_DIR/ffmpegkit.xcframework/ios-arm64/ffmpegkit.framework/Headers/FFmpegKitConfig.h"

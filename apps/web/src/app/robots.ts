@@ -10,6 +10,6 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
       },
     ],
-    sitemap: "https://split-sync.swim-hub.app/sitemap.xml",
+    sitemap: "https://timer.swim-hub.app/sitemap.xml",
   };
 }

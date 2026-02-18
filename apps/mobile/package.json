@@ -1,5 +1,5 @@
 {
-  "name": "@split-sync/mobile",
+  "name": "@swimhub-timer/mobile",
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
@@ -10,8 +10,8 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@split-sync/core": "*",
-    "@split-sync/i18n": "*",
+    "@swimhub-timer/core": "*",
+    "@swimhub-timer/i18n": "*",
     "expo-localization": "~55.0.6",
     "i18next": "^24.0.0",
     "react-i18next": "^15.0.0",

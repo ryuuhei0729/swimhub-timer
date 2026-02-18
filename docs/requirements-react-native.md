@@ -1,9 +1,9 @@
-# SplitSync React Native 移行 要件定義書
+# SwimHub Timer React Native 移行 要件定義書
 
 ## 1. プロジェクト概要
 
 ### 1.1 目的
-既存のNext.js Webアプリ「SplitSync」をReact Nativeアプリとして iOS / Android 向けにリリースする。
+既存のNext.js Webアプリ「SwimHub Timer」をReact Nativeアプリとして iOS / Android 向けにリリースする。
 
 ### 1.2 アプリ概要
 水泳レース動画にストップウォッチオーバーレイを自動追加するビデオ編集アプリ。
@@ -182,7 +182,7 @@
 ### 5.3 ディレクトリ構成 (案)
 
 ```
-split-sync-mobile/
+swimhub-timer-mobile/
 ├── app/                          # Expo Router ページ
 │   ├── _layout.tsx
 │   ├── index.tsx                 # Import画面

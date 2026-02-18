@@ -1,7 +1,7 @@
 "use client";
 
 import { useEditorStore } from "@/stores/editor-store";
-import { STOPWATCH_PRESETS } from "@split-sync/core";
+import { STOPWATCH_PRESETS } from "@swimhub-timer/core";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Palette } from "lucide-react";

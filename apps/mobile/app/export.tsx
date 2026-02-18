@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import type * as SharingType from "expo-sharing";
 import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../stores/editor-store";
-import { formatTime } from "@split-sync/core";
+import { formatTime } from "@swimhub-timer/core";
 import {
   exportVideoWithStopwatch,
   saveToPhotoLibrary,

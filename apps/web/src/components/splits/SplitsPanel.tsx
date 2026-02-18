@@ -1,7 +1,7 @@
 "use client";
 
 import { useEditorStore } from "@/stores/editor-store";
-import { formatTime } from "@split-sync/core";
+import { formatTime } from "@swimhub-timer/core";
 import { useTranslation } from "react-i18next";
 import {
   ListOrdered, Trash2, RotateCcw, Trophy,

@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import type { EditorStep, StopwatchConfig, SplitTime, VideoMetadata, ExportSettings } from "@split-sync/core";
-import { DEFAULT_STOPWATCH_CONFIG } from "@split-sync/core";
+import type { EditorStep, StopwatchConfig, SplitTime, VideoMetadata, ExportSettings } from "@swimhub-timer/core";
+import { DEFAULT_STOPWATCH_CONFIG } from "@swimhub-timer/core";
 
 interface EditorState {
   step: EditorStep;

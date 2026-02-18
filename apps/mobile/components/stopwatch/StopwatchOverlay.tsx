@@ -8,8 +8,8 @@ import {
   type LayoutChangeEvent,
 } from "react-native";
 import { useEditorStore } from "../../stores/editor-store";
-import { formatTime } from "@split-sync/core";
-import type { SplitTime } from "@split-sync/core";
+import { formatTime } from "@swimhub-timer/core";
+import type { SplitTime } from "@swimhub-timer/core";
 
 const SPLIT_DISPLAY_DURATION = 3;
 
@@ -143,7 +143,7 @@ export function StopwatchOverlay({ videoWidth, videoHeight }: Props) {
             fontWeight: "600",
           }}
         >
-          Split Sync
+          SwimHub Timer
         </Text>
       </View>
 
