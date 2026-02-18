@@ -7,11 +7,13 @@ import {
   FlatList,
 } from "react-native";
 import * as Haptics from "expo-haptics";
+import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../../stores/editor-store";
 import { formatTime } from "@split-sync/core";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 
 export function SplitsPanel() {
+  const { t } = useTranslation();
   const {
     splitTimes,
     isFinished,
@@ -52,10 +54,10 @@ export function SplitsPanel() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.sectionTitle}>スプリット</Text>
+        <Text style={styles.sectionTitle}>{t("splits.title")}</Text>
         {splitTimes.length > 0 && (
           <Pressable onPress={resetSplits}>
-            <Text style={styles.resetText}>リセット</Text>
+            <Text style={styles.resetText}>{t("common.reset")}</Text>
           </Pressable>
         )}
       </View>
@@ -88,7 +90,7 @@ export function SplitsPanel() {
           <View style={styles.inputRow}>
             <TextInput
               style={styles.distanceInput}
-              placeholder="距離 (m)"
+              placeholder={t("splits.distancePlaceholder")}
               placeholderTextColor={colors.muted}
               value={currentDistanceInput}
               onChangeText={setCurrentDistanceInput}
@@ -102,14 +104,14 @@ export function SplitsPanel() {
               onPress={handleRecord}
               disabled={!currentDistanceInput}
             >
-              <Text style={styles.recordBtnText}>Record</Text>
+              <Text style={styles.recordBtnText}>{t("splits.record")}</Text>
             </Pressable>
           </View>
 
           {/* Memo */}
           <TextInput
             style={styles.memoInput}
-            placeholder="メモ（任意）"
+            placeholder={t("splits.memoPlaceholder")}
             placeholderTextColor={colors.muted}
             value={currentMemoInput}
             onChangeText={setCurrentMemoInput}
@@ -117,7 +119,7 @@ export function SplitsPanel() {
 
           {/* Finish */}
           <Pressable style={styles.finishBtn} onPress={handleFinish}>
-            <Text style={styles.finishBtnText}>Finish</Text>
+            <Text style={styles.finishBtnText}>{t("splits.finish")}</Text>
           </Pressable>
         </View>
       )}
@@ -128,7 +130,7 @@ export function SplitsPanel() {
           style={styles.finishCard}
           onPress={() => startTime !== null && seekVideo(startTime + finishTime)}
         >
-          <Text style={styles.finishLabel}>Final Time</Text>
+          <Text style={styles.finishLabel}>{t("splits.finalTime")}</Text>
           <Text style={styles.finishTimeText}>{formatTime(finishTime)}</Text>
           {finishMemo ? (
             <Text style={styles.finishMemoText}>{finishMemo}</Text>
@@ -139,7 +141,7 @@ export function SplitsPanel() {
       {/* Split list */}
       {splitTimes.length === 0 && !isFinished ? (
         <Text style={styles.emptyText}>
-          動画を一時停止し、距離を入力して{"\n"}Recordボタンでスプリットを記録
+          {t("splits.emptyHint")}
         </Text>
       ) : (
         <FlatList
@@ -159,7 +161,7 @@ export function SplitsPanel() {
               <Text style={styles.splitTime}>{formatTime(item.time)}</Text>
               {item.lapTime !== null && (
                 <Text style={styles.lapTime}>
-                  lap: {formatTime(item.lapTime)}
+                  {t("splits.lap")}: {formatTime(item.lapTime)}
                 </Text>
               )}
               {!isFinished && (

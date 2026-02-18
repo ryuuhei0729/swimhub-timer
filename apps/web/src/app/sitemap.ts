@@ -1,14 +1,25 @@
 import type { MetadataRoute } from "next";
+import { supportedLocales } from "@split-sync/i18n";
 
 export const dynamic = "force-static";
 
+const baseUrl = "https://split-sync.swim-hub.app";
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  return [
+  const pages = supportedLocales.flatMap((locale) => [
     {
-      url: "https://split-sync.swim-hub.app",
+      url: `${baseUrl}/${locale}`,
       lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 1,
+      changeFrequency: "monthly" as const,
+      priority: locale === "ja" ? 1 : 0.9,
     },
-  ];
+    {
+      url: `${baseUrl}/${locale}/privacy`,
+      lastModified: new Date(),
+      changeFrequency: "yearly" as const,
+      priority: 0.3,
+    },
+  ]);
+
+  return pages;
 }

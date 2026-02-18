@@ -2,12 +2,14 @@
 
 import { useEditorStore } from "@/stores/editor-store";
 import { formatTime } from "@split-sync/core";
+import { useTranslation } from "react-i18next";
 import {
   ListOrdered, Trash2, RotateCcw, Trophy,
   CircleDot, Flag, Minus, Plus,
 } from "lucide-react";
 
 export function SplitsPanel() {
+  const { t } = useTranslation();
   const {
     splitTimes,
     isFinished,
@@ -48,7 +50,7 @@ export function SplitsPanel() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <ListOrdered className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-semibold">Splits</h3>
+          <h3 className="text-sm font-semibold">{t("splits.title")}</h3>
           {splitTimes.length > 0 && (
             <span className="text-[10px] font-medium text-muted-foreground bg-surface-raised px-1.5 py-0.5 rounded-md">
               {splitTimes.length}
@@ -61,7 +63,7 @@ export function SplitsPanel() {
             className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
           >
             <RotateCcw className="w-3 h-3" />
-            Reset
+            {t("common.reset")}
           </button>
         )}
       </div>
@@ -114,7 +116,7 @@ export function SplitsPanel() {
               type="number"
               step="any"
               min="0"
-              placeholder="距離 (m)"
+              placeholder={t("splits.distancePlaceholder")}
               value={currentDistanceInput}
               onChange={(e) => setCurrentDistanceInput(e.target.value)}
               className="flex-1 h-8 px-3 text-xs bg-surface border border-border rounded-lg font-mono placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
@@ -125,14 +127,14 @@ export function SplitsPanel() {
               className="h-8 px-3 text-xs font-medium rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 shrink-0"
             >
               <CircleDot className="w-3.5 h-3.5" />
-              Record
+              {t("splits.record")}
             </button>
           </div>
 
           {/* Memo input */}
           <input
             type="text"
-            placeholder="メモ（任意）"
+            placeholder={t("splits.memoPlaceholder")}
             value={currentMemoInput}
             onChange={(e) => setCurrentMemoInput(e.target.value)}
             className="w-full h-8 px-3 text-xs bg-surface border border-border rounded-lg placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
@@ -144,7 +146,7 @@ export function SplitsPanel() {
             className="w-full h-9 text-xs font-medium rounded-lg bg-red-600/90 text-white hover:bg-red-500 transition-colors flex items-center justify-center gap-1.5"
           >
             <Flag className="w-3.5 h-3.5" />
-            Finish
+            {t("splits.finish")}
           </button>
         </div>
       )}
@@ -158,7 +160,7 @@ export function SplitsPanel() {
           <Trophy className="w-5 h-5 text-primary shrink-0" />
           <div>
             <div className="text-[11px] text-muted-foreground font-medium">
-              Final Time
+              {t("splits.finalTime")}
             </div>
             <div className="text-lg font-bold font-mono text-primary tabular-nums">
               {formatTime(finishTime)}
@@ -173,9 +175,7 @@ export function SplitsPanel() {
       {/* Split list */}
       {splitTimes.length === 0 && !isFinished ? (
         <p className="text-xs text-muted-foreground/60 text-center py-6">
-          動画を一時停止し、距離を入力して
-          <br />
-          Recordボタンでスプリットを記録
+          {t("splits.emptyHint")}
         </p>
       ) : (
         <div className="flex flex-col gap-1">
@@ -199,7 +199,7 @@ export function SplitsPanel() {
                 {/* Lap time (50m intervals only) */}
                 {split.lapTime !== null && (
                   <span className="text-[10px] font-mono text-muted-foreground tabular-nums">
-                    lap: {formatTime(split.lapTime)}
+                    {t("splits.lap")}: {formatTime(split.lapTime)}
                   </span>
                 )}
 

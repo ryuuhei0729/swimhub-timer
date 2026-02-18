@@ -5,8 +5,10 @@ import { STOPWATCH_PRESETS } from "@split-sync/core";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Palette } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export function StopwatchDesigner() {
+  const { t } = useTranslation();
   const { stopwatchConfig, updateStopwatchConfig, setStopwatchConfig } =
     useEditorStore();
 
@@ -24,7 +26,7 @@ export function StopwatchDesigner() {
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
         <Palette className="w-4 h-4 text-primary" />
-        <h3 className="font-semibold text-sm tracking-tight">Design</h3>
+        <h3 className="font-semibold text-sm tracking-tight">{t("design.title")}</h3>
       </div>
 
       {/* Presets */}
@@ -53,7 +55,7 @@ export function StopwatchDesigner() {
               0:00.00
             </div>
             <span className={`text-[10px] font-medium ${isActivePreset(preset.id) ? "text-primary" : "text-muted-foreground"}`}>
-              {preset.name}
+              {t(`design.preset.${preset.id}`)}
             </span>
           </button>
         ))}
@@ -63,7 +65,7 @@ export function StopwatchDesigner() {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">
-            Size
+            {t("design.size")}
           </Label>
           <span className="text-xs font-mono text-primary">
             {stopwatchConfig.fontSize}px

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState, useRef } from "react";
 import { useEditorStore } from "@/stores/editor-store";
 import { useVideoExport } from "@/hooks/useVideoExport";
 import { Button } from "@/components/ui/button";
@@ -12,18 +13,98 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Download, Loader2, Check, ArrowLeft, Timer } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { ExportResolution } from "@split-sync/core";
+import {
+  createRewardedAdController,
+  type AdState,
+  type RewardedAdController,
+} from "@/lib/ads/rewarded-ad";
 
 export function ExportDialog() {
+  const { t } = useTranslation();
   const { exportSettings, setExportSettings, setStep } = useEditorStore();
   const {
-    startExport,
+    startExport: startEncoding,
     downloadOutput,
     isExporting,
     exportProgress,
     error,
     outputBlob,
   } = useVideoExport();
+
+  // --- Ad state ---
+  const adControllerRef = useRef<RewardedAdController | null>(null);
+  const [adState, setAdState] = useState<AdState>("idle");
+  const [adRewardEarned, setAdRewardEarned] = useState(false);
+  const [adUnavailable, setAdUnavailable] = useState(false);
+  const [exportTriggered, setExportTriggered] = useState(false);
+
+  // --- Derived ---
+  const exportComplete = outputBlob !== null;
+  const canProceed = exportComplete && (adRewardEarned || adUnavailable);
+
+  // Preload ad on mount
+  useEffect(() => {
+    const controller = createRewardedAdController();
+    if (!controller) {
+      const timer = setTimeout(() => setAdUnavailable(true), 0);
+      return () => clearTimeout(timer);
+    }
+    adControllerRef.current = controller;
+
+    const unsubscribe = controller.onStateChange((state) => {
+      setAdState(state);
+      if (state === "rewarded") {
+        setAdRewardEarned(true);
+      }
+    });
+
+    controller.load();
+
+    return () => {
+      unsubscribe();
+      controller.dispose();
+    };
+  }, []);
+
+  // If ad loads AFTER export was triggered, show it automatically
+  useEffect(() => {
+    if (
+      exportTriggered &&
+      adState === "loaded" &&
+      !adRewardEarned &&
+      !adUnavailable
+    ) {
+      adControllerRef.current?.show();
+    }
+  }, [exportTriggered, adState, adRewardEarned, adUnavailable]);
+
+  // Fallback: if ad fails, allow export without ad after delay
+  useEffect(() => {
+    if (adState === "error" && !adUnavailable) {
+      const timer = setTimeout(() => setAdUnavailable(true), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [adState, adUnavailable]);
+
+  const handleExport = () => {
+    setExportTriggered(true);
+
+    // --- Show ad (parallel with encoding) ---
+    const controller = adControllerRef.current;
+    if (controller) {
+      const currentState = controller.getState();
+      if (currentState === "loaded") {
+        controller.show();
+      } else if (currentState !== "loading") {
+        setAdUnavailable(true);
+      }
+    }
+
+    // --- Start encoding ---
+    startEncoding();
+  };
 
   return (
     <div className="flex flex-col gap-8 max-w-md mx-auto w-full">
@@ -33,9 +114,9 @@ export function ExportDialog() {
           <Timer className="w-7 h-7 text-primary" />
         </div>
         <div className="text-center space-y-1">
-          <h2 className="text-xl font-bold tracking-tight">Export Video</h2>
+          <h2 className="text-xl font-bold tracking-tight">{t("exportScreen.webTitle")}</h2>
           <p className="text-sm text-muted-foreground">
-            Create your final video with stopwatch overlay
+            {t("exportScreen.subtitle")}
           </p>
         </div>
       </div>
@@ -45,7 +126,7 @@ export function ExportDialog() {
         {/* Quality selection */}
         <div className="space-y-2">
           <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">
-            Quality
+            {t("exportScreen.quality")}
           </Label>
           <Select
             value={exportSettings.resolution}
@@ -58,30 +139,42 @@ export function ExportDialog() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="720">720p</SelectItem>
-              <SelectItem value="1080">1080p (Recommended)</SelectItem>
-              <SelectItem value="original">Original</SelectItem>
+              <SelectItem value="1080">1080p {t("exportScreen.recommended")}</SelectItem>
+              <SelectItem value="original">{t("exportScreen.original")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        {/* Export button or progress */}
-        {!isExporting && !outputBlob && (
-          <Button
-            onClick={startExport}
-            size="lg"
-            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 glow-cyan h-11"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Export MP4
-          </Button>
+        {/* Export button / progress / waiting for ad / done */}
+        {!isExporting && !outputBlob && !exportTriggered && (
+          <>
+            <Button
+              onClick={handleExport}
+              size="lg"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 glow-cyan h-11"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              {t("exportScreen.exportMp4")}
+            </Button>
+            {adState === "loading" && (
+              <p className="text-[11px] text-muted-foreground text-center">
+                {t("exportScreen.adLoading")}
+              </p>
+            )}
+            {adState === "error" && (
+              <p className="text-[11px] text-muted-foreground text-center">
+                {t("exportScreen.adFailed")}
+              </p>
+            )}
+          </>
         )}
 
-        {isExporting && (
+        {(isExporting || (exportComplete && !canProceed)) && (
           <div className="space-y-4">
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                <span>Encoding...</span>
+                <span>{t("exportScreen.encoding")}</span>
               </div>
               <span className="font-mono text-primary tabular-nums">
                 {exportProgress}%
@@ -93,19 +186,27 @@ export function ExportDialog() {
                 style={{ width: `${exportProgress}%` }}
               />
             </div>
-            <p className="text-[11px] text-muted-foreground text-center">
-              This may take a few minutes depending on video length
-            </p>
+            {exportComplete && !adRewardEarned && !adUnavailable ? (
+              <p className="text-[11px] text-muted-foreground text-center">
+                {t("exportScreen.adWatchPrompt")}
+              </p>
+            ) : (
+              <p className="text-[11px] text-muted-foreground text-center">
+                {t("exportScreen.timeEstimate")}
+              </p>
+            )}
           </div>
         )}
 
-        {outputBlob && (
+        {canProceed && (
           <div className="space-y-4">
             <div className="flex items-center justify-center gap-2 py-3">
               <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
                 <Check className="w-4 h-4 text-emerald-400" />
               </div>
-              <span className="font-medium text-emerald-400">Export complete</span>
+              <span className="font-medium text-emerald-400">
+                {t("exportScreen.complete")}
+              </span>
             </div>
             <Button
               onClick={downloadOutput}
@@ -113,7 +214,9 @@ export function ExportDialog() {
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90 glow-cyan h-11"
             >
               <Download className="w-4 h-4 mr-2" />
-              Download MP4 ({(outputBlob.size / 1024 / 1024).toFixed(1)} MB)
+              {t("exportScreen.downloadMp4", {
+                size: (outputBlob!.size / 1024 / 1024).toFixed(1),
+              })}
             </Button>
           </div>
         )}
@@ -124,10 +227,10 @@ export function ExportDialog() {
             <Button
               variant="outline"
               size="sm"
-              onClick={startExport}
+              onClick={handleExport}
               className="mt-3 text-xs"
             >
-              Retry
+              {t("common.retry")}
             </Button>
           </div>
         )}
@@ -139,7 +242,7 @@ export function ExportDialog() {
         className="flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
-        Back to editor
+        {t("exportScreen.backToEditor")}
       </button>
     </div>
   );

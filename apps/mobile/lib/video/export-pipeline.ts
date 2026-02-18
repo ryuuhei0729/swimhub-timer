@@ -215,6 +215,38 @@ function buildSplitFilters(
   return filters;
 }
 
+/** Resolve the app icon to a local file URI for FFmpeg overlay. */
+async function getWatermarkIconUri(): Promise<string | null> {
+  try {
+    const { Asset } = require("expo-asset") as typeof import("expo-asset");
+    const asset = Asset.fromModule(require("../../assets/icon.png"));
+    await asset.downloadAsync();
+    return asset.localUri ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Watermark font size for a given video height. */
+function watermarkFontSize(videoHeight: number): number {
+  return Math.max(16, Math.round(videoHeight * 0.06));
+}
+
+/**
+ * Build a drawtext filter for the "Split Sync" watermark text in the bottom-right corner.
+ */
+function buildWatermarkFilter(videoHeight: number): string {
+  const fontSize = watermarkFontSize(videoHeight);
+  const parts = [
+    `fontsize=${fontSize}`,
+    `fontcolor=white@0.30`,
+    `x=w-tw-w*0.03`,
+    `y=h-th-h*0.03`,
+    `text='Split Sync'`,
+  ];
+  return `drawtext=${parts.join(":")}`;
+}
+
 /**
  * Export a video with stopwatch overlay using native FFmpeg.
  */
@@ -269,6 +301,13 @@ export async function exportVideoWithStopwatch(
     ...buildSplitFilters(startSignalTime, scaledConfig, splitTimes)
   );
 
+  // Watermark: use output height (after scale) for font sizing
+  const watermarkHeight =
+    exportSettings.resolution !== "original"
+      ? parseInt(exportSettings.resolution)
+      : originalVideoHeight;
+  filters.push(buildWatermarkFilter(watermarkHeight));
+
   const filterChain = filters.join(",");
   const crf = exportSettings.resolution === "original" ? "18" : "23";
 
@@ -282,7 +321,23 @@ export async function exportVideoWithStopwatch(
     }
   });
 
-  const command = `-y -i "${videoUri}" -vf "${filterChain}" -c:v libx264 -preset medium -crf ${crf} -c:a aac -b:a 128k -movflags +faststart "${outputPath}"`;
+  // Try to resolve app icon for watermark overlay
+  const iconUri = await getWatermarkIconUri();
+
+  let command: string;
+  if (iconUri) {
+    // Use filter_complex to overlay icon + drawtext
+    const fontSize = watermarkFontSize(watermarkHeight);
+    const iconSize = fontSize;
+    const gap = Math.round(fontSize * 0.4);
+    const textWidthEstimate = Math.round(fontSize * 5.0);
+    const iconX = `W-w-${gap}-${textWidthEstimate}-W*0.03`;
+    const iconY = `H-h-H*0.03`;
+
+    command = `-y -i "${videoUri}" -i "${iconUri}" -filter_complex "[0:v]${filterChain}[bg];[1:v]scale=${iconSize}:${iconSize},format=rgba,colorchannelmixer=aa=0.30[icon];[bg][icon]overlay=${iconX}:${iconY}[v]" -map "[v]" -map 0:a? -c:v libx264 -preset medium -crf ${crf} -c:a aac -b:a 128k -movflags +faststart "${outputPath}"`;
+  } else {
+    command = `-y -i "${videoUri}" -vf "${filterChain}" -c:v libx264 -preset medium -crf ${crf} -c:a aac -b:a 128k -movflags +faststart "${outputPath}"`;
+  }
 
   const session = await FFmpegKit.execute(command);
   const returnCode = await session.getReturnCode();

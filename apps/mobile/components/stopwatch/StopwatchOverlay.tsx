@@ -2,6 +2,7 @@ import { useRef, useMemo, useCallback } from "react";
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   PanResponder,
   type LayoutChangeEvent,
@@ -65,6 +66,13 @@ export function StopwatchOverlay({ videoWidth, videoHeight }: Props) {
     };
   }, []);
 
+  // Watermark font size: ~2% of video height, scaled to preview
+  const watermarkScale =
+    containerSize.current.width > 0
+      ? containerSize.current.width / videoWidth
+      : 0.2;
+  const watermarkFontSize = Math.max(8, Math.round(videoHeight * 0.06 * watermarkScale));
+
   if (startTime === null) return null;
 
   let elapsed = Math.max(0, currentVideoTime - startTime);
@@ -107,6 +115,38 @@ export function StopwatchOverlay({ videoWidth, videoHeight }: Props) {
       pointerEvents="box-none"
       onLayout={onContainerLayout}
     >
+      {/* Watermark: bottom-right corner */}
+      <View
+        style={{
+          position: "absolute",
+          right: "3%",
+          bottom: "3%",
+          flexDirection: "row",
+          alignItems: "center",
+          opacity: 0.30,
+        }}
+        pointerEvents="none"
+      >
+        <Image
+          source={require("../../assets/icon.png")}
+          style={{
+            width: watermarkFontSize,
+            height: watermarkFontSize,
+            borderRadius: watermarkFontSize * 0.2,
+            marginRight: watermarkFontSize * 0.3,
+          }}
+        />
+        <Text
+          style={{
+            color: "white",
+            fontSize: watermarkFontSize,
+            fontWeight: "600",
+          }}
+        >
+          Split Sync
+        </Text>
+      </View>
+
       <View style={wrapperStyle} pointerEvents="box-none">
         <View style={{ alignItems: "center" }}>
           {/* Split display above stopwatch (for bottom anchors) */}

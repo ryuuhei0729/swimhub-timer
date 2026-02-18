@@ -81,6 +81,26 @@ function rgbaToFFmpegColor(rgba: string): string {
   return rgba;
 }
 
+/** Watermark font size for a given video height. */
+function watermarkFontSize(videoHeight: number): number {
+  return Math.max(16, Math.round(videoHeight * 0.04));
+}
+
+/**
+ * Build a drawtext filter for the "Split Sync" watermark text in the bottom-right corner.
+ */
+function buildWatermarkFilter(videoHeight: number): string {
+  const fontSize = watermarkFontSize(videoHeight);
+  const parts = [
+    `fontsize=${fontSize}`,
+    `fontcolor=white@0.30`,
+    `x=w-tw-w*0.03`,
+    `y=h-th-h*0.03`,
+    `text='Split Sync'`,
+  ];
+  return `drawtext=${parts.join(":")}`;
+}
+
 export async function exportVideoWithStopwatch(
   videoFile: File,
   startSignalTime: number,
@@ -104,31 +124,68 @@ export async function exportVideoWithStopwatch(
   // Add stopwatch drawtext
   filters.push(buildDrawtextFilter(startSignalTime, stopwatchConfig));
 
+  // Watermark: use output height (after scale) for font sizing
+  const watermarkHeight =
+    exportSettings.resolution !== "original"
+      ? parseInt(exportSettings.resolution)
+      : 1080;
+  filters.push(buildWatermarkFilter(watermarkHeight));
+
   const filterChain = filters.join(",");
 
   // Use lower CRF for original resolution to preserve quality
   const crf = exportSettings.resolution === "original" ? "18" : "23";
 
+  // Try to load watermark icon
+  let hasIcon = false;
+  try {
+    const iconResp = await fetch("/apple-touch-icon.png");
+    if (iconResp.ok) {
+      const iconData = new Uint8Array(await iconResp.arrayBuffer());
+      await ffmpeg.writeFile("icon.png", iconData);
+      hasIcon = true;
+    }
+  } catch {
+    // Fall back to text-only watermark
+  }
+
   // Execute ffmpeg
-  await ffmpeg.exec([
-    "-i",
-    "input.mp4",
-    "-vf",
-    filterChain,
-    "-c:v",
-    "libx264",
-    "-preset",
-    "medium",
-    "-crf",
-    crf,
-    "-c:a",
-    "aac",
-    "-b:a",
-    "128k",
-    "-movflags",
-    "+faststart",
-    "output.mp4",
-  ]);
+  if (hasIcon) {
+    const fontSize = watermarkFontSize(watermarkHeight);
+    const iconSize = fontSize;
+    const gap = Math.round(fontSize * 0.4);
+    const textWidthEstimate = Math.round(fontSize * 5.0);
+    const iconX = `W-w-${gap}-${textWidthEstimate}-W*0.03`;
+    const iconY = `H-h-H*0.03`;
+
+    await ffmpeg.exec([
+      "-i", "input.mp4",
+      "-i", "icon.png",
+      "-filter_complex",
+      `[0:v]${filterChain}[bg];[1:v]scale=${iconSize}:${iconSize},format=rgba,colorchannelmixer=aa=0.30[icon];[bg][icon]overlay=${iconX}:${iconY}[v]`,
+      "-map", "[v]",
+      "-map", "0:a",
+      "-c:v", "libx264",
+      "-preset", "medium",
+      "-crf", crf,
+      "-c:a", "aac",
+      "-b:a", "128k",
+      "-movflags", "+faststart",
+      "output.mp4",
+    ]);
+  } else {
+    await ffmpeg.exec([
+      "-i", "input.mp4",
+      "-vf", filterChain,
+      "-c:v", "libx264",
+      "-preset", "medium",
+      "-crf", crf,
+      "-c:a", "aac",
+      "-b:a", "128k",
+      "-movflags", "+faststart",
+      "output.mp4",
+    ]);
+  }
 
   // Read output
   const outputData = await ffmpeg.readFile("output.mp4");
