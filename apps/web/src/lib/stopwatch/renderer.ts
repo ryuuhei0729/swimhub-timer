@@ -1,5 +1,5 @@
-import type { StopwatchConfig, SplitTime } from "@split-sync/core";
-import { formatTime } from "@split-sync/core";
+import type { StopwatchConfig, SplitTime } from "@swimhub-timer/core";
+import { formatTime } from "@swimhub-timer/core";
 
 /**
  * Measure the maximum digit width for the current ctx.font,
@@ -240,12 +240,12 @@ function getWatermarkIcon(): HTMLImageElement | null {
 }
 
 /**
- * Render the "Split Sync" watermark with icon in the bottom-right corner.
+ * Render the "SwimHub Timer" watermark with icon in the bottom-right corner.
  */
 export function renderWatermark(ctx: CanvasRenderingContext2D): void {
   const fontSize = Math.max(12, Math.round(ctx.canvas.height * 0.04));
   const margin = 0.03;
-  const text = "Split Sync";
+  const text = "SwimHub Timer";
   const gap = fontSize * 0.3;
   const iconSize = fontSize;
 

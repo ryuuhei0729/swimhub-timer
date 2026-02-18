@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Download, Loader2, Check, ArrowLeft, Timer } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { ExportResolution } from "@split-sync/core";
+import type { ExportResolution } from "@swimhub-timer/core";
 import {
   createRewardedAdController,
   type AdState,

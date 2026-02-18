@@ -7,7 +7,7 @@ import {
   supportedLocales,
   i18nResources,
   type SupportedLocale,
-} from "@split-sync/i18n";
+} from "@swimhub-timer/i18n";
 
 const inter = Inter({
   variable: "--font-geist-sans",
@@ -23,7 +23,7 @@ function isSupportedLocale(locale: string): locale is SupportedLocale {
   return (supportedLocales as readonly string[]).includes(locale);
 }
 
-const siteUrl = "https://split-sync.swim-hub.app";
+const siteUrl = "https://timer.swim-hub.app";
 
 export function generateStaticParams() {
   return supportedLocales.map((locale) => ({ locale }));
@@ -54,7 +54,7 @@ export async function generateMetadata({
       title: t.meta.title,
       description: t.meta.description,
       url: siteUrl,
-      siteName: "SplitSync",
+      siteName: "SwimHub Timer",
       locale: t.meta.ogLocale,
       type: "website",
     },
@@ -97,7 +97,7 @@ export default async function LocaleLayout({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "SplitSync",
+    name: "SwimHub Timer",
     url: siteUrl,
     description: t.meta.description,
     applicationCategory: "MultimediaApplication",

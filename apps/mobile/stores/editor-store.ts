@@ -5,8 +5,8 @@ import type {
   SplitTime,
   VideoMetadata,
   ExportSettings,
-} from "@split-sync/core";
-import { DEFAULT_STOPWATCH_CONFIG } from "@split-sync/core";
+} from "@swimhub-timer/core";
+import { DEFAULT_STOPWATCH_CONFIG } from "@swimhub-timer/core";
 
 interface AudioData {
   pcmData: Float32Array;

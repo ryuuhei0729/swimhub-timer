@@ -1,6 +1,6 @@
 const ja = {
   common: {
-    appName: "SplitSync",
+    appName: "SwimHub Timer",
     export: "書き出し",
     back: "戻る",
     retry: "再試行",
@@ -13,7 +13,7 @@ const ja = {
   },
 
   meta: {
-    title: "SplitSync – 水泳レース動画にストップウォッチを自動オーバーレイ",
+    title: "SwimHub Timer – 水泳レース動画にストップウォッチを自動オーバーレイ",
     description:
       "水泳のレース動画にストップウォッチを自動でオーバーレイ。スタート信号を音声検出し、ラップタイムを動画上に表示・書き出しできる無料Webツールです。",
     ogLocale: "ja_JP",
@@ -27,7 +27,7 @@ const ja = {
       "swimming",
       "stopwatch",
       "race video",
-      "SplitSync",
+      "SwimHub Timer",
     ],
   },
 
@@ -137,12 +137,12 @@ const ja = {
 
   privacy: {
     title: "プライバシーポリシー",
-    metaTitle: "プライバシーポリシー | SplitSync",
-    metaDescription: "SplitSyncのプライバシーポリシー",
+    metaTitle: "プライバシーポリシー | SwimHub Timer",
+    metaDescription: "SwimHub Timerのプライバシーポリシー",
     lastUpdated: "最終更新日: 2026年2月17日",
     introTitle: "はじめに",
     introBody:
-      "SplitSync（以下「本アプリ」）は、水泳のレース動画にストップウォッチをオーバーレイするためのアプリです。本プライバシーポリシーでは、本アプリにおける個人情報の取り扱いについて説明します。",
+      "SwimHub Timer（以下「本アプリ」）は、水泳のレース動画にストップウォッチをオーバーレイするためのアプリです。本プライバシーポリシーでは、本アプリにおける個人情報の取り扱いについて説明します。",
     collectionTitle: "収集する情報",
     collectionBody:
       "本アプリは、個人情報を収集しません。動画の処理はすべてお使いのデバイス上でローカルに行われ、外部サーバーへのデータ送信は行いません。",

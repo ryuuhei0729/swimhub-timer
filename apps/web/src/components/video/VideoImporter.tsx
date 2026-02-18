@@ -64,7 +64,7 @@ export function VideoImporter() {
         <div className="w-16 h-16 rounded-2xl bg-surface-raised border border-border flex items-center justify-center mx-auto glow-cyan">
           <Timer className="w-8 h-8 text-primary" />
         </div>
-        <h1 className="text-3xl font-bold tracking-tight">SplitSync</h1>
+        <h1 className="text-3xl font-bold tracking-tight">SwimHub Timer</h1>
         <p className="text-muted-foreground text-sm max-w-xs mx-auto leading-relaxed">
           {t("import.subtitle")}
         </p>

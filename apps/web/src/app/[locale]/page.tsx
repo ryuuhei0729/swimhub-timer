@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SplitsPanel } from "@/components/splits/SplitsPanel";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ArrowRight, RotateCcw, Waves, Palette, ListOrdered } from "lucide-react";
-import { SplitSyncIcon } from "@/components/icons/SplitSyncIcon";
+import { SwimHubTimerIcon } from "@/components/icons/SwimHubTimerIcon";
 import { useTranslation } from "react-i18next";
 
 export default function Home() {
@@ -43,8 +43,8 @@ export default function Home() {
       <header className="h-14 shrink-0 border-b border-border bg-surface/80 backdrop-blur-xl px-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <SplitSyncIcon className="w-4 h-4 text-primary" />
-            <span className="font-semibold text-sm tracking-tight">SplitSync</span>
+            <SwimHubTimerIcon className="w-4 h-4 text-primary" />
+            <span className="font-semibold text-sm tracking-tight">SwimHub Timer</span>
           </div>
           <div className="hidden sm:flex items-center gap-1 text-[11px] font-medium">
             <span className="px-2.5 py-1 rounded-md bg-surface-raised text-muted-foreground">

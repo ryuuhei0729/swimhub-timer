@@ -2,7 +2,7 @@ import { useRef, useCallback } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../../stores/editor-store";
-import { STOPWATCH_PRESETS } from "@split-sync/core";
+import { STOPWATCH_PRESETS } from "@swimhub-timer/core";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 
 const SIZE_MIN = 20;

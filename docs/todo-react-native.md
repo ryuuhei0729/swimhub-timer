@@ -1,11 +1,11 @@
-# SplitSync React Native 移行 ToDoリスト
+# SwimHub Timer React Native 移行 ToDoリスト
 
 ---
 
 ## Phase 1: プロジェクトセットアップ + 動画取り込み
 
 ### 1.1 プロジェクト初期化
-- [ ] Expo プロジェクト作成 (`npx create-expo-app split-sync-mobile --template`)
+- [ ] Expo プロジェクト作成 (`npx create-expo-app swimhub-timer-mobile --template`)
 - [ ] TypeScript 設定
 - [ ] Expo Router 導入・ページ構成作成
 - [ ] NativeWind (Tailwind CSS for RN) セットアップ

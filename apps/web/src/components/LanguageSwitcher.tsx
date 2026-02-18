@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { supportedLocales } from "@split-sync/i18n";
+import { supportedLocales } from "@swimhub-timer/i18n";
 
 const localeLabels: Record<string, string> = {
   ja: "日本語",

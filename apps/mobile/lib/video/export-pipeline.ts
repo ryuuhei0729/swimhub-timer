@@ -1,5 +1,5 @@
-import type { StopwatchConfig, SplitTime, ExportSettings } from "@split-sync/core";
-import { formatTime } from "@split-sync/core";
+import type { StopwatchConfig, SplitTime, ExportSettings } from "@swimhub-timer/core";
+import { formatTime } from "@swimhub-timer/core";
 
 function getFFmpeg() {
   try {
@@ -233,7 +233,7 @@ function watermarkFontSize(videoHeight: number): number {
 }
 
 /**
- * Build a drawtext filter for the "Split Sync" watermark text in the bottom-right corner.
+ * Build a drawtext filter for the "SwimHub Timer" watermark text in the bottom-right corner.
  */
 function buildWatermarkFilter(videoHeight: number): string {
   const fontSize = watermarkFontSize(videoHeight);
@@ -242,7 +242,7 @@ function buildWatermarkFilter(videoHeight: number): string {
     `fontcolor=white@0.30`,
     `x=w-tw-w*0.03`,
     `y=h-th-h*0.03`,
-    `text='Split Sync'`,
+    `text='SwimHub Timer'`,
   ];
   return `drawtext=${parts.join(":")}`;
 }

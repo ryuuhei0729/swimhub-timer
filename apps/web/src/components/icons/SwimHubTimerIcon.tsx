@@ -1,4 +1,4 @@
-export function SplitSyncIcon({ className }: { className?: string }) {
+export function SwimHubTimerIcon({ className }: { className?: string }) {
   return (
     <svg
       className={className}

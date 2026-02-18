@@ -1,8 +1,8 @@
 {
   "android": {
-    "package": "com.ryuuhei0729.splitsync"
+    "package": "com.swimhubtimer.app"
   },
   "ios": {
-    "bundleIdentifier": "com.ryuuhei0729.splitsync"
+    "bundleIdentifier": "com.swimhubtimer.app"
   }
 }

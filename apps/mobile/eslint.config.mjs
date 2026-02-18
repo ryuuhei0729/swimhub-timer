@@ -6,6 +6,7 @@ export default [
     files: ["app/**/*.{ts,tsx}", "lib/**/*.ts"],
     rules: {
       "@typescript-eslint/no-require-imports": "off",
+      "import/no-named-as-default-member": "off",
     },
   },
 ];

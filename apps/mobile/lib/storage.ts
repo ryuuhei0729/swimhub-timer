@@ -1,10 +1,10 @@
-import type { StopwatchConfig } from "@split-sync/core";
-import { DEFAULT_STOPWATCH_CONFIG } from "@split-sync/core";
+import type { StopwatchConfig } from "@swimhub-timer/core";
+import { DEFAULT_STOPWATCH_CONFIG } from "@swimhub-timer/core";
 
 function getStorage() {
   try {
     const { createMMKV } = require("react-native-mmkv");
-    return createMMKV({ id: "split-sync-settings" });
+    return createMMKV({ id: "swimhub-timer-settings" });
   } catch {
     // Fallback for Expo Go: no persistence
     return null;

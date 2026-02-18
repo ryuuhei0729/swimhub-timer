@@ -1,5 +1,5 @@
 {
-  "name": "@split-sync/i18n",
+  "name": "@swimhub-timer/i18n",
   "version": "0.1.0",
   "private": true,
   "main": "./src/index.ts",

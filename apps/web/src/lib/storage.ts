@@ -1,8 +1,8 @@
 import { get, set } from "idb-keyval";
-import type { StopwatchConfig } from "@split-sync/core";
+import type { StopwatchConfig } from "@swimhub-timer/core";
 
 const KEYS = {
-  STOPWATCH_CONFIG: "splitsync-stopwatch-config",
+  STOPWATCH_CONFIG: "swimhub-timer-stopwatch-config",
 } as const;
 
 export async function saveStopwatchConfig(

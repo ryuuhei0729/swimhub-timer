@@ -4,12 +4,12 @@
     "ios_app_id": "ca-app-pub-4640414097368188~9666392288"
   },
   "expo": {
-    "name": "SplitSync",
-    "slug": "split-sync",
+    "name": "SwimHub Timer",
+    "slug": "swimhub-timer",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "splitsync",
+    "scheme": "swimhubtimer",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -19,7 +19,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.splitsync.app",
+      "bundleIdentifier": "com.swimhubtimer.app",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "動画をインポートするためにフォトライブラリへのアクセスが必要です",
         "NSPhotoLibraryAddUsageDescription": "書き出した動画をフォトライブラリに保存するために必要です",
@@ -32,7 +32,7 @@
         "backgroundColor": "#0a0f1a"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.splitsync.app",
+      "package": "com.swimhubtimer.app",
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.READ_EXTERNAL_STORAGE",
@@ -78,7 +78,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "c057267b-82d7-46d3-a39f-a19091160b84"
+        "projectId": "f13631fc-c228-4b0f-be19-81e7d73942e9"
       }
     },
     "owner": "ryuuhei0729"

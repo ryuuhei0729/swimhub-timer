@@ -1,9 +1,9 @@
 import type { MetadataRoute } from "next";
-import { supportedLocales } from "@split-sync/i18n";
+import { supportedLocales } from "@swimhub-timer/i18n";
 
 export const dynamic = "force-static";
 
-const baseUrl = "https://split-sync.swim-hub.app";
+const baseUrl = "https://timer.swim-hub.app";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const pages = supportedLocales.flatMap((locale) => [
