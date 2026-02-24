@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     height: BAR_HEIGHT,
     borderRadius: radius.md,
     overflow: "hidden",
-    backgroundColor: "#111116",
+    backgroundColor: colors.surfaceRaised,
     borderWidth: 1,
     borderColor: colors.border,
     position: "relative",
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     top: 0,
     width: 6,
     height: BAR_HEIGHT,
-    backgroundColor: "rgba(239, 68, 68, 0.3)",
+    backgroundColor: "rgba(220, 38, 38, 0.3)",
     marginLeft: -3,
   },
   signalMarker: {
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     top: 0,
     width: 2,
     height: BAR_HEIGHT,
-    backgroundColor: "#ef4444",
+    backgroundColor: colors.destructive,
     marginLeft: -1,
   },
   signalTriangle: {
@@ -139,6 +139,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 8,
     borderLeftColor: "transparent",
     borderRightColor: "transparent",
-    borderTopColor: "#ef4444",
+    borderTopColor: colors.destructive,
   },
 });

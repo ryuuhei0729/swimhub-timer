@@ -53,44 +53,44 @@
 
 :root {
   --radius: 0.625rem;
-  /* Dark theme as default — swimming pool inspired */
-  --background: #09090b;
-  --foreground: #fafafa;
-  --card: #0c0c10;
-  --card-foreground: #fafafa;
-  --popover: #111116;
-  --popover-foreground: #fafafa;
-  --primary: #06b6d4;
-  --primary-foreground: #020617;
-  --secondary: #18181b;
-  --secondary-foreground: #fafafa;
-  --muted: #131318;
-  --muted-foreground: #71717a;
-  --accent: #18181b;
-  --accent-foreground: #fafafa;
-  --destructive: #ef4444;
-  --border: rgba(255, 255, 255, 0.06);
-  --input: rgba(255, 255, 255, 0.08);
-  --ring: #06b6d4;
-  --chart-1: #06b6d4;
-  --chart-2: #22d3ee;
-  --chart-3: #67e8f9;
-  --chart-4: #a5f3fc;
-  --chart-5: #0891b2;
-  --sidebar: #0c0c10;
-  --sidebar-foreground: #fafafa;
-  --sidebar-primary: #06b6d4;
-  --sidebar-primary-foreground: #fafafa;
-  --sidebar-accent: #18181b;
-  --sidebar-accent-foreground: #fafafa;
-  --sidebar-border: rgba(255, 255, 255, 0.06);
-  --sidebar-ring: #06b6d4;
+  /* Light theme — matching SwimHub */
+  --background: #EFF6FF;
+  --foreground: #111827;
+  --card: #FFFFFF;
+  --card-foreground: #111827;
+  --popover: #FFFFFF;
+  --popover-foreground: #111827;
+  --primary: #2563EB;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F3F4F6;
+  --secondary-foreground: #111827;
+  --muted: #F3F4F6;
+  --muted-foreground: #6B7280;
+  --accent: #F3F4F6;
+  --accent-foreground: #111827;
+  --destructive: #DC2626;
+  --border: #E5E7EB;
+  --input: #E5E7EB;
+  --ring: #2563EB;
+  --chart-1: #2563EB;
+  --chart-2: #3b82f6;
+  --chart-3: #60a5fa;
+  --chart-4: #93c5fd;
+  --chart-5: #1d4ed8;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #111827;
+  --sidebar-primary: #2563EB;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F3F4F6;
+  --sidebar-accent-foreground: #111827;
+  --sidebar-border: #E5E7EB;
+  --sidebar-ring: #2563EB;
 
   /* Custom tokens */
-  --surface: #111116;
-  --surface-raised: #1a1a22;
-  --accent-cyan: #06b6d4;
-  --accent-cyan-foreground: #020617;
+  --surface: #FFFFFF;
+  --surface-raised: #F3F4F6;
+  --accent-cyan: #2563EB;
+  --accent-cyan-foreground: #FFFFFF;
 }
 
 @layer base {
@@ -105,7 +105,7 @@
   }
 }
 
-/* Custom scrollbar for dark theme */
+/* Custom scrollbar for light theme */
 @layer base {
   ::-webkit-scrollbar {
     width: 6px;
@@ -114,11 +114,11 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.15);
     border-radius: 3px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.25);
   }
 }
 
@@ -132,7 +132,7 @@
     height: 6px;
   }
   input[type="range"]::-webkit-slider-track {
-    background: rgba(255, 255, 255, 0.15);
+    background: #E5E7EB;
     border-radius: 3px;
     height: 4px;
   }
@@ -142,12 +142,12 @@
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    background: #06b6d4;
+    background: #2563EB;
     margin-top: -5px;
-    box-shadow: 0 0 8px rgba(6, 182, 212, 0.4);
+    box-shadow: 0 0 8px rgba(37, 99, 235, 0.3);
   }
   input[type="range"]::-moz-range-track {
-    background: rgba(255, 255, 255, 0.15);
+    background: #E5E7EB;
     border-radius: 3px;
     height: 4px;
   }
@@ -155,18 +155,18 @@
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    background: #06b6d4;
+    background: #2563EB;
     border: none;
-    box-shadow: 0 0 8px rgba(6, 182, 212, 0.4);
+    box-shadow: 0 0 8px rgba(37, 99, 235, 0.3);
   }
 }
 
 /* Glow effect utility */
 @layer utilities {
   .glow-cyan {
-    box-shadow: 0 0 20px rgba(6, 182, 212, 0.15), 0 0 60px rgba(6, 182, 212, 0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
   }
   .glow-cyan-sm {
-    box-shadow: 0 0 10px rgba(6, 182, 212, 0.1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
 }

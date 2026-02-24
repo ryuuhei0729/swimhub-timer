@@ -142,6 +142,79 @@ const en: TranslationShape = {
     tabSplits: "Splits",
   },
 
+  auth: {
+    login: "Log In",
+    logout: "Log Out",
+    logoutConfirm: "Are you sure you want to log out?",
+    loginWith: {
+      google: "Sign in with Google",
+      apple: "Sign in with Apple",
+      email: "Sign in with Email",
+    },
+    signUp: "Sign Up",
+    signIn: "Sign In",
+    switchToSignUp: "Don't have an account? Sign up",
+    switchToSignIn: "Already have an account? Sign in",
+    emailPlaceholder: "Email address",
+    passwordPlaceholder: "Password",
+    confirmationSent: "Confirmation email sent. Please check your inbox.",
+    or: "or",
+    terms: "Terms of Service",
+    termsAgree: "By logging in, you agree to the Terms of Service and Privacy Policy",
+    account: "Account",
+    accountInfo: "Account Information",
+    email: "Email",
+    plan: "Plan",
+    planFree: "Free",
+    planPremium: "Premium",
+    premiumOnly: "Premium only",
+    errors: {
+      cancelled: "Authentication was cancelled",
+      generic: "Authentication failed. Please try again.",
+      timeout: "Authentication timed out. Please try again.",
+      notInitialized: "Authentication service is not initialized",
+      logoutFailed: "Failed to log out",
+      invalidCredentials: "Invalid email or password",
+      alreadyRegistered: "This email is already registered. Please sign in.",
+      passwordTooShort: "Password must be at least 6 characters",
+    },
+  },
+
+  terms: {
+    title: "Terms of Service",
+    metaTitle: "Terms of Service | SwimHub Timer",
+    metaDescription: "SwimHub Timer Terms of Service",
+    lastUpdated: "Last updated: February 24, 2026",
+    introTitle: "Introduction",
+    introBody:
+      "These Terms of Service (hereinafter \"the Terms\") set forth the conditions for using SwimHub Timer (hereinafter \"the App\"). By using the App, you are deemed to have agreed to the Terms.",
+    serviceTitle: "Service Description",
+    serviceBody:
+      "The App is a tool for overlaying a stopwatch on swimming race videos and exporting the result.",
+    accountTitle: "Accounts",
+    accountBody:
+      "An account is required to use certain features of the App. Users must provide accurate information and are responsible for managing their account credentials.",
+    prohibitedTitle: "Prohibited Activities",
+    prohibitedBody: "The following activities are prohibited:",
+    prohibitedItems: [
+      "Actions that violate laws or public order",
+      "Actions that interfere with the operation of the App",
+      "Actions that cause disadvantage to other users",
+      "Unauthorized access or attempts thereof",
+      "Unauthorized commercial use of the App",
+    ],
+    disclaimerTitle: "Disclaimer",
+    disclaimerBody:
+      "The App is provided \"as is.\" The operator assumes no liability for any damages arising from the use of the App.",
+    changesTitle: "Changes to Terms",
+    changesBody:
+      "The operator may modify these Terms as necessary. Modified Terms take effect upon publication within the App.",
+    contactTitle: "Contact Us",
+    contactBody:
+      "For questions about these Terms, please contact us through the app's support page.",
+    backToTop: "Back to home",
+  },
+
   privacy: {
     title: "Privacy Policy",
     metaTitle: "Privacy Policy | SwimHub Timer",

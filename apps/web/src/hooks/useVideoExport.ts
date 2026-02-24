@@ -10,6 +10,7 @@ export function useVideoExport() {
     startTime,
     stopwatchConfig,
     exportSettings,
+    videoMetadata,
     setExportProgress,
     setIsExporting,
     isExporting,
@@ -31,6 +32,7 @@ export function useVideoExport() {
         videoFile,
         startTime,
         stopwatchConfig,
+        videoMetadata?.height ?? 0,
         exportSettings,
         (percent) => setExportProgress(percent)
       );
@@ -46,6 +48,7 @@ export function useVideoExport() {
     videoFile,
     startTime,
     stopwatchConfig,
+    videoMetadata,
     exportSettings,
     setExportProgress,
     setIsExporting,

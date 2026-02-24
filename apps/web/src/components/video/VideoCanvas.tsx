@@ -336,7 +336,7 @@ export function VideoCanvas() {
               style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
             />
             <div
-              className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-primary rounded-full shadow-[0_0_8px_rgba(6,182,212,0.5)] opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute top-1/2 w-3.5 h-3.5 bg-primary rounded-full shadow-[0_0_8px_rgba(6,182,212,0.5)] opacity-0 group-hover:opacity-100 transition-opacity"
               style={{ left: `${duration ? (currentTime / duration) * 100 : 0}%`, transform: "translate(-50%, -50%)" }}
             />
           </div>

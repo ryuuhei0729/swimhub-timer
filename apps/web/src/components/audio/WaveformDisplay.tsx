@@ -33,10 +33,10 @@ export function WaveformDisplay({
     const h = height;
 
     // Background
-    ctx.fillStyle = "#111116";
+    ctx.fillStyle = "#F3F4F6";
     ctx.fillRect(0, 0, w, h);
 
-    // Waveform bars - cyan tinted
+    // Waveform bars - blue tinted
     const barWidth = Math.max(1, w / waveformData.length);
 
     for (let i = 0; i < waveformData.length; i++) {
@@ -45,14 +45,14 @@ export function WaveformDisplay({
       const intensity = waveformData[i];
 
       // Brighter bars for louder sections
-      const alpha = 0.15 + intensity * 0.6;
-      ctx.fillStyle = `rgba(6, 182, 212, ${alpha})`;
+      const alpha = 0.2 + intensity * 0.6;
+      ctx.fillStyle = `rgba(37, 99, 235, ${alpha})`;
       ctx.fillRect(x, (h - barHeight) / 2, barWidth, barHeight);
     }
 
     // Draw hover cursor line
     if (hoverX !== null) {
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
       ctx.lineWidth = 1;
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
@@ -67,7 +67,7 @@ export function WaveformDisplay({
       const markerX = (detectedSignalTime / videoMetadata.duration) * w;
 
       // Glow effect
-      ctx.strokeStyle = "rgba(239, 68, 68, 0.3)";
+      ctx.strokeStyle = "rgba(220, 38, 38, 0.3)";
       ctx.lineWidth = 6;
       ctx.beginPath();
       ctx.moveTo(markerX, 0);
@@ -75,7 +75,7 @@ export function WaveformDisplay({
       ctx.stroke();
 
       // Vertical line
-      ctx.strokeStyle = "#ef4444";
+      ctx.strokeStyle = "#DC2626";
       ctx.lineWidth = 2;
       ctx.setLineDash([]);
       ctx.beginPath();
@@ -84,7 +84,7 @@ export function WaveformDisplay({
       ctx.stroke();
 
       // Triangle marker at top
-      ctx.fillStyle = "#ef4444";
+      ctx.fillStyle = "#DC2626";
       ctx.beginPath();
       ctx.moveTo(markerX - 5, 0);
       ctx.lineTo(markerX + 5, 0);

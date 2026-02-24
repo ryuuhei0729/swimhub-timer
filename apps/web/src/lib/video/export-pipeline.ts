@@ -105,6 +105,7 @@ export async function exportVideoWithStopwatch(
   videoFile: File,
   startSignalTime: number,
   stopwatchConfig: StopwatchConfig,
+  originalVideoHeight: number,
   exportSettings: ExportSettings,
   onProgress: (percent: number) => void
 ): Promise<Blob> {
@@ -112,6 +113,23 @@ export async function exportVideoWithStopwatch(
 
   // Write input video to virtual filesystem
   await ffmpeg.writeFile("input.mp4", await fetchFile(videoFile));
+
+  // Scale font/padding when exporting at different resolution
+  // so the stopwatch maintains the same proportional size as the preview
+  let scaledConfig = stopwatchConfig;
+  if (
+    exportSettings.resolution !== "original" &&
+    originalVideoHeight > 0
+  ) {
+    const outputHeight = parseInt(exportSettings.resolution);
+    const resScale = outputHeight / originalVideoHeight;
+    scaledConfig = {
+      ...stopwatchConfig,
+      fontSize: Math.round(stopwatchConfig.fontSize * resScale),
+      padding: Math.round(stopwatchConfig.padding * resScale),
+      borderRadius: Math.round(stopwatchConfig.borderRadius * resScale),
+    };
+  }
 
   // Build filter chain
   const filters: string[] = [];
@@ -122,13 +140,13 @@ export async function exportVideoWithStopwatch(
   }
 
   // Add stopwatch drawtext
-  filters.push(buildDrawtextFilter(startSignalTime, stopwatchConfig));
+  filters.push(buildDrawtextFilter(startSignalTime, scaledConfig));
 
   // Watermark: use output height (after scale) for font sizing
   const watermarkHeight =
     exportSettings.resolution !== "original"
       ? parseInt(exportSettings.resolution)
-      : 1080;
+      : (originalVideoHeight || 1080);
   filters.push(buildWatermarkFilter(watermarkHeight));
 
   const filterChain = filters.join(",");

@@ -7,29 +7,29 @@ export function PrivacyContent({ locale }: { locale: string }) {
   const { t } = useTranslation();
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16 text-zinc-300">
-      <h1 className="mb-8 text-2xl font-bold text-white">
+    <main className="mx-auto max-w-2xl px-6 py-16 text-foreground/80">
+      <h1 className="mb-8 text-2xl font-bold text-foreground">
         {t("privacy.title")}
       </h1>
-      <p className="mb-6 text-sm text-zinc-500">{t("privacy.lastUpdated")}</p>
+      <p className="mb-6 text-sm text-muted-foreground">{t("privacy.lastUpdated")}</p>
 
       <section className="space-y-6 text-sm leading-relaxed">
         <div>
-          <h2 className="mb-2 text-lg font-semibold text-white">
+          <h2 className="mb-2 text-lg font-semibold text-foreground">
             {t("privacy.introTitle")}
           </h2>
           <p>{t("privacy.introBody")}</p>
         </div>
 
         <div>
-          <h2 className="mb-2 text-lg font-semibold text-white">
+          <h2 className="mb-2 text-lg font-semibold text-foreground">
             {t("privacy.collectionTitle")}
           </h2>
           <p>{t("privacy.collectionBody")}</p>
         </div>
 
         <div>
-          <h2 className="mb-2 text-lg font-semibold text-white">
+          <h2 className="mb-2 text-lg font-semibold text-foreground">
             {t("privacy.accessTitle")}
           </h2>
           <p>{t("privacy.accessBody")}</p>
@@ -41,14 +41,14 @@ export function PrivacyContent({ locale }: { locale: string }) {
         </div>
 
         <div>
-          <h2 className="mb-2 text-lg font-semibold text-white">
+          <h2 className="mb-2 text-lg font-semibold text-foreground">
             {t("privacy.thirdPartyTitle")}
           </h2>
           <p>{t("privacy.thirdPartyBody")}</p>
         </div>
 
         <div>
-          <h2 className="mb-2 text-lg font-semibold text-white">
+          <h2 className="mb-2 text-lg font-semibold text-foreground">
             {t("privacy.contactTitle")}
           </h2>
           <p>{t("privacy.contactBody")}</p>
@@ -58,7 +58,7 @@ export function PrivacyContent({ locale }: { locale: string }) {
       <div className="mt-12">
         <Link
           href={`/${locale}`}
-          className="text-sm text-cyan-400 hover:underline"
+          className="text-sm text-primary hover:underline"
         >
           {t("privacy.backToTop")}
         </Link>

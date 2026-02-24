@@ -10,9 +10,44 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SplitsPanel } from "@/components/splits/SplitsPanel";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { ArrowRight, RotateCcw, Waves, Palette, ListOrdered } from "lucide-react";
+import { AuthGuard } from "@/components/auth/AuthGuard";
+import { UserMenu } from "@/components/auth/UserMenu";
+import { ArrowRight, ChevronRight, RotateCcw, Waves, Palette, ListOrdered } from "lucide-react";
 import { SwimHubTimerIcon } from "@/components/icons/SwimHubTimerIcon";
 import { useTranslation } from "react-i18next";
+import type { EditorStep } from "@swimhub-timer/core";
+
+function StepIndicator({ currentStep }: { currentStep: EditorStep }) {
+  const { t } = useTranslation();
+  const steps = [
+    { key: "import" as const, label: t("import.stepImport"), num: 1 },
+    { key: "detect" as const, label: t("import.stepDetect"), num: 2 },
+    { key: "export" as const, label: t("import.stepExport"), num: 3 },
+  ];
+  return (
+    <div className="hidden sm:flex items-center gap-1 text-[11px] font-medium">
+      {steps.map((s, i) => {
+        const isActive = s.key === currentStep;
+        return (
+          <span key={s.key} className="flex items-center">
+            {i > 0 && (
+              <ChevronRight className="w-3 h-3 text-muted-foreground/50 mx-0.5" />
+            )}
+            <span
+              className={`px-2.5 py-1 rounded-md ${
+                isActive
+                  ? "bg-primary/10 text-primary border border-primary/20"
+                  : "bg-surface-raised text-muted-foreground"
+              }`}
+            >
+              {s.num}. {s.label}
+            </span>
+          </span>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function Home() {
   const { t } = useTranslation();
@@ -21,45 +56,80 @@ export default function Home() {
   // Step 1: Import
   if (step === "import") {
     return (
-      <main className="min-h-dvh flex items-center justify-center p-4">
-        <VideoImporter />
-      </main>
+      <AuthGuard>
+        <div className="min-h-dvh flex flex-col">
+          <header className="h-14 shrink-0 border-b border-border bg-surface/80 backdrop-blur-xl px-4 flex items-center justify-between relative z-50">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <SwimHubTimerIcon className="w-4 h-4 text-primary" />
+                <span className="font-semibold text-sm tracking-tight">SwimHub Timer</span>
+              </div>
+              <StepIndicator currentStep="import" />
+            </div>
+            <div className="flex items-center gap-2">
+              <LanguageSwitcher />
+              <UserMenu />
+            </div>
+          </header>
+          <main className="flex-1 flex items-center justify-center p-4">
+            <VideoImporter />
+          </main>
+        </div>
+      </AuthGuard>
     );
   }
 
   // Step 3: Export
   if (step === "export") {
     return (
-      <main className="min-h-dvh flex items-center justify-center p-4">
-        <ExportDialog />
-      </main>
+      <AuthGuard>
+        <div className="min-h-dvh flex flex-col">
+          <header className="h-14 shrink-0 border-b border-border bg-surface/80 backdrop-blur-xl px-4 flex items-center justify-between relative z-50">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <SwimHubTimerIcon className="w-4 h-4 text-primary" />
+                <span className="font-semibold text-sm tracking-tight">SwimHub Timer</span>
+              </div>
+              <StepIndicator currentStep="export" />
+            </div>
+            <div className="flex items-center gap-2">
+              <LanguageSwitcher />
+              <UserMenu />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearVideo}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+                {t("common.new")}
+              </Button>
+            </div>
+          </header>
+          <main className="flex-1 flex items-center justify-center p-4">
+            <ExportDialog />
+          </main>
+        </div>
+      </AuthGuard>
     );
   }
 
   // Step 2: Detect & Design (main editor)
   return (
+    <AuthGuard>
     <main className="h-dvh flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="h-14 shrink-0 border-b border-border bg-surface/80 backdrop-blur-xl px-4 flex items-center justify-between">
+      <header className="h-14 shrink-0 border-b border-border bg-surface/80 backdrop-blur-xl px-4 flex items-center justify-between relative z-50">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <SwimHubTimerIcon className="w-4 h-4 text-primary" />
             <span className="font-semibold text-sm tracking-tight">SwimHub Timer</span>
           </div>
-          <div className="hidden sm:flex items-center gap-1 text-[11px] font-medium">
-            <span className="px-2.5 py-1 rounded-md bg-surface-raised text-muted-foreground">
-              {t("import.stepImport")}
-            </span>
-            <span className="px-2.5 py-1 rounded-md bg-primary/10 text-primary border border-primary/20">
-              {t("import.stepDetect")}
-            </span>
-            <span className="px-2.5 py-1 rounded-md bg-surface-raised text-muted-foreground">
-              {t("import.stepExport")}
-            </span>
-          </div>
+          <StepIndicator currentStep="detect" />
         </div>
         <div className="flex items-center gap-2">
           <LanguageSwitcher />
+          <UserMenu />
           <Button
             variant="ghost"
             size="sm"
@@ -136,5 +206,6 @@ export default function Home() {
         </div>
       </div>
     </main>
+    </AuthGuard>
   );
 }

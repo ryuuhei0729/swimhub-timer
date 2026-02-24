@@ -14,7 +14,9 @@ import {
 } from "@/components/ui/select";
 import { Download, Loader2, Check, ArrowLeft, Timer } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/hooks/useAuth";
 import type { ExportResolution } from "@swimhub-timer/core";
+import { getAvailableResolutions } from "@swimhub-timer/core";
 import {
   createRewardedAdController,
   type AdState,
@@ -23,7 +25,9 @@ import {
 
 export function ExportDialog() {
   const { t } = useTranslation();
+  const { plan } = useAuth();
   const { exportSettings, setExportSettings, setStep } = useEditorStore();
+  const availableResolutions = getAvailableResolutions(plan);
   const {
     startExport: startEncoding,
     downloadOutput,
@@ -130,9 +134,11 @@ export function ExportDialog() {
           </Label>
           <Select
             value={exportSettings.resolution}
-            onValueChange={(v) =>
-              setExportSettings({ resolution: v as ExportResolution })
-            }
+            onValueChange={(v) => {
+              if (availableResolutions.includes(v as ExportResolution)) {
+                setExportSettings({ resolution: v as ExportResolution });
+              }
+            }}
           >
             <SelectTrigger className="bg-surface-raised border-border">
               <SelectValue />
@@ -140,7 +146,17 @@ export function ExportDialog() {
             <SelectContent>
               <SelectItem value="720">720p</SelectItem>
               <SelectItem value="1080">1080p {t("exportScreen.recommended")}</SelectItem>
-              <SelectItem value="original">{t("exportScreen.original")}</SelectItem>
+              <SelectItem
+                value="original"
+                disabled={!availableResolutions.includes("original")}
+              >
+                {t("exportScreen.original")}
+                {!availableResolutions.includes("original") && (
+                  <span className="ml-2 text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full">
+                    {t("auth.premiumOnly")}
+                  </span>
+                )}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>

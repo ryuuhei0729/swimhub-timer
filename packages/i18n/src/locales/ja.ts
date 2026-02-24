@@ -135,6 +135,79 @@ const ja = {
     tabSplits: "スプリット",
   },
 
+  auth: {
+    login: "ログイン",
+    logout: "ログアウト",
+    logoutConfirm: "ログアウトしますか？",
+    loginWith: {
+      google: "Googleでログイン",
+      apple: "Appleでログイン",
+      email: "メールアドレスでログイン",
+    },
+    signUp: "新規登録",
+    signIn: "ログイン",
+    switchToSignUp: "アカウントをお持ちでない方はこちら",
+    switchToSignIn: "アカウントをお持ちの方はこちら",
+    emailPlaceholder: "メールアドレス",
+    passwordPlaceholder: "パスワード",
+    confirmationSent: "確認メールを送信しました。メールをご確認ください。",
+    or: "または",
+    terms: "利用規約",
+    termsAgree: "ログインすることで利用規約とプライバシーポリシーに同意します",
+    account: "アカウント",
+    accountInfo: "アカウント情報",
+    email: "メールアドレス",
+    plan: "プラン",
+    planFree: "Free",
+    planPremium: "Premium",
+    premiumOnly: "Premiumプランのみ",
+    errors: {
+      cancelled: "認証がキャンセルされました",
+      generic: "認証に失敗しました。もう一度お試しください。",
+      timeout: "認証がタイムアウトしました。もう一度お試しください。",
+      notInitialized: "認証サービスが初期化されていません",
+      logoutFailed: "ログアウトに失敗しました",
+      invalidCredentials: "メールアドレスまたはパスワードが正しくありません",
+      alreadyRegistered: "このメールアドレスは既に登録されています。ログインしてください。",
+      passwordTooShort: "パスワードは6文字以上で入力してください",
+    },
+  },
+
+  terms: {
+    title: "利用規約",
+    metaTitle: "利用規約 | SwimHub Timer",
+    metaDescription: "SwimHub Timerの利用規約",
+    lastUpdated: "最終更新日: 2026年2月24日",
+    introTitle: "はじめに",
+    introBody:
+      "この利用規約（以下「本規約」）は、SwimHub Timer（以下「本アプリ」）の利用条件を定めるものです。本アプリをご利用いただくことにより、本規約に同意したものとみなされます。",
+    serviceTitle: "サービス内容",
+    serviceBody:
+      "本アプリは、水泳のレース動画にストップウォッチをオーバーレイし、動画を書き出すためのツールです。",
+    accountTitle: "アカウント",
+    accountBody:
+      "本アプリの一部機能を利用するにはアカウント登録が必要です。ユーザーは正確な情報を提供し、アカウント情報の管理について責任を負います。",
+    prohibitedTitle: "禁止事項",
+    prohibitedBody: "以下の行為を禁止します：",
+    prohibitedItems: [
+      "法令または公序良俗に違反する行為",
+      "本アプリの運営を妨害する行為",
+      "他のユーザーに不利益を与える行為",
+      "不正アクセスまたはそれを試みる行為",
+      "本アプリを商業目的で無断利用する行為",
+    ],
+    disclaimerTitle: "免責事項",
+    disclaimerBody:
+      "本アプリは「現状のまま」で提供されます。本アプリの利用により生じた損害について、運営者は一切の責任を負いません。",
+    changesTitle: "規約の変更",
+    changesBody:
+      "運営者は、必要に応じて本規約を変更することがあります。変更後の規約は、本アプリ上に掲載した時点で効力を生じます。",
+    contactTitle: "お問い合わせ",
+    contactBody:
+      "本規約に関するご質問は、アプリのサポートページよりお問い合わせください。",
+    backToTop: "トップページに戻る",
+  },
+
   privacy: {
     title: "プライバシーポリシー",
     metaTitle: "プライバシーポリシー | SwimHub Timer",
