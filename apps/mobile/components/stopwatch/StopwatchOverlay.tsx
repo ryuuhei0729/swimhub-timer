@@ -216,6 +216,7 @@ export function StopwatchOverlay({ videoWidth, videoHeight }: Props) {
                   fontWeight: "700",
                   fontFamily:
                     config.fontFamily === "monospace" ? "monospace" : undefined,
+                  fontVariant: ["tabular-nums"],
                 }}
               >
                 {timeText}
@@ -286,6 +287,7 @@ function SplitDisplay({
           fontWeight: "700",
           fontFamily:
             config.fontFamily === "monospace" ? "monospace" : undefined,
+          fontVariant: ["tabular-nums"],
         }}
       >
         {formatSplitText(split)}

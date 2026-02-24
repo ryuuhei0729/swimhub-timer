@@ -55,7 +55,7 @@ export function SplitsPanel() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.sectionTitle}>{t("splits.title")}</Text>
-        {splitTimes.length > 0 && (
+        {(splitTimes.length > 0 || isFinished) && (
           <Pressable onPress={resetSplits}>
             <Text style={styles.resetText}>{t("common.reset")}</Text>
           </Pressable>
@@ -126,16 +126,21 @@ export function SplitsPanel() {
 
       {/* Finish summary */}
       {isFinished && finishTime !== null && (
-        <Pressable
-          style={styles.finishCard}
-          onPress={() => startTime !== null && seekVideo(startTime + finishTime)}
-        >
-          <Text style={styles.finishLabel}>{t("splits.finalTime")}</Text>
-          <Text style={styles.finishTimeText}>{formatTime(finishTime)}</Text>
-          {finishMemo ? (
-            <Text style={styles.finishMemoText}>{finishMemo}</Text>
-          ) : null}
-        </Pressable>
+        <>
+          <Pressable
+            style={styles.finishCard}
+            onPress={() => startTime !== null && seekVideo(startTime + finishTime)}
+          >
+            <Text style={styles.finishLabel}>{t("splits.finalTime")}</Text>
+            <Text style={styles.finishTimeText}>{formatTime(finishTime)}</Text>
+            {finishMemo ? (
+              <Text style={styles.finishMemoText}>{finishMemo}</Text>
+            ) : null}
+          </Pressable>
+          <Pressable style={styles.resetBtn} onPress={resetSplits}>
+            <Text style={styles.resetBtnText}>{t("common.reset")}</Text>
+          </Pressable>
+        </>
       )}
 
       {/* Split list */}
@@ -216,6 +221,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: colors.primary,
     textAlign: "right",
+    fontVariant: ["tabular-nums"],
   },
   tuneRow: {
     flexDirection: "row",
@@ -308,6 +314,7 @@ const styles = StyleSheet.create({
     fontFamily: "monospace",
     fontWeight: "700",
     color: colors.primary,
+    fontVariant: ["tabular-nums"],
   },
   finishMemoText: {
     fontSize: fontSize.xs,
@@ -350,11 +357,13 @@ const styles = StyleSheet.create({
     fontFamily: "monospace",
     fontWeight: "600",
     color: colors.text,
+    fontVariant: ["tabular-nums"],
   },
   lapTime: {
     fontSize: fontSize.xs,
     fontFamily: "monospace",
     color: colors.muted,
+    fontVariant: ["tabular-nums"],
   },
   deleteBtn: {
     width: 24,
@@ -365,6 +374,19 @@ const styles = StyleSheet.create({
   },
   deleteBtnText: {
     fontSize: 16,
+    color: colors.muted,
+  },
+  resetBtn: {
+    height: 40,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  resetBtnText: {
+    fontSize: fontSize.sm,
+    fontWeight: "600",
     color: colors.muted,
   },
 });

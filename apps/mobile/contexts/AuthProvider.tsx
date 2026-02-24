@@ -49,7 +49,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        return { error };
+        // Network failure: fall back to local-only sign out
+        await supabase.auth.signOut({ scope: "local" });
       }
       setPlan("free");
 
@@ -66,8 +67,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       return { error: null };
     } catch (error) {
-      console.error("Sign out error:", error);
-      return { error: error as Error };
+      // Network failure in try block: fall back to local-only sign out
+      try {
+        await supabase.auth.signOut({ scope: "local" });
+        setPlan("free");
+
+        try {
+          const { createMMKV } = require("react-native-mmkv");
+          const settingsStorage = createMMKV({ id: "swimhub-timer-settings" });
+          settingsStorage.clearAll();
+          const authStorage = createMMKV({ id: "supabase-auth" });
+          authStorage.clearAll();
+        } catch {
+          // Expo Go fallback: no MMKV available
+        }
+
+        return { error: null };
+      } catch (localError) {
+        console.error("Sign out error:", localError);
+        return { error: localError as Error };
+      }
     }
   }, []);
 

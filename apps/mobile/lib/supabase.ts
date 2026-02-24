@@ -16,7 +16,7 @@ function createMmkvStorage() {
         mmkv.set(key, value);
       },
       removeItem: (key: string): void => {
-        mmkv.delete(key);
+        mmkv.remove(key);
       },
     };
   } catch {
