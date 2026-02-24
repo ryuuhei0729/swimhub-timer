@@ -3,23 +3,26 @@ import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import type * as SharingType from "expo-sharing";
 import { useTranslation } from "react-i18next";
-import { useEditorStore } from "../stores/editor-store";
-import { formatTime } from "@swimhub-timer/core";
+import { useEditorStore } from "../../stores/editor-store";
+import { useAuth } from "../../contexts/AuthProvider";
+import { formatTime, getAvailableResolutions } from "@swimhub-timer/core";
+import type { ExportResolution } from "@swimhub-timer/core";
 import {
   exportVideoWithStopwatch,
   saveToPhotoLibrary,
   cleanupExportFiles,
-} from "../lib/video/export-pipeline";
+} from "../../lib/video/export-pipeline";
 import {
   createRewardedAdController,
   type AdState,
   type RewardedAdController,
-} from "../lib/ads/rewarded-ad";
-import { colors, spacing, radius, fontSize } from "../lib/theme";
+} from "../../lib/ads/rewarded-ad";
+import { colors, spacing, radius, fontSize } from "../../lib/theme";
 
 export default function ExportScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { plan } = useAuth();
   const {
     videoUri,
     videoMetadata,
@@ -49,12 +52,20 @@ export default function ExportScreen() {
   const exportComplete = outputPath !== null;
   const canProceed = exportComplete && (adRewardEarned || adUnavailable);
   const duration = videoMetadata?.duration ?? 0;
+  const availableResolutions = getAvailableResolutions(plan);
 
-  const RESOLUTIONS = [
-    { key: "original" as const, label: t("exportScreen.original") },
-    { key: "1080" as const, label: "1080p" },
-    { key: "720" as const, label: "720p" },
+  const ALL_RESOLUTIONS: { key: ExportResolution; label: string }[] = [
+    { key: "original", label: t("exportScreen.original") },
+    { key: "1080", label: "1080p" },
+    { key: "720", label: "720p" },
   ];
+
+  // Normalize resolution when available resolutions change (e.g. plan downgrade)
+  useEffect(() => {
+    if (!availableResolutions.includes(exportSettings.resolution)) {
+      setExportSettings({ resolution: availableResolutions[0] ?? "720" });
+    }
+  }, [availableResolutions, exportSettings.resolution, setExportSettings]);
 
   // Preload ad on mount
   useEffect(() => {
@@ -106,6 +117,14 @@ export default function ExportScreen() {
       return;
     }
 
+    // Runtime guard: ensure selected resolution is still available
+    let resolvedSettings = exportSettings;
+    if (!availableResolutions.includes(exportSettings.resolution)) {
+      const fallback = availableResolutions[0] ?? "720";
+      setExportSettings({ resolution: fallback });
+      resolvedSettings = { ...exportSettings, resolution: fallback };
+    }
+
     setIsExporting(true);
     setProgress(0);
     setError(null);
@@ -118,10 +137,8 @@ export default function ExportScreen() {
       if (currentState === "loaded") {
         controller.show().catch(() => setAdUnavailable(true));
       } else if (currentState !== "loading") {
-        // Ad errored or idle — skip
         setAdUnavailable(true);
       }
-      // If still "loading", the useEffect above will auto-show when ready
     }
 
     // --- Start encoding ---
@@ -135,7 +152,7 @@ export default function ExportScreen() {
         isFinished,
         finishTime,
         videoMetadata?.height ?? 1080,
-        exportSettings,
+        resolvedSettings,
         (timeMs) => {
           if (durationMs > 0) {
             setProgress(Math.min(timeMs / durationMs, 1));
@@ -159,6 +176,8 @@ export default function ExportScreen() {
     isFinished,
     finishTime,
     exportSettings,
+    availableResolutions,
+    setExportSettings,
     duration,
     videoMetadata?.height,
     t,
@@ -226,22 +245,36 @@ export default function ExportScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>{t("exportScreen.resolution")}</Text>
         <View style={styles.resolutionRow}>
-          {RESOLUTIONS.map((r) => {
+          {ALL_RESOLUTIONS.map((r) => {
             const active = exportSettings.resolution === r.key;
+            const isLocked = !availableResolutions.includes(r.key);
             return (
               <Pressable
                 key={r.key}
-                style={[styles.resBtn, active && styles.resBtnActive]}
-                onPress={() => setExportSettings({ resolution: r.key })}
+                style={[
+                  styles.resBtn,
+                  active && styles.resBtnActive,
+                  isLocked && styles.resBtnLocked,
+                ]}
+                onPress={() => {
+                  if (!isLocked) {
+                    setExportSettings({ resolution: r.key });
+                  }
+                }}
+                disabled={isLocked}
               >
                 <Text
                   style={[
                     styles.resBtnText,
                     active && styles.resBtnTextActive,
+                    isLocked && styles.resBtnTextLocked,
                   ]}
                 >
                   {r.label}
                 </Text>
+                {isLocked && (
+                  <Text style={styles.premiumBadge}>{t("auth.premiumOnly")}</Text>
+                )}
               </Pressable>
             );
           })}
@@ -322,10 +355,13 @@ const styles = StyleSheet.create({
   summaryCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.lg,
     gap: spacing.md,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   summaryTitle: {
     fontSize: fontSize.md,
@@ -374,6 +410,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryMuted,
     borderColor: colors.primaryBorder,
   },
+  resBtnLocked: {
+    opacity: 0.5,
+  },
   resBtnText: {
     fontSize: fontSize.sm,
     color: colors.muted,
@@ -381,6 +420,19 @@ const styles = StyleSheet.create({
   },
   resBtnTextActive: {
     color: colors.primary,
+  },
+  resBtnTextLocked: {
+    color: colors.muted,
+  },
+  premiumBadge: {
+    fontSize: 9,
+    color: "#92400E",
+    backgroundColor: "#FEF3C7",
+    borderRadius: 4,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    marginTop: 2,
+    overflow: "hidden",
   },
   progressSection: {
     gap: spacing.md,
@@ -455,15 +507,15 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   errorCard: {
-    backgroundColor: "rgba(239, 68, 68, 0.1)",
+    backgroundColor: "rgba(220, 38, 38, 0.1)",
     borderWidth: 1,
-    borderColor: "rgba(239, 68, 68, 0.3)",
+    borderColor: "rgba(220, 38, 38, 0.3)",
     borderRadius: radius.md,
     padding: spacing.md,
   },
   errorText: {
     fontSize: fontSize.sm,
-    color: "#ef4444",
+    color: colors.destructive,
   },
   exportBtn: {
     backgroundColor: colors.primary,

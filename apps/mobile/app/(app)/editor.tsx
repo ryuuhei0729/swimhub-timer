@@ -3,13 +3,13 @@ import { View, StyleSheet, ScrollView, Pressable, Text } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
-import { VideoPlayer } from "../components/video/VideoPlayer";
-import { SignalDetector } from "../components/audio/SignalDetector";
-import { StopwatchDesigner } from "../components/stopwatch/StopwatchDesigner";
-import { SplitsPanel } from "../components/splits/SplitsPanel";
-import { TabBar } from "../components/ui/TabBar";
-import { useEditorStore } from "../stores/editor-store";
-import { colors, spacing, radius, fontSize } from "../lib/theme";
+import { VideoPlayer } from "../../components/video/VideoPlayer";
+import { SignalDetector } from "../../components/audio/SignalDetector";
+import { StopwatchDesigner } from "../../components/stopwatch/StopwatchDesigner";
+import { SplitsPanel } from "../../components/splits/SplitsPanel";
+import { TabBar } from "../../components/ui/TabBar";
+import { useEditorStore } from "../../stores/editor-store";
+import { colors, spacing, radius, fontSize } from "../../lib/theme";
 
 export default function EditorScreen() {
   const { t } = useTranslation();

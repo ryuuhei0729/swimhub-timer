@@ -4,13 +4,15 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useTranslation } from "react-i18next";
-import { useEditorStore } from "../stores/editor-store";
-import { colors, spacing, radius, fontSize } from "../lib/theme";
+import { useEditorStore } from "../../stores/editor-store";
+import { useAuth } from "../../contexts/AuthProvider";
+import { colors, spacing, radius, fontSize } from "../../lib/theme";
 
 export default function ImportScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { setVideoUri, setVideoMetadata } = useEditorStore();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const pickVideo = async () => {
@@ -55,7 +57,15 @@ export default function ImportScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>{t("common.appName")}</Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.title}>{t("common.appName")}</Text>
+          <Pressable
+            style={styles.accountButton}
+            onPress={() => router.push("/account")}
+          >
+            <Ionicons name="person-circle-outline" size={28} color={colors.muted} />
+          </Pressable>
+        </View>
         <Text style={styles.subtitle}>
           {t("import.subtitle")}
         </Text>
@@ -124,12 +134,25 @@ const styles = StyleSheet.create({
   header: {
     alignItems: "center",
     marginBottom: 48,
+    width: "100%",
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    position: "relative",
   },
   title: {
     fontSize: fontSize.xxl,
     fontWeight: "800",
     color: colors.text,
     letterSpacing: -0.5,
+  },
+  accountButton: {
+    position: "absolute",
+    right: 0,
+    padding: 4,
   },
   subtitle: {
     fontSize: fontSize.sm,
@@ -140,20 +163,21 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.xl,
     width: "100%",
     alignItems: "center",
     gap: spacing.md,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   iconCircle: {
     width: 56,
     height: 56,
     borderRadius: radius.lg,
     backgroundColor: colors.surfaceRaised,
-    borderWidth: 1,
-    borderColor: colors.border,
     alignItems: "center",
     justifyContent: "center",
   },

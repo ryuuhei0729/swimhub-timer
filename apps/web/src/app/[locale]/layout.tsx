@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 import { notFound } from "next/navigation";
 import { I18nProvider } from "@/components/I18nProvider";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import {
   supportedLocales,
   i18nResources,
@@ -79,7 +80,7 @@ export async function generateMetadata({
 }
 
 export const viewport: Viewport = {
-  themeColor: "#09090b",
+  themeColor: "#EFF6FF",
 };
 
 export default async function LocaleLayout({
@@ -116,16 +117,17 @@ export default async function LocaleLayout({
         className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
       >
         <I18nProvider locale={locale}>
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-          />
-          <Script
-            async
-            src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"
-            strategy="afterInteractive"
-          />
-          {children}
+          <AuthProvider>
+            <script type="application/ld+json">
+              {JSON.stringify(jsonLd)}
+            </script>
+            <Script
+              async
+              src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"
+              strategy="afterInteractive"
+            />
+            {children}
+          </AuthProvider>
         </I18nProvider>
       </body>
     </html>

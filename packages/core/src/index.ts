@@ -13,6 +13,10 @@ export type {
   StopwatchPreset,
   SplitTime,
 } from "./types/stopwatch";
+export type { UserPlan, UserProfile } from "./types/auth";
+
+// Utils
+export { getAvailableResolutions } from "./utils/subscription";
 
 // Constants
 export {

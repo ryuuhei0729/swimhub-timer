@@ -10,12 +10,12 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "swimhubtimer",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0a0f1a"
+      "backgroundColor": "#EFF6FF"
     },
     "ios": {
       "supportsTablet": true,
@@ -29,7 +29,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0a0f1a"
+        "backgroundColor": "#EFF6FF"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.swimhubtimer.app",
@@ -73,7 +73,8 @@
           "androidAppId": "ca-app-pub-4640414097368188~2822606743",
           "iosAppId": "ca-app-pub-4640414097368188~9666392288"
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "extra": {
       "router": {},
