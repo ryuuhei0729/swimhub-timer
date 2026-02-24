@@ -18,6 +18,8 @@ import { useTranslation } from "react-i18next";
 import { useEmailAuth } from "../../hooks/useEmailAuth";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 
+const PASSWORD_MIN_LENGTH = 6;
+
 export default function EmailSignupScreen() {
   const router = useRouter();
   const { t } = useTranslation();
@@ -44,8 +46,8 @@ export default function EmailSignupScreen() {
       setLocalError(t("auth.emailPlaceholder"));
       return;
     }
-    if (password.length < 6) {
-      setLocalError(t("auth.errors.passwordTooShort"));
+    if (password.length < PASSWORD_MIN_LENGTH) {
+      setLocalError(t("auth.errors.passwordTooShort", { minLength: PASSWORD_MIN_LENGTH }));
       return;
     }
 

@@ -112,7 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     }, 10000);
 
-    // 認証状態の変更を監視
+    // 認証状態の変更を監視（INITIAL_SESSION イベントで初期セッションも処理される）
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
@@ -128,29 +128,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         setPlan("free");
       }
     });
-
-    // 初期セッションを明示的に取得（フォールバック）
-    supabase.auth
-      .getSession()
-      .then(({ data: { session: initialSession } }) => {
-        if (isMounted) {
-          clearTimeout(timeoutId);
-          setSession(initialSession);
-          setUser(initialSession?.user ?? null);
-          setLoading(false);
-
-          if (initialSession?.user) {
-            fetchPlan(initialSession.user.id);
-          }
-        }
-      })
-      .catch((error) => {
-        console.error("初期セッション取得エラー:", error);
-        if (isMounted) {
-          clearTimeout(timeoutId);
-          setLoading(false);
-        }
-      });
 
     return () => {
       isMounted = false;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { View, Text, Pressable, Linking, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -88,7 +88,12 @@ export default function GetStartedScreen() {
               isLoading && styles.buttonDisabled,
               pressed && !isLoading && styles.emailButtonPressed,
             ]}
-            onPress={() => router.push("/(auth)/email-signup")}
+            onPress={() => {
+              setError(null);
+              clearGoogleError();
+              clearAppleError();
+              router.push("/(auth)/email-signup");
+            }}
             disabled={isLoading}
           >
             <View style={styles.buttonContent}>
@@ -107,36 +112,42 @@ export default function GetStartedScreen() {
             const full = t("auth.termsAgree");
             const terms = t("auth.terms");
             const privacy = t("privacy.title");
-            const parts = full.split(new RegExp(`(${terms}|${privacy})`));
-            return parts.map((part, i) => {
-              if (part === terms) {
-                return (
-                  <Text
-                    key={i}
-                    style={styles.legalLink}
-                    onPress={() =>
-                      Linking.openURL("https://timer.swim-hub.app/terms")
-                    }
-                  >
-                    {terms}
-                  </Text>
-                );
+            const tokens = [
+              { text: terms, url: "https://timer.swim-hub.app/terms" },
+              { text: privacy, url: "https://timer.swim-hub.app/privacy" },
+            ];
+            const result: React.ReactNode[] = [];
+            let remaining = full;
+            let key = 0;
+            while (remaining.length > 0) {
+              let earliest = -1;
+              let matched: (typeof tokens)[number] | null = null;
+              for (const token of tokens) {
+                const idx = remaining.indexOf(token.text);
+                if (idx !== -1 && (earliest === -1 || idx < earliest)) {
+                  earliest = idx;
+                  matched = token;
+                }
               }
-              if (part === privacy) {
-                return (
-                  <Text
-                    key={i}
-                    style={styles.legalLink}
-                    onPress={() =>
-                      Linking.openURL("https://timer.swim-hub.app/privacy")
-                    }
-                  >
-                    {privacy}
-                  </Text>
-                );
+              if (matched === null || earliest === -1) {
+                result.push(remaining);
+                break;
               }
-              return part;
-            });
+              if (earliest > 0) {
+                result.push(remaining.slice(0, earliest));
+              }
+              result.push(
+                <Text
+                  key={key++}
+                  style={styles.legalLink}
+                  onPress={() => Linking.openURL(matched!.url)}
+                >
+                  {matched.text}
+                </Text>
+              );
+              remaining = remaining.slice(earliest + matched.text.length);
+            }
+            return result;
           })()}
         </Text>
       </View>

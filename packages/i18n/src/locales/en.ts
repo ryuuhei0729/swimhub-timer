@@ -146,11 +146,6 @@ const en: TranslationShape = {
     login: "Log In",
     logout: "Log Out",
     logoutConfirm: "Are you sure you want to log out?",
-    loginWith: {
-      google: "Sign in with Google",
-      apple: "Sign in with Apple",
-      email: "Sign in with Email",
-    },
     welcome: {
       getStarted: "Get Started",
       login: "Log In",
@@ -169,7 +164,7 @@ const en: TranslationShape = {
       withGoogle: "Sign in with Google",
       withEmail: "Sign in with Email",
     },
-    emailLogin: "Log in with Email",
+    emailLogin: "Sign in with Email",
     emailSignup: "Sign up with Email",
     signUp: "Sign Up",
     signIn: "Sign In",
@@ -196,7 +191,7 @@ const en: TranslationShape = {
       logoutFailed: "Failed to log out",
       invalidCredentials: "Invalid email or password",
       alreadyRegistered: "This email is already registered. Please sign in.",
-      passwordTooShort: "Password must be at least 6 characters",
+      passwordTooShort: "Password must be at least {{minLength}} characters",
     },
   },
 

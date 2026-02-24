@@ -139,11 +139,6 @@ const ja = {
     login: "ログイン",
     logout: "ログアウト",
     logoutConfirm: "ログアウトしますか？",
-    loginWith: {
-      google: "Googleでログイン",
-      apple: "Appleでログイン",
-      email: "メールアドレスでログイン",
-    },
     welcome: {
       getStarted: "さっそく始める",
       login: "ログイン",
@@ -189,7 +184,7 @@ const ja = {
       logoutFailed: "ログアウトに失敗しました",
       invalidCredentials: "メールアドレスまたはパスワードが正しくありません",
       alreadyRegistered: "このメールアドレスは既に登録されています。ログインしてください。",
-      passwordTooShort: "パスワードは6文字以上で入力してください",
+      passwordTooShort: "パスワードは{{minLength}}文字以上で入力してください",
     },
   },
 
