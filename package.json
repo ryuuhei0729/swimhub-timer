@@ -14,7 +14,8 @@
     "lint:mobile": "npm run lint -w @swimhub-timer/mobile",
     "dev:mobile": "npm run start -w @swimhub-timer/mobile",
     "android": "expo run:android",
-    "ios": "expo run:ios"
+    "ios": "expo run:ios",
+    "deploy:web": "npm run deploy -w @swimhub-timer/web"
   },
   "overrides": {
     "@types/react": "^19.2.14",
