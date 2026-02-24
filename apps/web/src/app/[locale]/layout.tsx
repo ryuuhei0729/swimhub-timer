@@ -118,10 +118,9 @@ export default async function LocaleLayout({
       >
         <I18nProvider locale={locale}>
           <AuthProvider>
-            <script
-              type="application/ld+json"
-              dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-            />
+            <script type="application/ld+json">
+              {JSON.stringify(jsonLd)}
+            </script>
             <Script
               async
               src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"

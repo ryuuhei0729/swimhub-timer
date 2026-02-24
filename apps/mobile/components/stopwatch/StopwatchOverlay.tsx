@@ -1,4 +1,4 @@
-import { useRef, useMemo, useCallback } from "react";
+import { useRef, useMemo, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -38,7 +38,7 @@ export function StopwatchOverlay({ videoWidth, videoHeight }: Props) {
   const updateContentRect = useCallback(() => {
     const cw = containerSize.current.width;
     const ch = containerSize.current.height;
-    if (cw === 0 || ch === 0) return;
+    if (cw === 0 || ch === 0 || videoWidth <= 0 || videoHeight <= 0) return;
 
     const containerAspect = cw / ch;
     const videoAspect = videoWidth / videoHeight;
@@ -83,6 +83,12 @@ export function StopwatchOverlay({ videoWidth, videoHeight }: Props) {
     [updateStopwatchConfig]
   );
 
+  // Re-compute contentRect when videoWidth/videoHeight change
+  // (onLayout only fires on container resize, not on prop changes)
+  useEffect(() => {
+    updateContentRect();
+  }, [updateContentRect]);
+
   const onContainerLayout = useCallback((e: LayoutChangeEvent) => {
     containerSize.current = {
       width: e.nativeEvent.layout.width,
@@ -93,7 +99,7 @@ export function StopwatchOverlay({ videoWidth, videoHeight }: Props) {
 
   // Scale based on actual video content area vs video resolution
   const scaleFactor =
-    contentRect.current.width > 0
+    contentRect.current.width > 0 && videoWidth > 0
       ? contentRect.current.width / videoWidth
       : 0.2;
   const watermarkFontSize = Math.max(8, Math.round(videoHeight * 0.06 * scaleFactor));

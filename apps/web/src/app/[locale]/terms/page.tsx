@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import {
   supportedLocales,
   i18nResources,
@@ -16,7 +17,9 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const t = i18nResources[locale as SupportedLocale].translation;
+  const resource = i18nResources[locale as SupportedLocale];
+  if (!resource) notFound();
+  const t = resource.translation;
   return {
     title: t.terms.metaTitle,
     description: t.terms.metaDescription,
@@ -29,5 +32,7 @@ export default async function TermsPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  const resource = i18nResources[locale as SupportedLocale];
+  if (!resource) notFound();
   return <TermsContent locale={locale} />;
 }

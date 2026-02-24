@@ -72,9 +72,10 @@ export default function LoginPage() {
       setError(null);
       setConfirmationSent(false);
       if (isSignUp) {
-        await signUpWithEmail(email, password);
-        setConfirmationSent(true);
-        setSubmitting(false);
+        const success = await signUpWithEmail(email, password);
+        if (success) {
+          setConfirmationSent(true);
+        }
       } else {
         await signInWithEmail(email, password);
       }
@@ -88,6 +89,7 @@ export default function LoginPage() {
       } else {
         setError(t("auth.errors.generic"));
       }
+    } finally {
       setSubmitting(false);
     }
   };

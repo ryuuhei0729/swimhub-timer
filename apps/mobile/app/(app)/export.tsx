@@ -60,6 +60,13 @@ export default function ExportScreen() {
     { key: "720", label: "720p" },
   ];
 
+  // Normalize resolution when available resolutions change (e.g. plan downgrade)
+  useEffect(() => {
+    if (!availableResolutions.includes(exportSettings.resolution)) {
+      setExportSettings({ resolution: availableResolutions[0] ?? "720" });
+    }
+  }, [availableResolutions, exportSettings.resolution, setExportSettings]);
+
   // Preload ad on mount
   useEffect(() => {
     const controller = createRewardedAdController();
@@ -110,6 +117,14 @@ export default function ExportScreen() {
       return;
     }
 
+    // Runtime guard: ensure selected resolution is still available
+    let resolvedSettings = exportSettings;
+    if (!availableResolutions.includes(exportSettings.resolution)) {
+      const fallback = availableResolutions[0] ?? "720";
+      setExportSettings({ resolution: fallback });
+      resolvedSettings = { ...exportSettings, resolution: fallback };
+    }
+
     setIsExporting(true);
     setProgress(0);
     setError(null);
@@ -137,7 +152,7 @@ export default function ExportScreen() {
         isFinished,
         finishTime,
         videoMetadata?.height ?? 1080,
-        exportSettings,
+        resolvedSettings,
         (timeMs) => {
           if (durationMs > 0) {
             setProgress(Math.min(timeMs / durationMs, 1));
@@ -161,6 +176,8 @@ export default function ExportScreen() {
     isFinished,
     finishTime,
     exportSettings,
+    availableResolutions,
+    setExportSettings,
     duration,
     videoMetadata?.height,
     t,

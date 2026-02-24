@@ -1,30 +1,60 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { supportedLocales, defaultLocale } from "@swimhub-timer/i18n";
+
+function resolveLocale(request: NextRequest): string {
+  // 1. Check OAuth state parameter
+  const state = new URL(request.url).searchParams.get("state");
+  if (state && (supportedLocales as readonly string[]).includes(state)) {
+    return state;
+  }
+
+  // 2. Check locale cookie
+  const localeCookie = request.cookies.get("NEXT_LOCALE")?.value;
+  if (localeCookie && (supportedLocales as readonly string[]).includes(localeCookie)) {
+    return localeCookie;
+  }
+
+  // 3. Check Accept-Language header
+  const acceptLang = request.headers.get("Accept-Language");
+  if (acceptLang) {
+    const preferred = acceptLang
+      .split(",")
+      .map((part) => part.split(";")[0].trim().substring(0, 2).toLowerCase())
+      .find((lang) => (supportedLocales as readonly string[]).includes(lang));
+    if (preferred) {
+      return preferred;
+    }
+  }
+
+  return defaultLocale;
+}
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
+  const locale = resolveLocale(request);
 
   if (!code) {
-    return NextResponse.redirect(requestUrl.origin + "/ja/login?error=missing_code");
+    return NextResponse.redirect(requestUrl.origin + `/${locale}/login?error=missing_code`);
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseAnonKey) {
-    return NextResponse.redirect(requestUrl.origin + "/ja/login?error=config_error");
+    return NextResponse.redirect(requestUrl.origin + `/${locale}/login?error=config_error`);
   }
+
+  type CookieToSet = {
+    name: string;
+    value: string;
+    options?: Record<string, unknown>;
+  };
+  const cookiesToSet: CookieToSet[] = [];
 
   try {
     const cookieStore = await cookies();
-
-    type CookieToSet = {
-      name: string;
-      value: string;
-      options?: Record<string, unknown>;
-    };
-    const cookiesToSet: CookieToSet[] = [];
 
     const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
@@ -58,18 +88,22 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error("OAuth callback error:", error);
       const errorResponse = NextResponse.redirect(
-        requestUrl.origin + "/ja/login?error=auth_failed",
+        requestUrl.origin + `/${locale}/login?error=auth_failed`,
       );
       applyCookies(errorResponse, cookiesToSet);
       return errorResponse;
     }
 
-    const successResponse = NextResponse.redirect(requestUrl.origin + "/ja");
+    const successResponse = NextResponse.redirect(requestUrl.origin + `/${locale}`);
     applyCookies(successResponse, cookiesToSet);
     return successResponse;
   } catch (error) {
     console.error("OAuth callback error:", error);
-    return NextResponse.redirect(requestUrl.origin + "/ja/login?error=auth_failed");
+    const catchResponse = NextResponse.redirect(
+      requestUrl.origin + `/${locale}/login?error=auth_failed`,
+    );
+    applyCookies(catchResponse, cookiesToSet);
+    return catchResponse;
   }
 }
 

@@ -35,9 +35,11 @@ export async function updateSession(request: NextRequest) {
   // Locale prefix detection: /ja, /en, etc.
   const localeMatch = pathname.match(/^\/([a-z]{2})(\/|$)/);
   const locale = localeMatch ? localeMatch[1] : "ja";
-  const pathWithoutLocale = localeMatch
+  const rawPathWithoutLocale = localeMatch
     ? pathname.slice(localeMatch[0].length - (localeMatch[2] === "/" ? 1 : 0))
     : pathname;
+  const pathWithoutLocale =
+    rawPathWithoutLocale === "" ? "/" : rawPathWithoutLocale;
 
   // Not logged in + accessing protected route → redirect to login
   if (

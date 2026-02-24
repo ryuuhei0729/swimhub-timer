@@ -86,9 +86,13 @@ export function UserMenu() {
           </div>
           <div className="py-1">
             <button
-              onClick={() => {
+              onClick={async () => {
                 setIsOpen(false);
-                signOut();
+                try {
+                  await signOut();
+                } catch (error) {
+                  console.error("Sign out failed:", error);
+                }
               }}
               className="flex w-full items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors duration-200"
             >

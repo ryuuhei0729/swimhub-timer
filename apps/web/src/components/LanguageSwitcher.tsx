@@ -19,10 +19,12 @@ export function LanguageSwitcher() {
     return segments.join("/");
   };
 
-  const handleSwitch = (locale: string) => {
-    i18next.changeLanguage(locale);
-    router.push(switchedPath(locale));
+  const handleSwitch = async (locale: string) => {
+    await i18next.changeLanguage(locale);
+    router.replace(switchedPath(locale));
   };
+
+  const currentLocale = pathname.split("/")[1];
 
   return (
     <div className="flex items-center gap-1">
@@ -31,6 +33,7 @@ export function LanguageSwitcher() {
           {i > 0 && <span className="text-border mx-1">|</span>}
           <button
             type="button"
+            aria-current={locale === currentLocale ? "true" : undefined}
             onClick={() => handleSwitch(locale)}
             className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
           >
