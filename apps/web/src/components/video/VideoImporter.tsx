@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useState, useRef } from "react";
-import { Upload, Timer, Waves, Zap } from "lucide-react";
+import { Upload, Waves, Zap } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useVideoFile } from "@/hooks/useVideoFile";
+import { SwimHubTimerIcon } from "@/components/icons/SwimHubTimerIcon";
 
 export function VideoImporter() {
   const { t } = useTranslation();
@@ -62,7 +63,7 @@ export function VideoImporter() {
       {/* Logo + title */}
       <div className="text-center space-y-3">
         <div className="w-16 h-16 rounded-2xl bg-surface-raised border border-border flex items-center justify-center mx-auto glow-cyan">
-          <Timer className="w-8 h-8 text-primary" />
+          <SwimHubTimerIcon className="w-8 h-8" />
         </div>
         <h1 className="text-3xl font-bold tracking-tight">SwimHub Timer</h1>
         <p className="text-muted-foreground text-sm max-w-xs mx-auto leading-relaxed">

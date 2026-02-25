@@ -14,6 +14,7 @@ import { AuthGuard } from "@/components/auth/AuthGuard";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { ArrowRight, ChevronRight, RotateCcw, Waves, Palette, ListOrdered } from "lucide-react";
 import { SwimHubTimerIcon } from "@/components/icons/SwimHubTimerIcon";
+import { SwimHubFamilyFooter } from "@/components/layout/SwimHubFamilyFooter";
 import { useTranslation } from "react-i18next";
 import type { EditorStep } from "@swimhub-timer/core";
 
@@ -74,6 +75,7 @@ export default function Home() {
           <main className="flex-1 flex items-center justify-center p-4">
             <VideoImporter />
           </main>
+          <SwimHubFamilyFooter />
         </div>
       </AuthGuard>
     );
@@ -109,6 +111,7 @@ export default function Home() {
           <main className="flex-1 flex items-center justify-center p-4">
             <ExportDialog />
           </main>
+          <SwimHubFamilyFooter />
         </div>
       </AuthGuard>
     );
