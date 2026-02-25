@@ -108,9 +108,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md w-full space-y-6 bg-card p-6 sm:p-8 md:p-10 rounded-2xl shadow-xl">
         <div className="text-center flex flex-col items-center">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-            <SwimHubTimerIcon className="w-9 h-9 text-primary" />
-          </div>
+          <SwimHubTimerIcon className="w-28 h-28 mx-auto mb-4" />
           <h2 className="text-xl sm:text-2xl font-extrabold text-foreground mb-2">
             {t("common.appName")}
           </h2>

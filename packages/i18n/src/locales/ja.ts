@@ -32,7 +32,7 @@ const ja = {
   },
 
   import: {
-    subtitle: "水泳レース動画にストップウォッチオーバーレイを追加",
+    subtitle: "レース動画にストップウォッチオーバーレイを追加",
     selectVideo: "動画を選択",
     selectVideoDesc: "フォトライブラリから水泳レースの動画を選んでください",
     dropHere: "レース動画をドロップ",

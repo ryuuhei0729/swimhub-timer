@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
+import { View, Text, StyleSheet, Pressable, Alert, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
@@ -57,6 +57,10 @@ export default function ImportScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <Image
+          source={require("../../assets/icon.png")}
+          style={styles.appIcon}
+        />
         <View style={styles.headerRow}>
           <Text style={styles.title}>{t("common.appName")}</Text>
           <Pressable
@@ -135,6 +139,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 48,
     width: "100%",
+  },
+  appIcon: {
+    width: 180,
+    height: 180,
+    marginBottom: spacing.md,
   },
   headerRow: {
     flexDirection: "row",
