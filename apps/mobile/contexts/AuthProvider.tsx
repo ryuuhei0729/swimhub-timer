@@ -28,7 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const { data } = await supabase
         .from("user_subscriptions")
         .select("plan")
-        .eq("user_id", userId)
+        .eq("id", userId)
         .single<{ plan: string }>();
       if (data?.plan === "premium") {
         setPlan("premium");
