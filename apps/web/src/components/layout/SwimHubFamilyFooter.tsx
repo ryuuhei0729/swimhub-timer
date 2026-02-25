@@ -1,25 +1,26 @@
-import { ExternalLink, Users, ScanLine } from "lucide-react";
+import Image from "next/image";
+import { ExternalLink } from "lucide-react";
 
 const services = [
   {
     name: "SwimHub",
     description: "水泳チームの総合管理",
     href: "https://swim-hub.app",
-    icon: Users,
+    iconSrc: "/swimhub-icon.png",
     current: false,
   },
   {
     name: "SwimHub Timer",
     description: "動画からタイムを自動計測",
     href: "https://timer.swim-hub.app",
-    icon: null,
+    iconSrc: "/icon.png",
     current: true,
   },
   {
     name: "SwimHub Scanner",
     description: "手書き記録表をAIでデジタル化",
     href: "https://scanner.swim-hub.app",
-    icon: ScanLine,
+    iconSrc: "/scanner-icon.png",
     current: false,
   },
 ];
@@ -38,6 +39,13 @@ export function SwimHubFamilyFooter() {
                 key={service.name}
                 className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-primary/5 border border-primary/15"
               >
+                <Image
+                  src={service.iconSrc}
+                  alt={service.name}
+                  width={64}
+                  height={64}
+                  className="w-8 h-8 shrink-0"
+                />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-medium text-primary">
@@ -60,9 +68,13 @@ export function SwimHubFamilyFooter() {
                 rel="noopener noreferrer"
                 className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface-raised border border-border hover:bg-accent/50 hover:border-border/80 transition-colors duration-200 group"
               >
-                {service.icon && (
-                  <service.icon className="w-4 h-4 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors shrink-0" />
-                )}
+                <Image
+                  src={service.iconSrc}
+                  alt={service.name}
+                  width={64}
+                  height={64}
+                  className="w-8 h-8 shrink-0 opacity-60 group-hover:opacity-100 transition-opacity"
+                />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1">
                     <span className="text-xs font-medium text-foreground/80 group-hover:text-foreground">
