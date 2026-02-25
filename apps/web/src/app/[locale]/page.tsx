@@ -59,7 +59,7 @@ export default function Home() {
     return (
       <AuthGuard>
         <div className="min-h-dvh flex flex-col">
-          <header className="h-14 shrink-0 border-b border-border bg-surface/80 backdrop-blur-xl px-4 flex items-center justify-between relative z-50">
+          <header className="h-14 shrink-0 border-b border-border bg-surface/80 backdrop-blur-xl px-2 sm:px-4 lg:px-8 flex items-center justify-between relative z-50">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <SwimHubTimerIcon className="w-4 h-4 text-primary" />
@@ -86,7 +86,7 @@ export default function Home() {
     return (
       <AuthGuard>
         <div className="min-h-dvh flex flex-col">
-          <header className="h-14 shrink-0 border-b border-border bg-surface/80 backdrop-blur-xl px-4 flex items-center justify-between relative z-50">
+          <header className="h-14 shrink-0 border-b border-border bg-surface/80 backdrop-blur-xl px-2 sm:px-4 lg:px-8 flex items-center justify-between relative z-50">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <SwimHubTimerIcon className="w-4 h-4 text-primary" />
@@ -122,7 +122,7 @@ export default function Home() {
     <AuthGuard>
     <main className="h-dvh flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="h-14 shrink-0 border-b border-border bg-surface/80 backdrop-blur-xl px-4 flex items-center justify-between relative z-50">
+      <header className="h-14 shrink-0 border-b border-border bg-surface/80 backdrop-blur-xl px-2 sm:px-4 lg:px-8 flex items-center justify-between relative z-50">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <SwimHubTimerIcon className="w-4 h-4 text-primary" />
