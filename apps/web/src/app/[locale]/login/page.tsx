@@ -188,6 +188,7 @@ export default function LoginPage() {
         <form onSubmit={handleEmailSubmit} className="space-y-3">
           <input
             type="email"
+            autoComplete="username"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder={t("auth.emailPlaceholder")}
