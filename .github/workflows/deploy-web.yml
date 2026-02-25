@@ -21,6 +21,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Create .env.production
+        working-directory: apps/web
+        run: |
+          echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> .env.production
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env.production
+          echo "Created .env.production with $(wc -l < .env.production) lines"
+
       - name: Build and deploy
         working-directory: apps/web
         run: >
