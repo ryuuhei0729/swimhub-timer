@@ -1,52 +1,98 @@
 import sharp from "sharp";
+import pngToIco from "png-to-ico";
 import { writeFileSync, mkdirSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
+const source = join(__dirname, "icon-source.png");
 
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#0a0f1a"/>
-  <rect x="232" y="68" width="48" height="26" rx="9" fill="#06b6d4"/>
-  <circle cx="256" cy="284" r="155" stroke="#06b6d4" stroke-width="16" fill="none"/>
-  <line x1="256" y1="284" x2="256" y2="156" stroke="#22d3ee" stroke-width="13" stroke-linecap="round"/>
-  <path d="M108 284 Q158 244, 208 284 Q258 324, 308 284 Q358 244, 408 284" stroke="#06b6d4" stroke-width="11" fill="none" stroke-linecap="round"/>
-  <circle cx="256" cy="284" r="10" fill="#22d3ee"/>
-</svg>`;
-
-// Adaptive icon foreground (no background, just the stopwatch centered)
-const adaptiveForegroundSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect x="232" y="68" width="48" height="26" rx="9" fill="#06b6d4"/>
-  <circle cx="256" cy="284" r="155" stroke="#06b6d4" stroke-width="16" fill="none"/>
-  <line x1="256" y1="284" x2="256" y2="156" stroke="#22d3ee" stroke-width="13" stroke-linecap="round"/>
-  <path d="M108 284 Q158 244, 208 284 Q258 324, 308 284 Q358 244, 408 284" stroke="#06b6d4" stroke-width="11" fill="none" stroke-linecap="round"/>
-  <circle cx="256" cy="284" r="10" fill="#22d3ee"/>
-</svg>`;
-
+// Resize targets (square, from PNG source)
 const targets = [
   // Mobile app icon (iOS + Android)
-  { path: "apps/mobile/assets/icon.png", size: 1024, svg },
-  // Android adaptive icon foreground
-  { path: "apps/mobile/assets/adaptive-icon.png", size: 1024, svg: adaptiveForegroundSvg },
+  { path: "apps/mobile/assets/icon.png", size: 1024 },
+  // Android adaptive icon foreground (with padding for safe zone)
+  { path: "apps/mobile/assets/adaptive-icon.png", size: 1024, adaptive: true },
   // Mobile favicon (for Expo web)
-  { path: "apps/mobile/assets/favicon.png", size: 48, svg },
+  { path: "apps/mobile/assets/favicon.png", size: 48 },
   // Mobile splash icon
-  { path: "apps/mobile/assets/splash-icon.png", size: 512, svg },
+  { path: "apps/mobile/assets/splash-icon.png", size: 512 },
   // Web apple-touch-icon
-  { path: "apps/web/public/apple-touch-icon.png", size: 180, svg },
+  { path: "apps/web/public/apple-touch-icon.png", size: 180 },
+  // Web PWA icons
+  { path: "apps/web/public/icons/icon-192.png", size: 192 },
+  { path: "apps/web/public/icons/icon-512.png", size: 512 },
+  // Web icon.png (referenced in layout metadata)
+  { path: "apps/web/public/icon.png", size: 512 },
 ];
 
 for (const target of targets) {
   const outPath = join(root, target.path);
   mkdirSync(dirname(outPath), { recursive: true });
 
-  await sharp(Buffer.from(target.svg))
-    .resize(target.size, target.size)
-    .png()
-    .toFile(outPath);
+  if (target.adaptive) {
+    // Android adaptive icon: place icon in center with padding (safe zone is ~66%)
+    const iconSize = Math.round(target.size * 0.66);
+    const resized = await sharp(source)
+      .resize(iconSize, iconSize, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .toBuffer();
+
+    await sharp({
+      create: {
+        width: target.size,
+        height: target.size,
+        channels: 4,
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      },
+    })
+      .composite([{ input: resized, gravity: "centre" }])
+      .png()
+      .toFile(outPath);
+  } else {
+    await sharp(source)
+      .resize(target.size, target.size, { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 0 } })
+      .png()
+      .toFile(outPath);
+  }
 
   console.log(`Generated: ${target.path} (${target.size}x${target.size})`);
 }
+
+// Generate favicon.ico (32x32)
+const favicon32 = await sharp(source)
+  .resize(32, 32, { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 0 } })
+  .png()
+  .toBuffer();
+
+const ico = await pngToIco(favicon32);
+const faviconPath = join(root, "apps/web/src/app/favicon.ico");
+mkdirSync(dirname(faviconPath), { recursive: true });
+writeFileSync(faviconPath, ico);
+console.log("Generated: apps/web/src/app/favicon.ico (32x32)");
+
+// Generate OG image (1200x630) - icon centered on white background
+const ogWidth = 1200;
+const ogHeight = 630;
+const ogIconSize = 400;
+
+const ogIcon = await sharp(source)
+  .resize(ogIconSize, ogIconSize, { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 0 } })
+  .toBuffer();
+
+const ogPath = join(root, "apps/web/public/og-image.png");
+await sharp({
+  create: {
+    width: ogWidth,
+    height: ogHeight,
+    channels: 4,
+    background: { r: 255, g: 255, b: 255, alpha: 255 },
+  },
+})
+  .composite([{ input: ogIcon, gravity: "centre" }])
+  .png()
+  .toFile(ogPath);
+
+console.log(`Generated: apps/web/public/og-image.png (${ogWidth}x${ogHeight})`);
 
 console.log("\nDone!");
