@@ -62,8 +62,8 @@ export default function Home() {
           <header className="h-14 shrink-0 border-b border-border bg-surface/80 backdrop-blur-xl px-2 sm:px-4 lg:px-8 flex items-center justify-between relative z-50">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <SwimHubTimerIcon className="w-4 h-4 text-primary" />
-                <span className="font-semibold text-sm tracking-tight">SwimHub Timer</span>
+                <SwimHubTimerIcon className="w-10 h-10 text-primary" />
+                <span className="text-lg font-bold tracking-tight">SwimHub Timer</span>
               </div>
               <StepIndicator currentStep="import" />
             </div>
@@ -89,8 +89,8 @@ export default function Home() {
           <header className="h-14 shrink-0 border-b border-border bg-surface/80 backdrop-blur-xl px-2 sm:px-4 lg:px-8 flex items-center justify-between relative z-50">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <SwimHubTimerIcon className="w-4 h-4 text-primary" />
-                <span className="font-semibold text-sm tracking-tight">SwimHub Timer</span>
+                <SwimHubTimerIcon className="w-10 h-10 text-primary" />
+                <span className="text-lg font-bold tracking-tight">SwimHub Timer</span>
               </div>
               <StepIndicator currentStep="export" />
             </div>
