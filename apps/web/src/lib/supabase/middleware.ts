@@ -32,6 +32,12 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Redirect locale-less public paths to default locale
+  const publicPaths = ["/terms", "/privacy"];
+  if (publicPaths.includes(pathname)) {
+    return NextResponse.redirect(new URL(`/ja${pathname}`, request.url));
+  }
+
   // Locale prefix detection: /ja, /en, etc.
   const localeMatch = pathname.match(/^\/([a-z]{2})(\/|$)/);
   const locale = localeMatch ? localeMatch[1] : "ja";

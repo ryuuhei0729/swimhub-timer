@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useTranslation } from "react-i18next";
 
 export function TermsContent({ locale }: { locale: string }) {
@@ -73,12 +72,13 @@ export function TermsContent({ locale }: { locale: string }) {
       </section>
 
       <div className="mt-12">
-        <Link
-          href={`/${locale}`}
+        <button
+          type="button"
+          onClick={() => window.history.back()}
           className="text-sm text-primary hover:underline"
         >
-          {t("terms.backToTop")}
-        </Link>
+          ← {t("common.back")}
+        </button>
       </div>
     </main>
   );
