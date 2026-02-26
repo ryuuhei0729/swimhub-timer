@@ -84,10 +84,14 @@ export function ExportDialog() {
     }
   }, [exportTriggered, adState, adRewardEarned, adUnavailable]);
 
-  // Fallback: if ad fails, allow export without ad after delay
+  // Fallback: if ad fails or stays loading too long, allow export without ad
   useEffect(() => {
     if (adState === "error" && !adUnavailable) {
       const timer = setTimeout(() => setAdUnavailable(true), 2000);
+      return () => clearTimeout(timer);
+    }
+    if (adState === "loading" && !adUnavailable) {
+      const timer = setTimeout(() => setAdUnavailable(true), 5000);
       return () => clearTimeout(timer);
     }
   }, [adState, adUnavailable]);
@@ -104,6 +108,9 @@ export function ExportDialog() {
       } else if (currentState !== "loading") {
         setAdUnavailable(true);
       }
+      // If still loading, the timeout effect will handle setting adUnavailable
+    } else {
+      setAdUnavailable(true);
     }
 
     // --- Start encoding ---
