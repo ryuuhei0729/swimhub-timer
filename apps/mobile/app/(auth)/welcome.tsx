@@ -1,6 +1,5 @@
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
@@ -16,13 +15,10 @@ export default function WelcomeScreen() {
     >
       <View style={styles.content}>
         <View style={styles.logoContainer}>
-          <View style={styles.iconContainer}>
-            <Ionicons
-              name="stopwatch-outline"
-              size={40}
-              color={colors.primary}
-            />
-          </View>
+          <Image
+            source={require("../../assets/splash-icon.png")}
+            style={styles.appIcon}
+          />
           <Text style={styles.appName}>{t("common.appName")}</Text>
           <Text style={styles.tagline}>{t("import.subtitle")}</Text>
         </View>
@@ -71,13 +67,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.lg,
   },
-  iconContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: 20,
-    backgroundColor: colors.primaryMuted,
-    alignItems: "center",
-    justifyContent: "center",
+  appIcon: {
+    width: 160,
+    height: 160,
   },
   appName: {
     fontSize: 32,
