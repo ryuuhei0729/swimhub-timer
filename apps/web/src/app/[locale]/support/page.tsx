@@ -4,7 +4,7 @@ import {
   i18nResources,
   type SupportedLocale,
 } from "@swimhub-timer/i18n";
-import { PrivacyContent } from "./PrivacyContent";
+import { SupportContent } from "./SupportContent";
 
 export function generateStaticParams() {
   return supportedLocales.map((locale) => ({ locale }));
@@ -18,16 +18,16 @@ export async function generateMetadata({
   const { locale } = await params;
   const t = i18nResources[locale as SupportedLocale].translation;
   return {
-    title: t.privacy.metaTitle,
-    description: t.privacy.metaDescription,
+    title: t.support.metaTitle,
+    description: t.support.metaDescription,
   };
 }
 
-export default async function PrivacyPage({
+export default async function SupportPage({
   params,
 }: {
   params: Promise<{ locale: string }>;
 }) {
   await params;
-  return <PrivacyContent />;
+  return <SupportContent />;
 }

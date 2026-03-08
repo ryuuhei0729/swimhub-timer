@@ -34,5 +34,5 @@ export default async function TermsPage({
   const { locale } = await params;
   const resource = i18nResources[locale as SupportedLocale];
   if (!resource) notFound();
-  return <TermsContent locale={locale} />;
+  return <TermsContent />;
 }

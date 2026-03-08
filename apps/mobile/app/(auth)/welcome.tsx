@@ -2,11 +2,13 @@ import { View, Text, Pressable, StyleSheet, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../../contexts/AuthProvider";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 
 export default function WelcomeScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { continueAsGuest } = useAuth();
 
   return (
     <SafeAreaView
@@ -46,6 +48,18 @@ export default function WelcomeScreen() {
         >
           <Text style={styles.secondaryButtonText}>
             {t("auth.welcome.login")}
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={({ pressed }) => [
+            styles.guestButton,
+            pressed && styles.guestButtonPressed,
+          ]}
+          onPress={continueAsGuest}
+        >
+          <Text style={styles.guestButtonText}>
+            {t("auth.continueAsGuest")}
           </Text>
         </Pressable>
       </View>
@@ -118,5 +132,18 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 17,
     fontWeight: "600",
+  },
+  guestButton: {
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  guestButtonPressed: {
+    opacity: 0.6,
+  },
+  guestButtonText: {
+    color: colors.muted,
+    fontSize: 14,
+    fontWeight: "500",
   },
 });

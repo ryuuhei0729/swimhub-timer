@@ -2,7 +2,7 @@
 
 import { useTranslation } from "react-i18next";
 
-export function PrivacyContent({ locale }: { locale: string }) {
+export function PrivacyContent() {
   const { t } = useTranslation();
 
   return (

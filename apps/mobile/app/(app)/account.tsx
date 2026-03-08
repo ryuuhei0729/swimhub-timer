@@ -1,13 +1,25 @@
-import { View, Text, TouchableOpacity, Alert, StyleSheet } from "react-native";
+import { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+  StyleSheet,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Constants from "expo-constants";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../contexts/AuthProvider";
+import { supabase } from "../../lib/supabase";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
+
+const WEB_API_URL = "https://timer.swim-hub.app";
 
 export default function AccountScreen() {
   const { t } = useTranslation();
   const { user, plan, signOut } = useAuth();
+  const [deleting, setDeleting] = useState(false);
 
   const handleSignOut = () => {
     Alert.alert(t("auth.logout"), t("auth.logoutConfirm"), [
@@ -23,6 +35,55 @@ export default function AccountScreen() {
         },
       },
     ]);
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      t("auth.deleteAccount"),
+      t("auth.deleteAccountConfirm"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("auth.deleteAccount"),
+          style: "destructive",
+          onPress: async () => {
+            setDeleting(true);
+            try {
+              const session = await supabase?.auth.getSession();
+              const accessToken = session?.data.session?.access_token;
+              if (!accessToken) {
+                throw new Error("No session");
+              }
+
+              const response = await fetch(`${WEB_API_URL}/api/user/delete`, {
+                method: "DELETE",
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                  "Content-Type": "application/json",
+                },
+              });
+
+              if (!response.ok) {
+                const body = await response.json().catch(() => ({}));
+                throw new Error(
+                  body.error || t("auth.errors.deleteAccountFailed"),
+                );
+              }
+
+              await signOut();
+            } catch (err) {
+              const message =
+                err instanceof Error
+                  ? err.message
+                  : t("auth.errors.deleteAccountFailed");
+              Alert.alert(t("common.error"), message);
+            } finally {
+              setDeleting(false);
+            }
+          },
+        },
+      ],
+    );
   };
 
   const appVersion = Constants.expoConfig?.version || "1.0.0";
@@ -57,7 +118,9 @@ export default function AccountScreen() {
                 >
                   {plan === "premium"
                     ? t("auth.planPremium")
-                    : t("auth.planFree")}
+                    : plan === "free"
+                      ? t("auth.planFree")
+                      : t("auth.planGuest")}
                 </Text>
               </View>
             </View>
@@ -72,6 +135,26 @@ export default function AccountScreen() {
           >
             <Text style={styles.signOutButtonText}>{t("auth.logout")}</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Delete account */}
+        <View style={styles.section}>
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={handleDeleteAccount}
+            disabled={deleting}
+          >
+            {deleting ? (
+              <ActivityIndicator color={colors.destructive} />
+            ) : (
+              <Text style={styles.deleteButtonText}>
+                {t("auth.deleteAccount")}
+              </Text>
+            )}
+          </TouchableOpacity>
+          <Text style={styles.deleteWarning}>
+            {t("auth.deleteAccountWarning")}
+          </Text>
         </View>
 
         {/* App info */}
@@ -165,6 +248,25 @@ const styles = StyleSheet.create({
     color: colors.destructive,
     fontSize: fontSize.md,
     fontWeight: "600",
+  },
+  deleteButton: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: 14,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.destructive,
+  },
+  deleteButtonText: {
+    color: colors.destructive,
+    fontSize: fontSize.md,
+    fontWeight: "600",
+  },
+  deleteWarning: {
+    fontSize: fontSize.xs,
+    color: colors.muted,
+    textAlign: "center",
+    marginTop: spacing.sm,
   },
   footer: {
     alignItems: "center",

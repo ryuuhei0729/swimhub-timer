@@ -226,6 +226,25 @@ export default function LoginPage() {
           </button>
         </form>
 
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-border" />
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="bg-card px-3 text-muted-foreground">
+              {t("auth.or")}
+            </span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => router.replace(`/${locale}`)}
+          className="w-full py-3 px-4 rounded-lg text-sm font-medium text-muted-foreground border border-border hover:bg-muted focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-150 ease-in-out"
+        >
+          {t("auth.continueAsGuest")}
+        </button>
+
         <p className="text-center text-xs text-muted-foreground">
           {(() => {
             const full = t("auth.termsAgree");

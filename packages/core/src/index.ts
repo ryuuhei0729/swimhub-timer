@@ -16,7 +16,7 @@ export type {
 export type { UserPlan, UserProfile } from "./types/auth";
 
 // Utils
-export { getAvailableResolutions } from "./utils/subscription";
+export { getAvailableResolutions, getMaxSplitCount, shouldShowWatermark } from "./utils/subscription";
 
 // Constants
 export {

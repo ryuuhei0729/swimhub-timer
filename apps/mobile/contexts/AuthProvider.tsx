@@ -10,6 +10,7 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   plan: UserPlan;
   signOut: () => Promise<{ error: Error | null }>;
+  continueAsGuest: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,7 +21,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [plan, setPlan] = useState<UserPlan>("free");
+  const [plan, setPlan] = useState<UserPlan>("guest");
+  const [guestMode, setGuestMode] = useState(false);
 
   const fetchPlan = React.useCallback(async (userId: string) => {
     if (!supabase) return;
@@ -52,7 +54,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         // Network failure: fall back to local-only sign out
         await supabase.auth.signOut({ scope: "local" });
       }
-      setPlan("free");
+      setPlan("guest");
+      setGuestMode(false);
 
       // Clear all MMKV caches
       try {
@@ -70,7 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       // Network failure in try block: fall back to local-only sign out
       try {
         await supabase.auth.signOut({ scope: "local" });
-        setPlan("free");
+        setPlan("guest");
 
         try {
           const { createMMKV } = require("react-native-mmkv");
@@ -88,6 +91,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         return { error: localError as Error };
       }
     }
+  }, []);
+
+  const continueAsGuest = React.useCallback(() => {
+    setPlan("guest");
+    setGuestMode(true);
   }, []);
 
   useEffect(() => {
@@ -123,9 +131,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setLoading(false);
 
       if (newSession?.user) {
+        setGuestMode(false);
         fetchPlan(newSession.user.id);
       } else {
-        setPlan("free");
+        setPlan("guest");
       }
     });
 
@@ -140,9 +149,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     user,
     session,
     loading,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user || guestMode,
     plan,
     signOut,
+    continueAsGuest,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

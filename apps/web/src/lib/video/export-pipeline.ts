@@ -107,7 +107,8 @@ export async function exportVideoWithStopwatch(
   stopwatchConfig: StopwatchConfig,
   originalVideoHeight: number,
   exportSettings: ExportSettings,
-  onProgress: (percent: number) => void
+  onProgress: (percent: number) => void,
+  showWatermark = true
 ): Promise<Blob> {
   const ffmpeg = await ffmpegManager.load(onProgress);
 
@@ -147,32 +148,36 @@ export async function exportVideoWithStopwatch(
     exportSettings.resolution !== "original"
       ? parseInt(exportSettings.resolution)
       : (originalVideoHeight || 1080);
-  filters.push(buildWatermarkFilter(watermarkHeight));
+  if (showWatermark) {
+    filters.push(buildWatermarkFilter(watermarkHeight));
+  }
 
   const filterChain = filters.join(",");
 
   // Use lower CRF for original resolution to preserve quality
   const crf = exportSettings.resolution === "original" ? "18" : "23";
 
-  // Try to load watermark icon
+  // Try to load watermark icon (only when watermark is enabled)
   let hasIcon = false;
-  try {
-    const iconResp = await fetch("/apple-touch-icon.png");
-    if (iconResp.ok) {
-      const iconData = new Uint8Array(await iconResp.arrayBuffer());
-      await ffmpeg.writeFile("icon.png", iconData);
-      hasIcon = true;
+  if (showWatermark) {
+    try {
+      const iconResp = await fetch("/apple-touch-icon.png");
+      if (iconResp.ok) {
+        const iconData = new Uint8Array(await iconResp.arrayBuffer());
+        await ffmpeg.writeFile("icon.png", iconData);
+        hasIcon = true;
+      }
+    } catch {
+      // Fall back to text-only watermark
     }
-  } catch {
-    // Fall back to text-only watermark
   }
 
   // Execute ffmpeg
   if (hasIcon) {
     const fontSize = watermarkFontSize(watermarkHeight);
     const iconSize = fontSize;
-    const gap = Math.round(fontSize * 0.4);
-    const textWidthEstimate = Math.round(fontSize * 5.0);
+    const gap = Math.round(fontSize * 0.3);
+    const textWidthEstimate = Math.round(fontSize * 5.8);
     const iconX = `W-w-${gap}-${textWidthEstimate}-W*0.03`;
     const iconY = `H-h-H*0.03`;
 

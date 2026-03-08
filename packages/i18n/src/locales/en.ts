@@ -99,6 +99,8 @@ const en: TranslationShape = {
       "Pause the video, enter distance,\nand tap Record to log a split",
     lap: "lap",
     count: "{{count}}",
+    limitReached:
+      "Split limit ({{max}}) reached. Upgrade to Premium for unlimited splits.",
   },
 
   exportScreen: {
@@ -180,9 +182,15 @@ const en: TranslationShape = {
     accountInfo: "Account Information",
     email: "Email",
     plan: "Plan",
+    planGuest: "Guest",
     planFree: "Free",
     planPremium: "Premium",
     premiumOnly: "Premium only",
+    continueAsGuest: "Continue as Guest",
+    deleteAccount: "Delete Account",
+    deleteAccountConfirm:
+      "Deleting your account will permanently remove all your data. This action cannot be undone.",
+    deleteAccountWarning: "All data will be permanently deleted",
     errors: {
       cancelled: "Authentication was cancelled",
       generic: "Authentication failed. Please try again.",
@@ -192,6 +200,8 @@ const en: TranslationShape = {
       invalidCredentials: "Invalid email or password",
       alreadyRegistered: "This email is already registered. Please sign in.",
       passwordTooShort: "Password must be at least {{minLength}} characters",
+      deleteAccountFailed:
+        "Failed to delete account. Please try again.",
     },
   },
 
@@ -257,6 +267,36 @@ const en: TranslationShape = {
     contactBody:
       "For questions about this policy, please contact us through the app's support page.",
     backToTop: "Back to home",
+  },
+
+  support: {
+    title: "Support",
+    metaTitle: "Support | SwimHub Timer",
+    metaDescription: "SwimHub Timer Support & Contact",
+    heading: "Support & Contact",
+    description:
+      "If you have any questions or need help with SwimHub Timer, please contact us at the email address below.",
+    emailLabel: "Contact Email",
+    email: "support@swim-hub.app",
+    responseNote: "We typically respond within a few business days.",
+    faqTitle: "Frequently Asked Questions",
+    faqItems: [
+      {
+        question: "Video export fails",
+        answer:
+          "Please check the available storage on your device. Longer videos require more storage space.",
+      },
+      {
+        question: "Start signal is not auto-detected",
+        answer:
+          "Auto-detection may not work well in noisy environments. Tap the waveform to manually set the start point.",
+      },
+      {
+        question: "I want to delete my account",
+        answer:
+          "To request account deletion, please contact us at the email address above.",
+      },
+    ],
   },
 } as const;
 

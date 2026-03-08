@@ -2,7 +2,7 @@
 
 import { useTranslation } from "react-i18next";
 
-export function TermsContent({ locale }: { locale: string }) {
+export function TermsContent() {
   const { t } = useTranslation();
 
   const prohibitedItems = t("terms.prohibitedItems", {

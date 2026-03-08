@@ -9,11 +9,14 @@ import {
 import * as Haptics from "expo-haptics";
 import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../../stores/editor-store";
-import { formatTime } from "@swimhub-timer/core";
+import { useAuth } from "../../contexts/AuthProvider";
+import { formatTime, getMaxSplitCount } from "@swimhub-timer/core";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 
 export function SplitsPanel() {
   const { t } = useTranslation();
+  const { plan } = useAuth();
+  const maxSplits = getMaxSplitCount(plan);
   const {
     splitTimes,
     isFinished,
@@ -34,8 +37,10 @@ export function SplitsPanel() {
 
   const elapsed =
     startTime !== null ? Math.max(0, currentVideoTime - startTime) : 0;
+  const splitLimitReached = splitTimes.length >= maxSplits;
 
   const handleRecord = () => {
+    if (splitLimitReached) return;
     recordSplit(elapsed);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
@@ -99,14 +104,23 @@ export function SplitsPanel() {
             <Pressable
               style={[
                 styles.recordBtn,
-                !currentDistanceInput && styles.btnDisabled,
+                (!currentDistanceInput || splitLimitReached) && styles.btnDisabled,
               ]}
               onPress={handleRecord}
-              disabled={!currentDistanceInput}
+              disabled={!currentDistanceInput || splitLimitReached}
             >
               <Text style={styles.recordBtnText}>{t("splits.record")}</Text>
             </Pressable>
           </View>
+
+          {/* Split limit message */}
+          {splitLimitReached && (
+            <View style={styles.limitBanner}>
+              <Text style={styles.limitBannerText}>
+                {t("splits.limitReached", { max: maxSplits })}
+              </Text>
+            </View>
+          )}
 
           {/* Memo */}
           <TextInput
@@ -388,5 +402,17 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     fontWeight: "600",
     color: colors.muted,
+  },
+  limitBanner: {
+    backgroundColor: "#FEF3C7",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+    borderRadius: radius.sm,
+    padding: spacing.sm,
+  },
+  limitBannerText: {
+    fontSize: fontSize.xs,
+    color: "#92400E",
+    lineHeight: 16,
   },
 });

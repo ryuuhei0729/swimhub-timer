@@ -29,7 +29,7 @@ export const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [plan, setPlan] = useState<UserPlan>("free");
+  const [plan, setPlan] = useState<UserPlan>("guest");
 
   const fetchPlan = useCallback(async (userId: string) => {
     try {
@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         fetchPlan(session.user.id);
       } else {
-        setPlan("free");
+        setPlan("guest");
       }
     });
 
@@ -125,7 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     const supabase = getSupabaseBrowserClient();
     await supabase.auth.signOut({ scope: "local" });
-    setPlan("free");
+    setPlan("guest");
 
     // Clear all caches
     useEditorStore.getState().reset();

@@ -5,7 +5,7 @@ import type * as SharingType from "expo-sharing";
 import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../../stores/editor-store";
 import { useAuth } from "../../contexts/AuthProvider";
-import { formatTime, getAvailableResolutions } from "@swimhub-timer/core";
+import { formatTime, getAvailableResolutions, shouldShowWatermark } from "@swimhub-timer/core";
 import type { ExportResolution } from "@swimhub-timer/core";
 import {
   exportVideoWithStopwatch,
@@ -53,6 +53,7 @@ export default function ExportScreen() {
   const canProceed = exportComplete && (adRewardEarned || adUnavailable);
   const duration = videoMetadata?.duration ?? 0;
   const availableResolutions = getAvailableResolutions(plan);
+  const showWatermark = shouldShowWatermark(plan);
 
   const ALL_RESOLUTIONS: { key: ExportResolution; label: string }[] = [
     { key: "original", label: t("exportScreen.original") },
@@ -157,7 +158,8 @@ export default function ExportScreen() {
           if (durationMs > 0) {
             setProgress(Math.min(timeMs / durationMs, 1));
           }
-        }
+        },
+        showWatermark
       );
       setOutputPath(path);
       setProgress(1);
@@ -180,6 +182,7 @@ export default function ExportScreen() {
     setExportSettings,
     duration,
     videoMetadata?.height,
+    showWatermark,
     t,
   ]);
 

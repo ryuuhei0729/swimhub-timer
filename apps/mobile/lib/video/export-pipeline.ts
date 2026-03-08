@@ -259,7 +259,8 @@ export async function exportVideoWithStopwatch(
   finishTime: number | null,
   originalVideoHeight: number,
   exportSettings: ExportSettings,
-  onProgress: (percent: number) => void
+  onProgress: (percent: number) => void,
+  showWatermark = true
 ): Promise<string> {
   const { Paths, File } = require("expo-file-system") as typeof import("expo-file-system");
   const outputFile = new File(Paths.cache, "export_output.mp4");
@@ -306,7 +307,9 @@ export async function exportVideoWithStopwatch(
     exportSettings.resolution !== "original"
       ? parseInt(exportSettings.resolution)
       : originalVideoHeight;
-  filters.push(buildWatermarkFilter(watermarkHeight));
+  if (showWatermark) {
+    filters.push(buildWatermarkFilter(watermarkHeight));
+  }
 
   const filterChain = filters.join(",");
   const crf = exportSettings.resolution === "original" ? "18" : "23";
@@ -321,16 +324,16 @@ export async function exportVideoWithStopwatch(
     }
   });
 
-  // Try to resolve app icon for watermark overlay
-  const iconUri = await getWatermarkIconUri();
+  // Try to resolve app icon for watermark overlay (only when watermark is enabled)
+  const iconUri = showWatermark ? await getWatermarkIconUri() : null;
 
   let command: string;
   if (iconUri) {
     // Use filter_complex to overlay icon + drawtext
     const fontSize = watermarkFontSize(watermarkHeight);
     const iconSize = fontSize;
-    const gap = Math.round(fontSize * 0.4);
-    const textWidthEstimate = Math.round(fontSize * 5.0);
+    const gap = Math.round(fontSize * 0.3);
+    const textWidthEstimate = Math.round(fontSize * 5.8);
     const iconX = `W-w-${gap}-${textWidthEstimate}-W*0.03`;
     const iconY = `H-h-H*0.03`;
 

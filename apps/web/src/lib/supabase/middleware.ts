@@ -33,7 +33,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Redirect locale-less public paths to default locale
-  const publicPaths = ["/terms", "/privacy"];
+  const publicPaths = ["/terms", "/privacy", "/support"];
   if (publicPaths.includes(pathname)) {
     return NextResponse.redirect(new URL(`/ja${pathname}`, request.url));
   }
@@ -46,20 +46,6 @@ export async function updateSession(request: NextRequest) {
     : pathname;
   const pathWithoutLocale =
     rawPathWithoutLocale === "" ? "/" : rawPathWithoutLocale;
-
-  // Not logged in + accessing protected route → redirect to login
-  if (
-    !user &&
-    pathWithoutLocale !== "/login" &&
-    pathname !== "/" &&
-    !pathname.startsWith("/api/") &&
-    !pathname.startsWith(`/${locale}/privacy`) &&
-    !pathname.startsWith(`/${locale}/terms`)
-  ) {
-    return NextResponse.redirect(
-      new URL(`/${locale}/login`, request.url),
-    );
-  }
 
   // Logged in + accessing login → redirect to home
   if (user && pathWithoutLocale === "/login") {

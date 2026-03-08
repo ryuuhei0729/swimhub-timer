@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 
@@ -9,6 +11,8 @@ export function UserMenu() {
   const { user, plan, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const params = useParams();
+  const locale = (params.locale as string) || "ja";
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -20,7 +24,16 @@ export function UserMenu() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <Link
+        href={`/${locale}/login`}
+        className="rounded-lg px-3 py-2 text-sm font-medium text-primary hover:bg-muted transition-colors duration-200"
+      >
+        {t("auth.login")}
+      </Link>
+    );
+  }
 
   const displayName = user.user_metadata?.full_name ?? user.email;
 
@@ -81,7 +94,9 @@ export function UserMenu() {
             >
               {plan === "premium"
                 ? t("auth.planPremium")
-                : t("auth.planFree")}
+                : plan === "free"
+                  ? t("auth.planFree")
+                  : t("auth.planGuest")}
             </span>
           </div>
           <div className="py-1">

@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { useEditorStore } from "@/stores/editor-store";
 import { exportVideoWithStopwatch } from "@/lib/video/export-pipeline";
 
-export function useVideoExport() {
+export function useVideoExport(showWatermark = true) {
   const {
     videoFile,
     startTime,
@@ -34,7 +34,8 @@ export function useVideoExport() {
         stopwatchConfig,
         videoMetadata?.height ?? 0,
         exportSettings,
-        (percent) => setExportProgress(percent)
+        (percent) => setExportProgress(percent),
+        showWatermark
       );
       setOutputBlob(blob);
     } catch (err) {
@@ -52,6 +53,7 @@ export function useVideoExport() {
     exportSettings,
     setExportProgress,
     setIsExporting,
+    showWatermark,
   ]);
 
   const downloadOutput = useCallback(() => {

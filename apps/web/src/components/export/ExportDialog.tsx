@@ -16,7 +16,7 @@ import { Download, Loader2, Check, ArrowLeft, Timer } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import type { ExportResolution } from "@swimhub-timer/core";
-import { getAvailableResolutions } from "@swimhub-timer/core";
+import { getAvailableResolutions, shouldShowWatermark } from "@swimhub-timer/core";
 import {
   createRewardedAdController,
   type AdState,
@@ -28,6 +28,7 @@ export function ExportDialog() {
   const { plan } = useAuth();
   const { exportSettings, setExportSettings, setStep } = useEditorStore();
   const availableResolutions = getAvailableResolutions(plan);
+  const showWatermark = shouldShowWatermark(plan);
   const {
     startExport: startEncoding,
     downloadOutput,
@@ -35,7 +36,7 @@ export function ExportDialog() {
     exportProgress,
     error,
     outputBlob,
-  } = useVideoExport();
+  } = useVideoExport(showWatermark);
 
   // --- Ad state ---
   const adControllerRef = useRef<RewardedAdController | null>(null);
@@ -152,17 +153,17 @@ export function ExportDialog() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="720">720p</SelectItem>
-              <SelectItem value="1080">1080p {t("exportScreen.recommended")}</SelectItem>
+              <SelectItem
+                value="1080"
+                disabled={!availableResolutions.includes("1080")}
+              >
+                1080p {t("exportScreen.recommended")}
+              </SelectItem>
               <SelectItem
                 value="original"
                 disabled={!availableResolutions.includes("original")}
               >
                 {t("exportScreen.original")}
-                {!availableResolutions.includes("original") && (
-                  <span className="ml-2 text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full">
-                    {t("auth.premiumOnly")}
-                  </span>
-                )}
               </SelectItem>
             </SelectContent>
           </Select>

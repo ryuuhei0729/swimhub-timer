@@ -1,15 +1,18 @@
 "use client";
 
 import { useEditorStore } from "@/stores/editor-store";
-import { formatTime } from "@swimhub-timer/core";
+import { useAuth } from "@/hooks/useAuth";
+import { formatTime, getMaxSplitCount } from "@swimhub-timer/core";
 import { useTranslation } from "react-i18next";
 import {
   ListOrdered, Trash2, RotateCcw, Trophy,
-  CircleDot, Flag, Minus, Plus,
+  CircleDot, Flag, Minus, Plus, Lock,
 } from "lucide-react";
 
 export function SplitsPanel() {
   const { t } = useTranslation();
+  const { plan } = useAuth();
+  const maxSplits = getMaxSplitCount(plan);
   const {
     splitTimes,
     isFinished,
@@ -29,8 +32,10 @@ export function SplitsPanel() {
   } = useEditorStore();
 
   const elapsed = startTime !== null ? Math.max(0, currentVideoTime - startTime) : 0;
+  const splitLimitReached = splitTimes.length >= maxSplits;
 
   const handleRecord = () => {
+    if (splitLimitReached) return;
     recordSplit(elapsed);
   };
 
@@ -123,13 +128,23 @@ export function SplitsPanel() {
             />
             <button
               onClick={handleRecord}
-              disabled={!currentDistanceInput}
+              disabled={!currentDistanceInput || splitLimitReached}
               className="h-8 px-3 text-xs font-medium rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 shrink-0"
             >
               <CircleDot className="w-3.5 h-3.5" />
               {t("splits.record")}
             </button>
           </div>
+
+          {/* Split limit message */}
+          {splitLimitReached && (
+            <div className="flex items-start gap-2 p-2.5 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-lg">
+              <Lock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <p className="text-[11px] text-amber-700 dark:text-amber-300">
+                {t("splits.limitReached", { max: maxSplits })}
+              </p>
+            </div>
+          )}
 
           {/* Memo input */}
           <input

@@ -74,7 +74,8 @@
           "iosAppId": "ca-app-pub-4640414097368188~9666392288"
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-apple-authentication"
     ],
     "extra": {
       "router": {},

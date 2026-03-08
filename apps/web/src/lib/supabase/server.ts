@@ -1,21 +1,9 @@
 import "server-only";
 import { createServerClient } from "@supabase/ssr";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
-
-type CookieToSet = {
-  name: string;
-  value: string;
-  options?: {
-    domain?: string;
-    expires?: Date;
-    httpOnly?: boolean;
-    maxAge?: number;
-    path?: string;
-    sameSite?: boolean | "lax" | "strict" | "none";
-    secure?: boolean;
-  };
-};
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 function getEnv() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -51,4 +39,63 @@ export async function createServerComponentClient(): Promise<SupabaseClient> {
       },
     },
   });
+}
+
+/**
+ * 管理者用クライアント（RLS バイパス）
+ */
+export function createAdminClient(): SupabaseClient {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceRoleKey) {
+    throw new Error(
+      "NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY が設定されていません",
+    );
+  }
+  return createClient(url, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
+
+/**
+ * Bearer token 認証（モバイルクライアント向け）
+ */
+export async function verifyAuth(
+  request: NextRequest,
+): Promise<
+  { result: { uid: string } } | { error: NextResponse }
+> {
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return {
+      error: NextResponse.json(
+        { error: "認証が必要です" },
+        { status: 401 },
+      ),
+    };
+  }
+
+  const accessToken = authHeader.substring(7);
+  const { url, anonKey } = getEnv();
+
+  const supabase = createClient(url, anonKey, {
+    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser(accessToken);
+
+  if (error || !user) {
+    return {
+      error: NextResponse.json(
+        { error: "認証が必要です" },
+        { status: 401 },
+      ),
+    };
+  }
+
+  return { result: { uid: user.id } };
 }

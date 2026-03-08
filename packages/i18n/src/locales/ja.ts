@@ -93,6 +93,8 @@ const ja = {
     emptyHint: "動画を一時停止し、距離を入力して\nRecordボタンでスプリットを記録",
     lap: "lap",
     count: "{{count}}件",
+    limitReached:
+      "スプリットの上限（{{max}}件）に達しました。Premiumプランで無制限に記録できます。",
   },
 
   exportScreen: {
@@ -173,9 +175,15 @@ const ja = {
     accountInfo: "アカウント情報",
     email: "メールアドレス",
     plan: "プラン",
+    planGuest: "ゲスト",
     planFree: "Free",
     planPremium: "Premium",
     premiumOnly: "Premiumプランのみ",
+    continueAsGuest: "ゲストとして続ける",
+    deleteAccount: "アカウントを削除",
+    deleteAccountConfirm:
+      "アカウントを削除すると、すべてのデータが完全に削除されます。この操作は取り消せません。",
+    deleteAccountWarning: "すべてのデータが完全に削除されます",
     errors: {
       cancelled: "認証がキャンセルされました",
       generic: "認証に失敗しました。もう一度お試しください。",
@@ -185,6 +193,8 @@ const ja = {
       invalidCredentials: "メールアドレスまたはパスワードが正しくありません",
       alreadyRegistered: "このメールアドレスは既に登録されています。ログインしてください。",
       passwordTooShort: "パスワードは{{minLength}}文字以上で入力してください",
+      deleteAccountFailed:
+        "アカウントの削除に失敗しました。再度お試しください。",
     },
   },
 
@@ -249,6 +259,36 @@ const ja = {
       "本ポリシーに関するご質問は、アプリのサポートページよりお問い合わせください。",
     backToTop: "トップページに戻る",
   },
+
+  support: {
+    title: "サポート",
+    metaTitle: "サポート | SwimHub Timer",
+    metaDescription: "SwimHub Timerのサポート・お問い合わせ",
+    heading: "サポート・お問い合わせ",
+    description:
+      "SwimHub Timerに関するご質問やお問い合わせは、以下のメールアドレスまでご連絡ください。",
+    emailLabel: "お問い合わせ先メールアドレス",
+    email: "support@swim-hub.app",
+    responseNote: "通常、数営業日以内にご返信いたします。",
+    faqTitle: "よくある質問",
+    faqItems: [
+      {
+        question: "動画の書き出しに失敗します",
+        answer:
+          "デバイスの空き容量を確認してください。長時間の動画の場合、十分なストレージが必要です。",
+      },
+      {
+        question: "スタート信号が自動検出されません",
+        answer:
+          "周囲の騒音が大きい場合、自動検出が難しいことがあります。波形をタップして手動でスタートポイントを設定してください。",
+      },
+      {
+        question: "アカウントを削除したい",
+        answer:
+          "アカウントの削除をご希望の場合は、上記メールアドレスまでご連絡ください。",
+      },
+    ],
+  },
 } as const;
 
 export default ja;
@@ -257,8 +297,10 @@ export type TranslationResource = typeof ja;
 // Loosened type for non-default locales (string values instead of literal types)
 type DeepStringify<T> = T extends readonly string[]
   ? string[]
-  : T extends Record<string, unknown>
-    ? { [K in keyof T]: DeepStringify<T[K]> }
-    : string;
+  : T extends readonly (infer U)[]
+    ? DeepStringify<U>[]
+    : T extends Record<string, unknown>
+      ? { [K in keyof T]: DeepStringify<T[K]> }
+      : string;
 
 export type TranslationShape = DeepStringify<TranslationResource>;
