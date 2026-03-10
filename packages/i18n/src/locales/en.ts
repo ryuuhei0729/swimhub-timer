@@ -228,6 +228,17 @@ const en: TranslationShape = {
       "Unauthorized access or attempts thereof",
       "Unauthorized commercial use of the App",
     ],
+    subscriptionTitle: "Paid Plans (Subscriptions)",
+    subscriptionBody:
+      "The App offers paid plans (Premium Plan) that provide access to additional features.",
+    subscriptionItems: [
+      "Premium Plan pricing includes a monthly plan (¥500/month) and an annual plan (¥5,000/year). Prices are subject to change with prior notice.",
+      "Subscriptions automatically renew under the same terms unless cancelled at least 24 hours before the end of the current period.",
+      "A 7-day free trial is available for first-time subscribers. If not cancelled during the trial period, billing will begin automatically after the trial ends.",
+      "Web payments are processed via Stripe. Mobile app payments are processed via Apple App Store / Google Play in-app purchases (through RevenueCat).",
+      "You may cancel at any time. For web subscriptions, cancel through the Stripe customer portal. For mobile subscriptions, cancel through your device's subscription management settings. Premium features remain available until the end of the current billing period.",
+      "Refunds are subject to the policies of each payment platform (Stripe, Apple App Store, Google Play).",
+    ],
     disclaimerTitle: "Disclaimer",
     disclaimerBody:
       "The App is provided \"as is.\" The operator assumes no liability for any damages arising from the use of the App.",
@@ -260,9 +271,18 @@ const en: TranslationShape = {
       "Microphone: To detect start signal sounds within videos",
     accessNote:
       "These accesses are used only for on-device processing, and no data is transmitted externally.",
+    paymentTitle: "Payment Information Handling",
+    paymentBody:
+      "When using the App's paid plan (Premium Plan), payment processing is delegated to the following external services. The App does not directly store credit card numbers or other payment information.",
+    paymentStripe:
+      "Stripe, Inc.: Handles subscription payment processing for web-based payments. Stripe provides a PCI DSS compliant payment infrastructure.",
+    paymentRevenueCat:
+      "RevenueCat, Inc.: Manages mobile app subscriptions. Payments via Apple App Store / Google Play are processed through RevenueCat.",
+    paymentNote:
+      "The App only manages subscription status (active/inactive, plan type, expiration date, etc.). The actual payment information is managed by the above service providers.",
     thirdPartyTitle: "Third-Party Disclosure",
     thirdPartyBody:
-      "Since the App does not collect personal information, no information is disclosed to third parties.",
+      "Personal information is not disclosed to third parties except for the payment processing providers listed above. This does not apply in cases required by law.",
     contactTitle: "Contact Us",
     contactBody:
       "For questions about this policy, please contact us through the app's support page.",

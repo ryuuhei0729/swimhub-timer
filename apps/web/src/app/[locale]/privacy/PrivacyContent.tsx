@@ -41,6 +41,18 @@ export function PrivacyContent() {
 
         <div>
           <h2 className="mb-2 text-lg font-semibold text-foreground">
+            {t("privacy.paymentTitle")}
+          </h2>
+          <p>{t("privacy.paymentBody")}</p>
+          <ul className="mt-2 list-disc space-y-1 pl-6">
+            <li>{t("privacy.paymentStripe")}</li>
+            <li>{t("privacy.paymentRevenueCat")}</li>
+          </ul>
+          <p className="mt-2">{t("privacy.paymentNote")}</p>
+        </div>
+
+        <div>
+          <h2 className="mb-2 text-lg font-semibold text-foreground">
             {t("privacy.thirdPartyTitle")}
           </h2>
           <p>{t("privacy.thirdPartyBody")}</p>

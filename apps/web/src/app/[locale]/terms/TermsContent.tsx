@@ -9,6 +9,10 @@ export function TermsContent() {
     returnObjects: true,
   }) as string[];
 
+  const subscriptionItems = t("terms.subscriptionItems", {
+    returnObjects: true,
+  }) as string[];
+
   return (
     <main className="mx-auto max-w-2xl px-6 py-16 text-foreground/80">
       <h1 className="mb-8 text-2xl font-bold text-foreground">
@@ -46,6 +50,17 @@ export function TermsContent() {
           <ul className="mt-2 list-disc space-y-1 pl-6">
             {Array.isArray(prohibitedItems) &&
               prohibitedItems.map((item, i) => <li key={i}>{item}</li>)}
+          </ul>
+        </div>
+
+        <div>
+          <h2 className="mb-2 text-lg font-semibold text-foreground">
+            {t("terms.subscriptionTitle")}
+          </h2>
+          <p>{t("terms.subscriptionBody")}</p>
+          <ul className="mt-2 list-disc space-y-1 pl-6">
+            {Array.isArray(subscriptionItems) &&
+              subscriptionItems.map((item, i) => <li key={i}>{item}</li>)}
           </ul>
         </div>
 
