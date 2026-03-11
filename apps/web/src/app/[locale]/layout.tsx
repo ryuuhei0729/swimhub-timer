@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import Script from "next/script";
 import { notFound } from "next/navigation";
 import { I18nProvider } from "@/components/I18nProvider";
 import { AuthProvider } from "@/components/auth/AuthProvider";
@@ -130,11 +129,6 @@ export default async function LocaleLayout({
             <script type="application/ld+json">
               {JSON.stringify(jsonLd)}
             </script>
-            <Script
-              async
-              src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"
-              strategy="afterInteractive"
-            />
             {children}
           </AuthProvider>
         </I18nProvider>

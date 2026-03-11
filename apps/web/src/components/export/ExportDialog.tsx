@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useState } from "react";
 import { useEditorStore } from "@/stores/editor-store";
 import { useVideoExport } from "@/hooks/useVideoExport";
 import { Button } from "@/components/ui/button";
@@ -17,11 +17,6 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import type { ExportResolution } from "@swimhub-timer/core";
 import { getAvailableResolutions, shouldShowWatermark } from "@swimhub-timer/core";
-import {
-  createRewardedAdController,
-  type AdState,
-  type RewardedAdController,
-} from "@/lib/ads/rewarded-ad";
 
 export function ExportDialog() {
   const { t } = useTranslation();
@@ -38,83 +33,12 @@ export function ExportDialog() {
     outputBlob,
   } = useVideoExport(showWatermark);
 
-  // --- Ad state ---
-  const adControllerRef = useRef<RewardedAdController | null>(null);
-  const [adState, setAdState] = useState<AdState>("idle");
-  const [adRewardEarned, setAdRewardEarned] = useState(false);
-  const [adUnavailable, setAdUnavailable] = useState(false);
   const [exportTriggered, setExportTriggered] = useState(false);
 
-  // --- Derived ---
   const exportComplete = outputBlob !== null;
-  const canProceed = exportComplete && (adRewardEarned || adUnavailable);
-
-  // Preload ad on mount
-  useEffect(() => {
-    const controller = createRewardedAdController();
-    if (!controller) {
-      const timer = setTimeout(() => setAdUnavailable(true), 0);
-      return () => clearTimeout(timer);
-    }
-    adControllerRef.current = controller;
-
-    const unsubscribe = controller.onStateChange((state) => {
-      setAdState(state);
-      if (state === "rewarded") {
-        setAdRewardEarned(true);
-      }
-    });
-
-    controller.load();
-
-    return () => {
-      unsubscribe();
-      controller.dispose();
-    };
-  }, []);
-
-  // If ad loads AFTER export was triggered, show it automatically
-  useEffect(() => {
-    if (
-      exportTriggered &&
-      adState === "loaded" &&
-      !adRewardEarned &&
-      !adUnavailable
-    ) {
-      adControllerRef.current?.show();
-    }
-  }, [exportTriggered, adState, adRewardEarned, adUnavailable]);
-
-  // Fallback: if ad fails or stays loading too long, allow export without ad
-  useEffect(() => {
-    if (adState === "error" && !adUnavailable) {
-      const timer = setTimeout(() => setAdUnavailable(true), 2000);
-      return () => clearTimeout(timer);
-    }
-    if (adState === "loading" && !adUnavailable) {
-      const timer = setTimeout(() => setAdUnavailable(true), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [adState, adUnavailable]);
 
   const handleExport = () => {
     setExportTriggered(true);
-
-    // --- Show ad (parallel with encoding) ---
-    const controller = adControllerRef.current;
-    if (controller) {
-      const currentState = controller.getState();
-      if (currentState === "loaded") {
-        controller.show();
-      } else if (currentState !== "loading") {
-        setAdUnavailable(true);
-      }
-      // If still loading, the timeout effect will handle setting adUnavailable
-    } else {
-      setAdUnavailable(true);
-    }
-
-    // --- Start encoding ---
     startEncoding();
   };
 
@@ -169,31 +93,19 @@ export function ExportDialog() {
           </Select>
         </div>
 
-        {/* Export button / progress / waiting for ad / done */}
+        {/* Export button / progress / done */}
         {!isExporting && !outputBlob && !exportTriggered && (
-          <>
-            <Button
-              onClick={handleExport}
-              size="lg"
-              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 glow-cyan h-11"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              {t("exportScreen.exportMp4")}
-            </Button>
-            {adState === "loading" && (
-              <p className="text-[11px] text-muted-foreground text-center">
-                {t("exportScreen.adLoading")}
-              </p>
-            )}
-            {adState === "error" && (
-              <p className="text-[11px] text-muted-foreground text-center">
-                {t("exportScreen.adFailed")}
-              </p>
-            )}
-          </>
+          <Button
+            onClick={handleExport}
+            size="lg"
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 glow-cyan h-11"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            {t("exportScreen.exportMp4")}
+          </Button>
         )}
 
-        {(isExporting || (exportComplete && !canProceed)) && (
+        {(isExporting || (exportTriggered && !exportComplete)) && (
           <div className="space-y-4">
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
@@ -210,19 +122,13 @@ export function ExportDialog() {
                 style={{ width: `${exportProgress}%` }}
               />
             </div>
-            {exportComplete && !adRewardEarned && !adUnavailable ? (
-              <p className="text-[11px] text-muted-foreground text-center">
-                {t("exportScreen.adWatchPrompt")}
-              </p>
-            ) : (
-              <p className="text-[11px] text-muted-foreground text-center">
-                {t("exportScreen.timeEstimate")}
-              </p>
-            )}
+            <p className="text-[11px] text-muted-foreground text-center">
+              {t("exportScreen.timeEstimate")}
+            </p>
           </div>
         )}
 
-        {canProceed && (
+        {exportComplete && (
           <div className="space-y-4">
             <div className="flex items-center justify-center gap-2 py-3">
               <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
