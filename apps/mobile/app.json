@@ -19,7 +19,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.swim-hub.timer",
+      "bundleIdentifier": "com.swimhubtimer.app",
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "動画をインポートするためにフォトライブラリへのアクセスが必要です",
