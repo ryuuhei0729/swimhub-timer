@@ -4,10 +4,101 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { SwimHubTimerIcon } from "@/components/icons/SwimHubTimerIcon";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 const PASSWORD_MIN_LENGTH = 6;
+
+// エラーコードを安全なメッセージに変換（swim-hub の errorMap に準拠）
+const ERROR_CODE_KEYS: Record<string, string> = {
+  access_denied: "auth.errors.accessDenied",
+  invalid_request: "auth.errors.invalidRequest",
+  server_error: "auth.errors.serverError",
+  temporarily_unavailable: "auth.errors.temporarilyUnavailable",
+  invalid_grant: "auth.errors.invalidGrant",
+  invalid_client: "auth.errors.invalidClient",
+  unauthorized_client: "auth.errors.unauthorizedClient",
+  unsupported_response_type: "auth.errors.unsupportedResponseType",
+  invalid_scope: "auth.errors.invalidScope",
+  session_not_found: "auth.errors.sessionNotFound",
+  email_not_confirmed: "auth.errors.emailNotConfirmed",
+  invalid_credentials: "auth.errors.invalidCredentials",
+  user_not_found: "auth.errors.userNotFound",
+  email_already_exists: "auth.errors.alreadyRegistered",
+  weak_password: "auth.errors.weakPassword",
+  password_too_short: "auth.errors.passwordTooShort",
+  password_too_long: "auth.errors.passwordTooLong",
+  invalid_email: "auth.errors.invalidEmail",
+  invalid_phone: "auth.errors.invalidPhone",
+  phone_not_found: "auth.errors.phoneNotFound",
+  invalid_otp: "auth.errors.invalidOtp",
+  expired_otp: "auth.errors.expiredOtp",
+  too_many_requests: "auth.errors.tooManyRequests",
+  rate_limit_exceeded: "auth.errors.rateLimitExceeded",
+};
+
+function getErrorFromCode(code: string, t: TFunction): string {
+  const key = ERROR_CODE_KEYS[code];
+  if (key) {
+    return t(key);
+  }
+  return t("auth.errors.generic");
+}
+
+// エラーメッセージ文字列からOWASP準拠のi18nキーを返す（swim-hub の formatAuthError に準拠）
+function formatAuthError(
+  err: unknown,
+  action: "signin" | "signup",
+  t: TFunction,
+): string {
+  const errMsg =
+    err instanceof Error ? err.message : typeof err === "string" ? err : "";
+  const msg = errMsg.toLowerCase();
+
+  // ログイン認証エラー（OWASP準拠: アカウント列挙攻撃を防止）
+  if (action === "signin") {
+    if (
+      (msg.includes("invalid") &&
+        (msg.includes("credentials") || msg.includes("email"))) ||
+      msg.includes("email not confirmed")
+    ) {
+      return t("auth.errors.invalidCredentials");
+    }
+    if (msg.includes("too many requests")) {
+      return t("auth.errors.tooManyRequests");
+    }
+  }
+
+  // サインアップエラー（OWASP準拠）
+  if (action === "signup") {
+    if (msg.includes("already registered") || msg.includes("already exists")) {
+      return t("auth.errors.alreadyRegistered");
+    }
+    if (
+      (msg.includes("password") && msg.includes("weak")) ||
+      msg.includes("too short") ||
+      (msg.includes("at least") && msg.includes("characters")) ||
+      (msg.includes("minimum") && msg.includes("characters"))
+    ) {
+      return t("auth.errors.weakPassword");
+    }
+  }
+
+  // 共通エラー
+  if (msg.includes("captcha")) {
+    return t("auth.errors.captchaRequired");
+  }
+  if (msg.includes("rate limit")) {
+    return t("auth.errors.rateLimitExceeded");
+  }
+  if (msg.includes("network") || msg.includes("connection")) {
+    return t("auth.errors.networkError");
+  }
+
+  return t("auth.errors.generic");
+}
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -15,7 +106,6 @@ export default function LoginPage() {
     user,
     loading,
     signInWithGoogle,
-    signInWithApple,
     signInWithEmail,
     signUpWithEmail,
   } = useAuth();
@@ -24,10 +114,9 @@ export default function LoginPage() {
   const params = useParams();
   const locale = (params.locale as string) || "ja";
 
+  const rawError = searchParams.get("error");
   const [error, setError] = useState<string | null>(
-    searchParams.get("error")
-      ? t("auth.errors.generic")
-      : null,
+    rawError ? getErrorFromCode(rawError, t) : null,
   );
   const [submitting, setSubmitting] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
@@ -52,21 +141,12 @@ export default function LoginPage() {
     }
   };
 
-  const handleAppleSignIn = async () => {
-    try {
-      setSubmitting(true);
-      setError(null);
-      await signInWithApple();
-    } catch {
-      setError(t("auth.errors.generic"));
-      setSubmitting(false);
-    }
-  };
-
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < PASSWORD_MIN_LENGTH) {
-      setError(t("auth.errors.passwordTooShort", { minLength: PASSWORD_MIN_LENGTH }));
+      setError(
+        t("auth.errors.passwordTooShort", { minLength: PASSWORD_MIN_LENGTH }),
+      );
       return;
     }
     try {
@@ -82,15 +162,7 @@ export default function LoginPage() {
         await signInWithEmail(email, password);
       }
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "";
-      if (message.includes("Invalid login credentials")) {
-        setError(t("auth.errors.invalidCredentials"));
-      } else if (message.includes("already registered")) {
-        setError(t("auth.errors.alreadyRegistered"));
-      } else {
-        setError(t("auth.errors.generic"));
-      }
+      setError(formatAuthError(err, isSignUp ? "signup" : "signin", t));
     } finally {
       setSubmitting(false);
     }
@@ -99,7 +171,7 @@ export default function LoginPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <LoadingSpinner size="lg" message={t("import.loading")} />
       </div>
     );
   }
@@ -118,15 +190,25 @@ export default function LoginPage() {
         </div>
 
         {error && (
-          <div className="p-4 bg-destructive/10 border border-destructive/30 text-destructive rounded-lg">
-            <div className="text-sm leading-relaxed text-center">{error}</div>
+          <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+            <div className="flex items-start">
+              <svg className="w-5 h-5 text-red-400 mt-0.5 mr-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              <div className="text-sm leading-relaxed">{error}</div>
+            </div>
           </div>
         )}
 
         {confirmationSent && (
-          <div className="p-4 bg-primary/10 border border-primary/30 text-primary rounded-lg">
-            <div className="text-sm leading-relaxed text-center">
-              {t("auth.confirmationSent")}
+          <div className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">
+            <div className="flex items-start">
+              <svg className="w-5 h-5 text-green-400 mt-0.5 mr-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <div className="text-sm leading-relaxed">
+                {t("auth.confirmationSent")}
+              </div>
             </div>
           </div>
         )}
@@ -157,18 +239,6 @@ export default function LoginPage() {
               />
             </svg>
             {t("auth.loginMethod.withGoogle")}
-          </button>
-
-          <button
-            type="button"
-            onClick={handleAppleSignIn}
-            disabled={submitting}
-            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg text-sm font-medium text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out"
-          >
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
-            </svg>
-            {t("auth.loginMethod.withApple")}
           </button>
         </div>
 
