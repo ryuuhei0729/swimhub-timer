@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useEditorStore } from "@/stores/editor-store";
 import { useVideoExport } from "@/hooks/useVideoExport";
 import { Button } from "@/components/ui/button";
@@ -12,11 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Download, Loader2, Check, ArrowLeft, Timer } from "lucide-react";
+import { Download, Loader2, Check, ArrowLeft, Timer, AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import type { ExportResolution } from "@swimhub-timer/core";
 import { getAvailableResolutions, shouldShowWatermark } from "@swimhub-timer/core";
+import { getGuestTodayCount } from "@/lib/guest-daily-limit";
 
 export function ExportDialog() {
   const { t } = useTranslation();
@@ -31,9 +32,32 @@ export function ExportDialog() {
     exportProgress,
     error,
     outputBlob,
+    limitReached,
   } = useVideoExport(showWatermark);
 
   const [exportTriggered, setExportTriggered] = useState(false);
+  const [fetchedRemaining, setFetchedRemaining] = useState<number | null>(null);
+
+  const remainingExports = useMemo(() => {
+    if (plan === "premium") return null;
+    if (plan === "guest") {
+      const used = getGuestTodayCount("timer");
+      return Math.max(0, 1 - used);
+    }
+    return fetchedRemaining;
+  }, [plan, fetchedRemaining]);
+
+  useEffect(() => {
+    if (plan !== "free") return;
+    fetch("/api/export/check")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.dailyLimit !== null) {
+          setFetchedRemaining(Math.max(0, data.dailyLimit - data.todayCount));
+        }
+      })
+      .catch(() => {});
+  }, [plan]);
 
   const exportComplete = outputBlob !== null;
 
@@ -93,8 +117,29 @@ export function ExportDialog() {
           </Select>
         </div>
 
+        {/* Remaining exports status */}
+        {plan !== "premium" && remainingExports !== null && !exportComplete && (
+          <p className="text-xs text-muted-foreground text-center">
+            {t("exportScreen.remainingCount", {
+              remaining: remainingExports,
+            })}
+          </p>
+        )}
+
+        {/* Limit reached message */}
+        {limitReached && (
+          <div className="p-3.5 bg-amber-500/5 border border-amber-500/20 rounded-xl flex items-start gap-3">
+            <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+            <p className="text-sm text-amber-400">
+              {plan === "guest"
+                ? t("exportScreen.dailyLimitGuest")
+                : t("exportScreen.dailyLimitFree")}
+            </p>
+          </div>
+        )}
+
         {/* Export button / progress / done */}
-        {!isExporting && !outputBlob && !exportTriggered && (
+        {!isExporting && !outputBlob && !exportTriggered && !limitReached && (
           <Button
             onClick={handleExport}
             size="lg"
@@ -105,7 +150,7 @@ export function ExportDialog() {
           </Button>
         )}
 
-        {(isExporting || (exportTriggered && !exportComplete)) && (
+        {(isExporting || (exportTriggered && !exportComplete && !limitReached)) && (
           <div className="space-y-4">
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">

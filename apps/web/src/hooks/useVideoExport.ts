@@ -3,6 +3,11 @@
 import { useCallback, useState } from "react";
 import { useEditorStore } from "@/stores/editor-store";
 import { exportVideoWithStopwatch } from "@/lib/video/export-pipeline";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  canGuestUseToday,
+  markGuestUsedToday,
+} from "@/lib/guest-daily-limit";
 
 export function useVideoExport(showWatermark = true) {
   const {
@@ -16,15 +21,59 @@ export function useVideoExport(showWatermark = true) {
     isExporting,
     exportProgress,
   } = useEditorStore();
+  const { plan } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [outputBlob, setOutputBlob] = useState<Blob | null>(null);
+  const [limitReached, setLimitReached] = useState(false);
+
+  const checkExportAllowed = useCallback(async (): Promise<boolean> => {
+    if (plan === "premium") return true;
+
+    if (plan === "guest") {
+      return canGuestUseToday("timer");
+    }
+
+    // free plan: server-side check
+    try {
+      const res = await fetch("/api/export/check");
+      if (!res.ok) return true;
+      const data = await res.json();
+      return data.canExport;
+    } catch {
+      return true;
+    }
+  }, [plan]);
+
+  const recordExportUsage = useCallback(async () => {
+    if (plan === "premium") return;
+
+    if (plan === "guest") {
+      markGuestUsedToday("timer");
+      return;
+    }
+
+    // free plan: server-side record
+    try {
+      await fetch("/api/export/record", { method: "POST" });
+    } catch {
+      // best-effort
+    }
+  }, [plan]);
 
   const startExport = useCallback(async () => {
     if (!videoFile || startTime === null) return;
 
+    setLimitReached(false);
+    setError(null);
+
+    const allowed = await checkExportAllowed();
+    if (!allowed) {
+      setLimitReached(true);
+      return;
+    }
+
     setIsExporting(true);
     setExportProgress(0);
-    setError(null);
     setOutputBlob(null);
 
     try {
@@ -38,6 +87,7 @@ export function useVideoExport(showWatermark = true) {
         showWatermark
       );
       setOutputBlob(blob);
+      await recordExportUsage();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Export failed"
@@ -54,6 +104,8 @@ export function useVideoExport(showWatermark = true) {
     setExportProgress,
     setIsExporting,
     showWatermark,
+    checkExportAllowed,
+    recordExportUsage,
   ]);
 
   const downloadOutput = useCallback(() => {
@@ -73,5 +125,6 @@ export function useVideoExport(showWatermark = true) {
     exportProgress,
     error,
     outputBlob,
+    limitReached,
   };
 }

@@ -1,12 +1,15 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { verifyAuth, createAdminClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
+import { createServerComponentClient, createAdminClient } from "@/lib/supabase/server";
 
-export async function DELETE(request: NextRequest) {
-  const authResult = await verifyAuth(request);
-  if ("error" in authResult) {
-    return authResult.error;
+export async function DELETE() {
+  const supabase = await createServerComponentClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   }
-  const { uid } = authResult.result;
+  const uid = user.id;
 
   try {
     const adminClient = createAdminClient();

@@ -128,6 +128,11 @@ const ja = {
     adLoading: "広告を読み込み中...",
     adFailed: "広告の読み込みに失敗しました",
     adWatchPrompt: "広告の視聴が完了するまでお待ちください",
+    dailyLimitGuest:
+      "今日のエクスポート回数に達しました。アカウント登録（無料）すると機能制限なしで使えます。",
+    dailyLimitFree:
+      "今日のエクスポート回数に達しました。Premiumなら無制限にエクスポート可能です。",
+    remainingCount: "本日の残りエクスポート回数: {{remaining}}回",
   },
 
   editor: {

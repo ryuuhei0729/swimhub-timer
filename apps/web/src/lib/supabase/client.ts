@@ -8,6 +8,7 @@ declare global {
 }
 
 function isLocalEnvironment(): boolean {
+  if (typeof window === "undefined") return false;
   const hostname = window.location.hostname;
   return (
     hostname === "localhost" ||
@@ -34,11 +35,11 @@ export const supabase: SupabaseClient | undefined =
 export function getSupabaseBrowserClient(): SupabaseClient {
   if (typeof window === "undefined") {
     throw new Error(
-      "getSupabaseBrowserClient() はブラウザ環境でのみ使用できます",
+      "getSupabaseBrowserClient()はブラウザ環境でのみ使用できます",
     );
   }
   if (!supabase) {
-    throw new Error("Supabase クライアントが初期化されていません");
+    throw new Error("Supabaseクライアントが初期化されていません");
   }
   return supabase;
 }

@@ -7,7 +7,8 @@ export function getAvailableResolutions(plan: UserPlan): ExportResolution[] {
 
 /** Maximum number of split times a user can record. `Infinity` means unlimited. */
 export function getMaxSplitCount(plan: UserPlan): number {
-  return plan === "premium" ? Infinity : 1;
+  if (plan === "guest") return 1;
+  return Infinity;
 }
 
 /** Whether the exported video should include the SwimHub Timer watermark. */

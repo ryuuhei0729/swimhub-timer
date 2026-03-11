@@ -7,7 +7,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import type { User } from "@supabase/supabase-js";
+import type { User, AuthChangeEvent, Session } from "@supabase/supabase-js";
 import type { UserPlan } from "@swimhub-timer/core";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useEditorStore } from "@/stores/editor-store";
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     supabase.auth
       .getUser()
-      .then(({ data: { user: currentUser } }) => {
+      .then(({ data: { user: currentUser } }: { data: { user: User | null } }) => {
         setUser(currentUser);
         setLoading(false);
         if (currentUser) {
@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
       setUser(session?.user ?? null);
       setLoading(false);
       if (session?.user) {

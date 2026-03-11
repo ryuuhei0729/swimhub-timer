@@ -3,6 +3,66 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { supportedLocales, defaultLocale } from "@swimhub-timer/i18n";
 
+/**
+ * redirectToパラメータを検証・サニタイズする
+ * - '/'で始まる相対パスのみ許可（スキーム付きURLは拒否）
+ * - プロトコル相対URL（//evil.com）を拒否
+ * - CR/LFや制御文字を含まないことを確認
+ * - 無効な値の場合はデフォルトパスにフォールバック
+ * - デコード後の値に対してバリデーションを実行（二重エンコード攻撃を防止）
+ * - URLコンストラクタで同一オリジン確認（オープンリダイレクト対策）
+ */
+function validateRedirectPath(redirectTo: string | null, origin?: string, locale?: string): string {
+  const defaultPath = `/${locale || "en"}`;
+
+  if (!redirectTo) {
+    return defaultPath;
+  }
+
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(redirectTo);
+  } catch {
+    return defaultPath;
+  }
+
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(decoded)) {
+    return defaultPath;
+  }
+
+  if (decoded.startsWith("//") || /^\/\//.test(decoded)) {
+    return defaultPath;
+  }
+
+  if (!decoded.startsWith("/")) {
+    return defaultPath;
+  }
+
+  for (let i = 0; i < decoded.length; i++) {
+    const charCode = decoded.charCodeAt(i);
+    if ((charCode >= 0x00 && charCode <= 0x1F) || charCode === 0x7F || (charCode >= 0x80 && charCode <= 0x9F)) {
+      return defaultPath;
+    }
+  }
+
+  if (decoded.includes("..")) {
+    return defaultPath;
+  }
+
+  if (origin) {
+    try {
+      const resolvedUrl = new URL(decoded, origin);
+      if (resolvedUrl.origin !== origin) {
+        return defaultPath;
+      }
+    } catch {
+      return defaultPath;
+    }
+  }
+
+  return decoded;
+}
+
 function resolveLocale(request: NextRequest): string {
   // 1. Check OAuth state parameter
   const state = new URL(request.url).searchParams.get("state");
@@ -35,6 +95,7 @@ export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const locale = resolveLocale(request);
+  const redirectTo = validateRedirectPath(requestUrl.searchParams.get("redirect_to"), requestUrl.origin, locale);
 
   if (!code) {
     return NextResponse.redirect(requestUrl.origin + `/${locale}/login?error=missing_code`);
@@ -94,7 +155,7 @@ export async function GET(request: NextRequest) {
       return errorResponse;
     }
 
-    const successResponse = NextResponse.redirect(requestUrl.origin + `/${locale}`);
+    const successResponse = NextResponse.redirect(requestUrl.origin + redirectTo);
     applyCookies(successResponse, cookiesToSet);
     return successResponse;
   } catch (error) {

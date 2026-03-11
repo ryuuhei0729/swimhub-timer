@@ -135,6 +135,11 @@ const en: TranslationShape = {
     adLoading: "Loading ad...",
     adFailed: "Ad failed to load",
     adWatchPrompt: "Please complete watching the ad to proceed",
+    dailyLimitGuest:
+      "You've reached today's export limit. Create a free account to unlock unlimited exports.",
+    dailyLimitFree:
+      "You've reached today's export limit. Upgrade to Premium for unlimited exports.",
+    remainingCount: "Remaining exports today: {{remaining}}",
   },
 
   editor: {

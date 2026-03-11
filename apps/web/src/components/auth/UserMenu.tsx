@@ -106,7 +106,9 @@ export function UserMenu() {
                 try {
                   await signOut();
                 } catch (error) {
-                  console.error("Sign out failed:", error);
+                  if (process.env.NODE_ENV !== "production") {
+                    console.error("Sign out failed:", error);
+                  }
                 }
               }}
               className="flex w-full items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors duration-200"

@@ -16,6 +16,7 @@
     "@opennextjs/cloudflare": "^1.17.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.97.0",
+    "@swimhub/supabase": "file:../../../packages/supabase",
     "@swimhub-timer/core": "*",
     "@swimhub-timer/i18n": "*",
     "class-variance-authority": "^0.7.1",
