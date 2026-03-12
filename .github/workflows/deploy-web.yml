@@ -27,14 +27,14 @@ jobs:
         working-directory: apps/web
         run: |
           # .env.production から NEXT_PUBLIC_* を自動読み込み
-          npx opennextjs-cloudflare build
+          pnpm exec opennextjs-cloudflare build
 
       - name: Deploy to Cloudflare Workers
         working-directory: apps/web
         run: |
           # .env.production から変数を読み込んで wrangler に渡す
           set -a && source .env.production && set +a
-          npx wrangler deploy \
+          pnpm exec wrangler deploy \
             --var NEXT_PUBLIC_SUPABASE_URL:$NEXT_PUBLIC_SUPABASE_URL \
             --var NEXT_PUBLIC_SUPABASE_ANON_KEY:$NEXT_PUBLIC_SUPABASE_ANON_KEY
         env:

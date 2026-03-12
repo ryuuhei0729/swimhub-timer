@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
-    "start": "npx dotenvx run -f .env.local -- expo start",
-    "start:clear": "npx dotenvx run -f .env.local -- expo start --clear",
-    "android": "npx dotenvx run -f .env.local -- expo run:android",
-    "ios": "npx dotenvx run -f .env.local -- expo run:ios",
-    "ios:dev-client": "npx dotenvx run -f .env.local -- expo start --ios --dev-client",
+    "start": "pnpm exec dotenvx run -f .env.local -- expo start",
+    "start:clear": "pnpm exec dotenvx run -f .env.local -- expo start --clear",
+    "android": "pnpm exec dotenvx run -f .env.local -- expo run:android",
+    "ios": "pnpm exec dotenvx run -f .env.local -- expo run:ios",
+    "ios:dev-client": "pnpm exec dotenvx run -f .env.local -- expo start --ios --dev-client",
     "web": "expo start --web",
     "lint": "eslint"
   },
