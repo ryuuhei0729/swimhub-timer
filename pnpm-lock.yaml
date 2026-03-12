@@ -134,6 +134,9 @@ importers:
         specifier: ^5.0.11
         version: 5.0.11(@types/react@19.2.14)(react@19.1.0)(use-sync-external-store@1.6.0(react@19.1.0))
     devDependencies:
+      '@dotenvx/dotenvx':
+        specifier: ^1.51.1
+        version: 1.54.1
       '@types/react':
         specifier: ^19.2.14
         version: 19.2.14
@@ -13280,7 +13283,7 @@ snapshots:
 
   dotenv-expand@11.0.7:
     dependencies:
-      dotenv: 16.4.7
+      dotenv: 16.6.1
 
   dotenv@16.4.7: {}
 
