@@ -13,10 +13,10 @@ export type {
   StopwatchPreset,
   SplitTime,
 } from "./types/stopwatch";
-export type { UserPlan, UserProfile } from "./types/auth";
+export type { UserPlan, UserProfile, SubscriptionStatus } from "./types/auth";
 
 // Utils
-export { getAvailableResolutions, getMaxSplitCount, shouldShowWatermark } from "./utils/subscription";
+export { isActivePremium, getAvailableResolutions, getMaxSplitCount, shouldShowWatermark } from "./utils/subscription";
 
 // Constants
 export {

@@ -1,5 +1,9 @@
-import type { UserPlan } from "../types/auth";
+import type { UserPlan, SubscriptionStatus } from "../types/auth";
 import type { ExportResolution } from "../types/video";
+
+export function isActivePremium(plan: UserPlan, status: SubscriptionStatus | null): boolean {
+  return plan === "premium" && (status === "active" || status === "trialing");
+}
 
 export function getAvailableResolutions(plan: UserPlan): ExportResolution[] {
   return plan === "guest" ? ["720"] : ["720", "1080", "original"];

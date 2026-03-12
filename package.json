@@ -2,24 +2,26 @@
   "name": "swimhub-timer",
   "version": "0.1.0",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "packageManager": "pnpm@10.20.0",
   "scripts": {
     "postinstall": "bash scripts/install-ffmpeg-frameworks.sh",
-    "dev:web": "npm run dev -w @swimhub-timer/web",
-    "build:web": "npm run build -w @swimhub-timer/web",
-    "lint:web": "NODE_PATH=$PWD/apps/web/node_modules npm run lint -w @swimhub-timer/web",
-    "lint:mobile": "npm run lint -w @swimhub-timer/mobile",
-    "dev:mobile": "npm run start -w @swimhub-timer/mobile",
+    "dev:web": "pnpm --filter @swimhub-timer/web dev",
+    "build:web": "pnpm --filter @swimhub-timer/web build",
+    "lint:web": "pnpm --filter @swimhub-timer/web lint",
+    "lint:mobile": "pnpm --filter @swimhub-timer/mobile lint",
+    "dev:mobile": "pnpm --filter @swimhub-timer/mobile start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "deploy:web": "npm run deploy -w @swimhub-timer/web"
+    "deploy:web": "pnpm --filter @swimhub-timer/web deploy",
+    "test": "pnpm -r --if-present test",
+    "test:core": "pnpm --filter @swimhub-timer/core test",
+    "test:web": "pnpm --filter @swimhub-timer/web test"
   },
-  "overrides": {
-    "@types/react": "^19.2.14",
-    "react-native-screens": "4.16.0"
+  "pnpm": {
+    "overrides": {
+      "@types/react": "^19.2.14",
+      "react-native-screens": "4.16.0"
+    }
   },
   "devDependencies": {
     "png-to-ico": "^3.0.1",

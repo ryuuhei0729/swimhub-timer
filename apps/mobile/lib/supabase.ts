@@ -54,7 +54,9 @@ if (supabaseUrl && supabaseAnonKey) {
 } else {
   console.error(
     "Supabase環境変数が設定されていません。\n" +
-      "EXPO_PUBLIC_SUPABASE_URL と EXPO_PUBLIC_SUPABASE_ANON_KEY を設定してください。"
+      `EXPO_PUBLIC_SUPABASE_URL: ${supabaseUrl ? "OK" : "未設定"}\n` +
+      `EXPO_PUBLIC_SUPABASE_ANON_KEY: ${supabaseAnonKey ? "OK" : "未設定"}\n` +
+      "EAS Secrets または .env ファイルに設定してください。"
   );
 }
 

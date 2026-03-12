@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start",
-    "android": "expo run:android",
-    "ios": "expo run:ios",
+    "start": "npx dotenvx run -f .env.local -- expo start",
+    "start:clear": "npx dotenvx run -f .env.local -- expo start --clear",
+    "android": "npx dotenvx run -f .env.local -- expo run:android",
+    "ios": "npx dotenvx run -f .env.local -- expo run:ios",
+    "ios:dev-client": "npx dotenvx run -f .env.local -- expo start --ios --dev-client",
     "web": "expo start --web",
     "lint": "eslint"
   },
@@ -46,6 +48,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@dotenvx/dotenvx": "^1.51.1",
     "@types/react": "~19.1.0",
     "eslint": "^9",
     "eslint-config-expo": "^10.0.0",

@@ -44,9 +44,15 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files
 .env*
 !apps/web/.env.production
+
+# dotenvx keys
+.env.keys
+.env.*.keys
+**/.env.keys
+**/.env.*.keys
 
 # vercel
 .vercel

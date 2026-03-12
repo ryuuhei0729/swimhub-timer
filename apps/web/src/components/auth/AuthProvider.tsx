@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import type { User, AuthChangeEvent, Session } from "@supabase/supabase-js";
-import type { UserPlan } from "@swimhub-timer/core";
+import type { UserPlan, SubscriptionStatus } from "@swimhub-timer/core";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useEditorStore } from "@/stores/editor-store";
 import { clear as clearIdb } from "idb-keyval";
@@ -17,6 +17,7 @@ export interface AuthContextValue {
   user: User | null;
   loading: boolean;
   plan: UserPlan;
+  subscriptionStatus: SubscriptionStatus | null;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<boolean>;
@@ -29,22 +30,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [plan, setPlan] = useState<UserPlan>("guest");
+  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
 
   const fetchPlan = useCallback(async (userId: string) => {
     try {
       const supabase = getSupabaseBrowserClient();
       const { data } = await supabase
         .from("user_subscriptions")
-        .select("plan")
+        .select("plan, status")
         .eq("id", userId)
-        .single<{ plan: string }>();
-      if (data?.plan === "premium") {
+        .single<{ plan: string; status: string | null }>();
+      const status = (data?.status ?? null) as SubscriptionStatus | null;
+      setSubscriptionStatus(status);
+      if (data?.plan === "premium" && (status === "active" || status === "trialing")) {
         setPlan("premium");
       } else {
         setPlan("free");
       }
     } catch {
       setPlan("free");
+      setSubscriptionStatus(null);
     }
   }, []);
 
@@ -74,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         fetchPlan(session.user.id);
       } else {
         setPlan("guest");
+        setSubscriptionStatus(null);
       }
     });
 
@@ -114,6 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const supabase = getSupabaseBrowserClient();
     await supabase.auth.signOut({ scope: "local" });
     setPlan("guest");
+    setSubscriptionStatus(null);
 
     // Clear all caches
     useEditorStore.getState().reset();
@@ -123,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, plan, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut }}
+      value={{ user, loading, plan, subscriptionStatus, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut }}
     >
       {children}
     </AuthContext.Provider>
