@@ -12,7 +12,7 @@
     "dev:mobile": "pnpm --filter @swimhub-timer/mobile start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "deploy:web": "pnpm --filter @swimhub-timer/web deploy",
+    "deploy:web": "pnpm --filter @swimhub-timer/web run deploy",
     "test": "pnpm -r --if-present test",
     "test:core": "pnpm --filter @swimhub-timer/core test",
     "test:web": "pnpm --filter @swimhub-timer/web test"
