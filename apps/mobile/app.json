@@ -4,7 +4,7 @@
     "ios_app_id": "ca-app-pub-4640414097368188~9666392288"
   },
   "expo": {
-    "name": "SwimHub Timer",
+    "name": "SH Timer",
     "slug": "swimhub-timer",
     "version": "2.0.0",
     "orientation": "portrait",

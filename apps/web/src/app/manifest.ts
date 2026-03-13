@@ -5,7 +5,7 @@ export const dynamic = "force-static";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "SwimHub Timer",
-    short_name: "SwimHub Timer",
+    short_name: "SH Timer",
     description: "Swimming race video stopwatch overlay tool",
     start_url: "/ja",
     display: "standalone",
