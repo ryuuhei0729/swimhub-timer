@@ -1,5 +1,5 @@
-import type { StopwatchConfig, SplitTime } from "@swimhub-timer/core";
-import { formatTime } from "@swimhub-timer/core";
+import type { StopwatchConfig, SplitTime } from "@swimhub-timer/shared";
+import { formatTime } from "@swimhub-timer/shared";
 
 /**
  * Measure the maximum digit width for the current ctx.font,

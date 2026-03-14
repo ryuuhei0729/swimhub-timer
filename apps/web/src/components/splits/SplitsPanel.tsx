@@ -2,7 +2,7 @@
 
 import { useEditorStore } from "@/stores/editor-store";
 import { useAuth } from "@/hooks/useAuth";
-import { formatTime, getMaxSplitCount } from "@swimhub-timer/core";
+import { formatTime, getMaxSplitCount } from "@swimhub-timer/shared";
 import { useTranslation } from "react-i18next";
 import {
   ListOrdered,

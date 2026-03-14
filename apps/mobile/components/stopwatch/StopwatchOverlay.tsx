@@ -10,8 +10,8 @@ import {
   type DimensionValue,
 } from "react-native";
 import { useEditorStore } from "../../stores/editor-store";
-import { formatTime } from "@swimhub-timer/core";
-import type { SplitTime } from "@swimhub-timer/core";
+import { formatTime } from "@swimhub-timer/shared";
+import type { SplitTime } from "@swimhub-timer/shared";
 
 const SPLIT_DISPLAY_DURATION = 3;
 

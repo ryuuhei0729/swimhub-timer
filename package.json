@@ -18,7 +18,7 @@
     "ios": "expo run:ios",
     "deploy:web": "pnpm --filter @swimhub-timer/web run deploy",
     "test": "turbo test",
-    "test:core": "turbo test --filter=@swimhub-timer/core",
+    "test:shared": "turbo test --filter=@swimhub-timer/shared",
     "test:web": "turbo test --filter=@swimhub-timer/web",
     "format": "prettier --write \"**/*.{ts,tsx,js,mjs,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,json,md}\""

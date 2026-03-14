@@ -5,7 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useEditorStore } from "../../stores/editor-store";
 import { StopwatchOverlay } from "../stopwatch/StopwatchOverlay";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
-import { formatTime } from "@swimhub-timer/core";
+import { formatTime } from "@swimhub-timer/shared";
 
 export function VideoPlayer() {
   const videoUri = useEditorStore((s) => s.videoUri);

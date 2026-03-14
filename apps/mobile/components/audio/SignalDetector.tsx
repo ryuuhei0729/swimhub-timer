@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable, ActivityIndicator, Modal } from "rea
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../../stores/editor-store";
-import { formatTime } from "@swimhub-timer/core";
+import { formatTime } from "@swimhub-timer/shared";
 import { extractAudioFromVideo, generateWaveformData } from "../../lib/audio/extractor";
 import { detectStartSignal } from "../../lib/audio/signal-detector";
 import { WaveformDisplay } from "./WaveformDisplay";

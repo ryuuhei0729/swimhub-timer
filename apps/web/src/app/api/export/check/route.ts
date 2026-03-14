@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerComponentClient } from "@/lib/supabase/server";
 import { getTodayExportCount, canUserExport } from "@/lib/supabase/usage";
-import type { UserPlan } from "@swimhub-timer/core";
+import type { UserPlan } from "@swimhub-timer/shared";
 
 export async function GET() {
   const supabase = await createServerComponentClient();

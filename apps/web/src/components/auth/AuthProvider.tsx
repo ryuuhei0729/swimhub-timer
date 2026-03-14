@@ -1,41 +1,50 @@
 "use client";
 
-import { createContext, useEffect, useState, useCallback, type ReactNode } from "react";
-import type { User, AuthChangeEvent, Session } from "@supabase/supabase-js";
-import type { UserPlan, SubscriptionStatus } from "@swimhub-timer/core";
+import { createContext, useEffect, useState, useCallback, useMemo, type ReactNode } from "react";
+import type { UserPlan, SubscriptionStatus, SubscriptionInfo } from "@swimhub-timer/shared";
+import type { TimerWebAuthContextValue } from "@swimhub-timer/shared/types/auth";
+import { useAuthState } from "@swimhub-timer/shared/hooks";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useEditorStore } from "@/stores/editor-store";
 import { clear as clearIdb } from "idb-keyval";
 
-export interface AuthContextValue {
-  user: User | null;
-  loading: boolean;
-  plan: UserPlan;
-  subscriptionStatus: SubscriptionStatus | null;
-  signInWithGoogle: () => Promise<void>;
-  signInWithEmail: (email: string, password: string) => Promise<void>;
-  signUpWithEmail: (email: string, password: string) => Promise<boolean>;
-  signOut: () => Promise<void>;
-}
+export type AuthContextValue = TimerWebAuthContextValue;
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const supabase = useMemo(() => getSupabaseBrowserClient() ?? null, []);
+  const { user, loading } = useAuthState(supabase);
   const [plan, setPlan] = useState<UserPlan>("guest");
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
+  const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
 
   const fetchPlan = useCallback(async (userId: string) => {
     try {
-      const supabase = getSupabaseBrowserClient();
-      const { data } = await supabase
+      const sb = getSupabaseBrowserClient()!;
+      const { data } = await sb
         .from("user_subscriptions")
-        .select("plan, status")
+        .select("plan, status, cancel_at_period_end, premium_expires_at, trial_end")
         .eq("id", userId)
-        .single<{ plan: string; status: string | null }>();
+        .single<{
+          plan: string;
+          status: string | null;
+          cancel_at_period_end: boolean | null;
+          premium_expires_at: string | null;
+          trial_end: string | null;
+        }>();
       const status = (data?.status ?? null) as SubscriptionStatus | null;
       setSubscriptionStatus(status);
+
+      const subInfo: SubscriptionInfo = {
+        plan: (data?.plan === "premium" ? "premium" : "free") as UserPlan,
+        status,
+        cancelAtPeriodEnd: data?.cancel_at_period_end ?? false,
+        premiumExpiresAt: data?.premium_expires_at ?? null,
+        trialEnd: data?.trial_end ?? null,
+      };
+      setSubscription(subInfo);
+
       if (data?.plan === "premium" && (status === "active" || status === "trialing")) {
         setPlan("premium");
       } else {
@@ -44,44 +53,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       setPlan("free");
       setSubscriptionStatus(null);
+      setSubscription({ plan: "free", status: null, cancelAtPeriodEnd: false, premiumExpiresAt: null, trialEnd: null });
     }
   }, []);
 
+  const refreshSubscription = useCallback(async () => {
+    if (!user) return;
+    await fetchPlan(user.id);
+  }, [user, fetchPlan]);
+
+  // user が変わったらプランを取得
   useEffect(() => {
-    const supabase = getSupabaseBrowserClient();
-
-    supabase.auth
-      .getUser()
-      .then(({ data: { user: currentUser } }: { data: { user: User | null } }) => {
-        setUser(currentUser);
-        setLoading(false);
-        if (currentUser) {
-          fetchPlan(currentUser.id);
-        }
-      })
-      .catch(() => {
-        setUser(null);
-        setLoading(false);
-      });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-      if (session?.user) {
-        fetchPlan(session.user.id);
-      } else {
+    if (user) {
+      // 非同期コールバック経由で setState を呼ぶことで set-state-in-effect を回避
+      void (async () => {
+        await fetchPlan(user.id);
+      })();
+    } else {
+      // ログアウト時はコールバック経由でリセット
+      Promise.resolve().then(() => {
         setPlan("guest");
         setSubscriptionStatus(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [fetchPlan]);
+        setSubscription(null);
+      });
+    }
+  }, [user, fetchPlan]);
 
   const signInWithGoogle = useCallback(async () => {
-    const supabase = getSupabaseBrowserClient();
+    const supabase = getSupabaseBrowserClient()!;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
@@ -92,13 +91,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signInWithEmail = useCallback(async (email: string, password: string) => {
-    const supabase = getSupabaseBrowserClient();
+    const supabase = getSupabaseBrowserClient()!;
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
   }, []);
 
   const signUpWithEmail = useCallback(async (email: string, password: string) => {
-    const supabase = getSupabaseBrowserClient();
+    const supabase = getSupabaseBrowserClient()!;
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -111,10 +110,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    const supabase = getSupabaseBrowserClient();
+    const supabase = getSupabaseBrowserClient()!;
     await supabase.auth.signOut({ scope: "local" });
     setPlan("guest");
     setSubscriptionStatus(null);
+    setSubscription(null);
 
     // Clear all caches
     useEditorStore.getState().reset();
@@ -129,10 +129,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         plan,
         subscriptionStatus,
+        subscription,
         signInWithGoogle,
         signInWithEmail,
         signUpWithEmail,
         signOut,
+        refreshSubscription,
       }}
     >
       {children}

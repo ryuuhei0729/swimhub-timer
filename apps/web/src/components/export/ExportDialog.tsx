@@ -15,8 +15,8 @@ import {
 import { Download, Loader2, Check, ArrowLeft, Timer, AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
-import type { ExportResolution } from "@swimhub-timer/core";
-import { getAvailableResolutions, shouldShowWatermark } from "@swimhub-timer/core";
+import type { ExportResolution } from "@swimhub-timer/shared";
+import { getAvailableResolutions, shouldShowWatermark } from "@swimhub-timer/shared";
 import { getGuestTodayCount } from "@/lib/guest-daily-limit";
 
 export function ExportDialog() {

@@ -1,5 +1,5 @@
-import type { StopwatchConfig, SplitTime, ExportSettings } from "@swimhub-timer/core";
-import { formatTime } from "@swimhub-timer/core";
+import type { StopwatchConfig, SplitTime, ExportSettings } from "@swimhub-timer/shared";
+import { formatTime } from "@swimhub-timer/shared";
 
 function getFFmpeg() {
   try {

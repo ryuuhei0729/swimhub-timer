@@ -1,5 +1,5 @@
-import type { StopwatchConfig } from "@swimhub-timer/core";
-import { DEFAULT_STOPWATCH_CONFIG } from "@swimhub-timer/core";
+import type { StopwatchConfig } from "@swimhub-timer/shared";
+import { DEFAULT_STOPWATCH_CONFIG } from "@swimhub-timer/shared";
 
 function getStorage() {
   try {

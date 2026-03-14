@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_STOPWATCH_CONFIG, STOPWATCH_PRESETS } from "../presets";
+import { DEFAULT_STOPWATCH_CONFIG, STOPWATCH_PRESETS } from "../utils/stopwatch-presets";
 
 describe("STOPWATCH_PRESETS", () => {
   it("has at least one preset", () => {

@@ -1,4 +1,4 @@
-import type { AudioAnalysisResult } from "@swimhub-timer/core";
+import type { AudioAnalysisResult } from "@swimhub-timer/shared";
 
 /**
  * Extract AudioBuffer from a video/audio file using Web Audio API.

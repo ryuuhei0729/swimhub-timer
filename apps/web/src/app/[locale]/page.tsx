@@ -16,7 +16,7 @@ import { ArrowRight, ChevronRight, RotateCcw, Waves, Palette, ListOrdered } from
 import { SwimHubTimerIcon } from "@/components/icons/SwimHubTimerIcon";
 import { SwimHubFamilyFooter } from "@/components/layout/SwimHubFamilyFooter";
 import { useTranslation } from "react-i18next";
-import type { EditorStep } from "@swimhub-timer/core";
+import type { EditorStep } from "@swimhub-timer/shared";
 
 function StepIndicator({ currentStep }: { currentStep: EditorStep }) {
   const { t } = useTranslation();

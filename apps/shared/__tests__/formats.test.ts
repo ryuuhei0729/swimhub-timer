@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatTime } from "../formats";
+import { formatTime } from "../utils/stopwatch-formats";
 
 describe("formatTime", () => {
   it("formats zero seconds", () => {

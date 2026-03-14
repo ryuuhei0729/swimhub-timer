@@ -5,8 +5,8 @@ import type * as SharingType from "expo-sharing";
 import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../../stores/editor-store";
 import { useAuth } from "../../contexts/AuthProvider";
-import { formatTime, getAvailableResolutions, shouldShowWatermark } from "@swimhub-timer/core";
-import type { ExportResolution } from "@swimhub-timer/core";
+import { formatTime, getAvailableResolutions, shouldShowWatermark } from "@swimhub-timer/shared";
+import type { ExportResolution } from "@swimhub-timer/shared";
 import {
   exportVideoWithStopwatch,
   saveToPhotoLibrary,

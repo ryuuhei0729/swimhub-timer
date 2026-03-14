@@ -2,8 +2,8 @@
 
 import { useCallback } from "react";
 import { useEditorStore } from "@/stores/editor-store";
-import type { VideoMetadata } from "@swimhub-timer/core";
-import { SUPPORTED_VIDEO_TYPES } from "@swimhub-timer/core";
+import type { VideoMetadata } from "@swimhub-timer/shared";
+import { SUPPORTED_VIDEO_TYPES } from "@swimhub-timer/shared";
 
 export function useVideoFile() {
   const { setVideoFile, setVideoMetadata, videoUrl, videoFile, videoMetadata } = useEditorStore();

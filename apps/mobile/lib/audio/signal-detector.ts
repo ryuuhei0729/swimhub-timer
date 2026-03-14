@@ -1,5 +1,5 @@
-import type { DetectedSignal } from "@swimhub-timer/core";
-import { BEEP_FREQUENCY_RANGE, FFT_WINDOW_SIZE, FFT_HOP_SIZE } from "@swimhub-timer/core";
+import type { DetectedSignal } from "@swimhub-timer/shared";
+import { BEEP_FREQUENCY_RANGE, FFT_WINDOW_SIZE, FFT_HOP_SIZE } from "@swimhub-timer/shared";
 import { applyHannWindow, computeMagnitudeSpectrum } from "./audio-utils";
 
 interface AudioData {

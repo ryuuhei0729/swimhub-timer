@@ -1,6 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { UserPlan } from "@swimhub-timer/core";
+import type { UserPlan } from "@swimhub-timer/shared";
 
 const APP = "swimhub_timer" as const;
 

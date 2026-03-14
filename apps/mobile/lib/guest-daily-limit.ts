@@ -1,4 +1,8 @@
-const STORAGE_KEY_PREFIX = "swimhub_guest_daily_usage";
+import {
+  canGuestUseToday as _canGuestUseToday,
+  markGuestUsedToday as _markGuestUsedToday,
+  getGuestTodayCount as _getGuestTodayCount,
+} from "@swimhub-timer/shared";
 
 function getMMKV() {
   try {
@@ -9,74 +13,34 @@ function getMMKV() {
   }
 }
 
-function getTodayJST(): string {
-  return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }))
-    .toISOString()
-    .split("T")[0];
-}
-
-interface DailyUsage {
-  date: string;
-  count: number;
-}
-
-function readUsage(app: "scanner" | "timer"): DailyUsage | null {
+const getItem = (key: string): string | null => {
   try {
     const storage = getMMKV();
     if (!storage) return null;
-    const key = `${STORAGE_KEY_PREFIX}_${app}`;
-    const raw = storage.getString(key);
-    if (!raw) return null;
-    return JSON.parse(raw) as DailyUsage;
+    return storage.getString(key) ?? null;
   } catch {
     return null;
   }
-}
+};
 
-function writeUsage(app: "scanner" | "timer", usage: DailyUsage): void {
+const setItem = (key: string, value: string): void => {
   try {
     const storage = getMMKV();
     if (!storage) return;
-    const key = `${STORAGE_KEY_PREFIX}_${app}`;
-    storage.set(key, JSON.stringify(usage));
+    storage.set(key, value);
   } catch {
     // MMKV unavailable
   }
-}
+};
 
 export function canGuestUseToday(app: "scanner" | "timer"): boolean {
-  try {
-    const usage = readUsage(app);
-    if (!usage) return true;
-    const today = getTodayJST();
-    if (usage.date !== today) return true;
-    return usage.count < 1;
-  } catch {
-    return true;
-  }
+  return _canGuestUseToday(app, getItem);
 }
 
 export function markGuestUsedToday(app: "scanner" | "timer"): void {
-  try {
-    const today = getTodayJST();
-    const usage = readUsage(app);
-    if (usage && usage.date === today) {
-      writeUsage(app, { date: today, count: usage.count + 1 });
-    } else {
-      writeUsage(app, { date: today, count: 1 });
-    }
-  } catch {
-    // MMKV unavailable
-  }
+  _markGuestUsedToday(app, getItem, setItem);
 }
 
 export function getGuestTodayCount(app: "scanner" | "timer"): number {
-  try {
-    const usage = readUsage(app);
-    if (!usage) return 0;
-    const today = getTodayJST();
-    return usage.date === today ? usage.count : 0;
-  } catch {
-    return 0;
-  }
+  return _getGuestTodayCount(app, getItem);
 }

@@ -1,0 +1,27 @@
+{
+  "name": "@swimhub-timer/shared",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./types/auth": "./types/auth.ts",
+    "./hooks": "./hooks/index.ts"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.97.0"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.1",
+    "typescript": "^5.9.3"
+  }
+}

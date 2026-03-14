@@ -1,4 +1,4 @@
-import type { StopwatchConfig, ExportSettings } from "@swimhub-timer/core";
+import type { StopwatchConfig, ExportSettings } from "@swimhub-timer/shared";
 import { ffmpegManager, fetchFile } from "./ffmpeg-manager";
 
 function buildDrawtextFilter(startSignalTime: number, config: StopwatchConfig): string {

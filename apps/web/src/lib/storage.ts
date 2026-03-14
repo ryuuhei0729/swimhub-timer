@@ -1,5 +1,5 @@
 import { get, set } from "idb-keyval";
-import type { StopwatchConfig } from "@swimhub-timer/core";
+import type { StopwatchConfig } from "@swimhub-timer/shared";
 
 const KEYS = {
   STOPWATCH_CONFIG: "swimhub-timer-stopwatch-config",
