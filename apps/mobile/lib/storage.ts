@@ -20,7 +20,7 @@ function getLegacyStorage() {
   }
 }
 
-let _storage: any = undefined;
+let _storage: ReturnType<typeof getStorage> | undefined = undefined;
 function storage() {
   if (_storage === undefined) {
     _storage = getStorage();

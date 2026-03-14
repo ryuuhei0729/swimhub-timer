@@ -75,9 +75,7 @@ export function ExportDialog() {
         </div>
         <div className="text-center space-y-1">
           <h2 className="text-xl font-bold tracking-tight">{t("exportScreen.webTitle")}</h2>
-          <p className="text-sm text-muted-foreground">
-            {t("exportScreen.subtitle")}
-          </p>
+          <p className="text-sm text-muted-foreground">{t("exportScreen.subtitle")}</p>
         </div>
       </div>
 
@@ -101,16 +99,10 @@ export function ExportDialog() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="720">720p</SelectItem>
-              <SelectItem
-                value="1080"
-                disabled={!availableResolutions.includes("1080")}
-              >
+              <SelectItem value="1080" disabled={!availableResolutions.includes("1080")}>
                 1080p {t("exportScreen.recommended")}
               </SelectItem>
-              <SelectItem
-                value="original"
-                disabled={!availableResolutions.includes("original")}
-              >
+              <SelectItem value="original" disabled={!availableResolutions.includes("original")}>
                 {t("exportScreen.original")}
               </SelectItem>
             </SelectContent>
@@ -157,9 +149,7 @@ export function ExportDialog() {
                 <Loader2 className="w-4 h-4 animate-spin text-primary" />
                 <span>{t("exportScreen.encoding")}</span>
               </div>
-              <span className="font-mono text-primary tabular-nums">
-                {exportProgress}%
-              </span>
+              <span className="font-mono text-primary tabular-nums">{exportProgress}%</span>
             </div>
             <div className="w-full bg-surface-raised rounded-full h-1.5 overflow-hidden">
               <div
@@ -179,9 +169,7 @@ export function ExportDialog() {
               <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
                 <Check className="w-4 h-4 text-emerald-400" />
               </div>
-              <span className="font-medium text-emerald-400">
-                {t("exportScreen.complete")}
-              </span>
+              <span className="font-medium text-emerald-400">{t("exportScreen.complete")}</span>
             </div>
             <Button
               onClick={downloadOutput}
@@ -199,12 +187,7 @@ export function ExportDialog() {
         {error && (
           <div className="p-3.5 bg-destructive/5 border border-destructive/20 rounded-xl">
             <p className="text-sm text-destructive">{error}</p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExport}
-              className="mt-3 text-xs"
-            >
+            <Button variant="outline" size="sm" onClick={handleExport} className="mt-3 text-xs">
               {t("common.retry")}
             </Button>
           </div>

@@ -6,6 +6,8 @@ import {
   StyleSheet,
   PanResponder,
   type LayoutChangeEvent,
+  type ViewStyle,
+  type DimensionValue,
 } from "react-native";
 import { useEditorStore } from "../../stores/editor-store";
 import { formatTime } from "@swimhub-timer/core";
@@ -25,9 +27,7 @@ export function StopwatchOverlay({ videoWidth, videoHeight }: Props) {
   const splitTimes = useEditorStore((s) => s.splitTimes);
   const isFinished = useEditorStore((s) => s.isFinished);
   const finishTime = useEditorStore((s) => s.finishTime);
-  const updateStopwatchConfig = useEditorStore(
-    (s) => s.updateStopwatchConfig
-  );
+  const updateStopwatchConfig = useEditorStore((s) => s.updateStopwatchConfig);
 
   const containerSize = useRef({ width: 0, height: 0 });
   const contentRect = useRef({ x: 0, y: 0, width: 0, height: 0 });
@@ -80,7 +80,7 @@ export function StopwatchOverlay({ videoWidth, videoHeight }: Props) {
           });
         },
       }),
-    [updateStopwatchConfig]
+    [updateStopwatchConfig],
   );
 
   // Re-compute contentRect when videoWidth/videoHeight change
@@ -89,19 +89,20 @@ export function StopwatchOverlay({ videoWidth, videoHeight }: Props) {
     updateContentRect();
   }, [updateContentRect]);
 
-  const onContainerLayout = useCallback((e: LayoutChangeEvent) => {
-    containerSize.current = {
-      width: e.nativeEvent.layout.width,
-      height: e.nativeEvent.layout.height,
-    };
-    updateContentRect();
-  }, [updateContentRect]);
+  const onContainerLayout = useCallback(
+    (e: LayoutChangeEvent) => {
+      containerSize.current = {
+        width: e.nativeEvent.layout.width,
+        height: e.nativeEvent.layout.height,
+      };
+      updateContentRect();
+    },
+    [updateContentRect],
+  );
 
   // Scale based on actual video content area vs video resolution
   const scaleFactor =
-    contentRect.current.width > 0 && videoWidth > 0
-      ? contentRect.current.width / videoWidth
-      : 0.2;
+    contentRect.current.width > 0 && videoWidth > 0 ? contentRect.current.width / videoWidth : 0.2;
   const watermarkFontSize = Math.max(8, Math.round(videoHeight * 0.06 * scaleFactor));
 
   if (startTime === null) return null;
@@ -138,11 +139,7 @@ export function StopwatchOverlay({ videoWidth, videoHeight }: Props) {
   const cr = contentRect.current;
 
   return (
-    <View
-      style={StyleSheet.absoluteFill}
-      pointerEvents="box-none"
-      onLayout={onContainerLayout}
-    >
+    <View style={StyleSheet.absoluteFill} pointerEvents="box-none" onLayout={onContainerLayout}>
       {/* Inner view matching the actual video content area */}
       <View
         style={{
@@ -162,7 +159,7 @@ export function StopwatchOverlay({ videoWidth, videoHeight }: Props) {
             bottom: "3%",
             flexDirection: "row",
             alignItems: "center",
-            opacity: 0.30,
+            opacity: 0.3,
           }}
           pointerEvents="none"
         >
@@ -214,8 +211,7 @@ export function StopwatchOverlay({ videoWidth, videoHeight }: Props) {
                   color: config.textColor,
                   fontSize: scaledFontSize,
                   fontWeight: "700",
-                  fontFamily:
-                    config.fontFamily === "monospace" ? "monospace" : undefined,
+                  fontFamily: config.fontFamily === "monospace" ? "monospace" : undefined,
                   fontVariant: ["tabular-nums"],
                 }}
               >
@@ -265,7 +261,7 @@ function SplitDisplay({
   memoFontSize: number;
   padding: number;
   radius: number;
-  style?: Record<string, any>;
+  style?: ViewStyle;
 }) {
   const hasMemo = split.memo.length > 0;
   return (
@@ -285,8 +281,7 @@ function SplitDisplay({
           color: config.textColor,
           fontSize,
           fontWeight: "700",
-          fontFamily:
-            config.fontFamily === "monospace" ? "monospace" : undefined,
+          fontFamily: config.fontFamily === "monospace" ? "monospace" : undefined,
           fontVariant: ["tabular-nums"],
         }}
       >
@@ -299,8 +294,7 @@ function SplitDisplay({
             fontSize: memoFontSize,
             opacity: 0.75,
             marginTop: 1,
-            fontFamily:
-              config.fontFamily === "monospace" ? "monospace" : undefined,
+            fontFamily: config.fontFamily === "monospace" ? "monospace" : undefined,
           }}
         >
           {split.memo}
@@ -315,49 +309,45 @@ function isCenterAnchor(anchor: string): boolean {
   return anchor === "top-center" || anchor === "bottom-center";
 }
 
-function getWrapperStyle(
-  config: { position: { x: number; y: number }; anchor: string }
-): Record<string, any> {
-  const style: Record<string, any> = {
-    position: "absolute",
-  };
+function pct(value: number): DimensionValue {
+  return `${value * 100}%` as DimensionValue;
+}
 
-  const yPercent = `${config.position.y * 100}%`;
+function getWrapperStyle(config: {
+  position: { x: number; y: number };
+  anchor: string;
+}): ViewStyle {
+  const base: ViewStyle = { position: "absolute" };
+  const yPos = pct(config.position.y);
 
-  if (isCenterAnchor(config.anchor)) {
-    style.left = 0;
-    style.right = 0;
-    style.flexDirection = "row";
-    style.justifyContent = "center";
-  }
+  const center: ViewStyle = isCenterAnchor(config.anchor)
+    ? { left: 0, right: 0, flexDirection: "row", justifyContent: "center" }
+    : {};
 
   switch (config.anchor) {
     case "top-left":
-      style.left = `${config.position.x * 100}%`;
-      style.top = yPercent;
-      break;
+      return { ...base, ...center, left: pct(config.position.x), top: yPos };
     case "top-center":
-      style.top = yPercent;
-      break;
+      return { ...base, ...center, top: yPos };
     case "top-right":
-      style.right = `${(1 - config.position.x) * 100}%`;
-      style.top = yPercent;
-      break;
+      return { ...base, ...center, right: pct(1 - config.position.x), top: yPos };
     case "bottom-left":
-      style.left = `${config.position.x * 100}%`;
-      style.bottom = `${(1 - config.position.y) * 100}%`;
-      break;
+      return {
+        ...base,
+        ...center,
+        left: pct(config.position.x),
+        bottom: pct(1 - config.position.y),
+      };
     case "bottom-center":
-      style.bottom = `${(1 - config.position.y) * 100}%`;
-      break;
+      return { ...base, ...center, bottom: pct(1 - config.position.y) };
     case "bottom-right":
-      style.right = `${(1 - config.position.x) * 100}%`;
-      style.bottom = `${(1 - config.position.y) * 100}%`;
-      break;
+      return {
+        ...base,
+        ...center,
+        right: pct(1 - config.position.x),
+        bottom: pct(1 - config.position.y),
+      };
     default:
-      style.left = `${config.position.x * 100}%`;
-      style.top = yPercent;
+      return { ...base, ...center, left: pct(config.position.x), top: yPos };
   }
-
-  return style;
 }

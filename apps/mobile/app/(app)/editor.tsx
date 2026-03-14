@@ -66,10 +66,7 @@ export default function EditorScreen() {
       {startTime !== null && (
         <View style={styles.exportBar}>
           <Pressable
-            style={({ pressed }) => [
-              styles.exportBtn,
-              pressed && styles.exportBtnPressed,
-            ]}
+            style={({ pressed }) => [styles.exportBtn, pressed && styles.exportBtnPressed]}
             onPress={() => router.push("/export")}
           >
             <Text style={styles.exportBtnText}>{t("common.export")}</Text>

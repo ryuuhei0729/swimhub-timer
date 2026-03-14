@@ -56,7 +56,7 @@ if (supabaseUrl && supabaseAnonKey) {
     "Supabase環境変数が設定されていません。\n" +
       `EXPO_PUBLIC_SUPABASE_URL: ${supabaseUrl ? "OK" : "未設定"}\n` +
       `EXPO_PUBLIC_SUPABASE_ANON_KEY: ${supabaseAnonKey ? "OK" : "未設定"}\n` +
-      "EAS Secrets または .env ファイルに設定してください。"
+      "EAS Secrets または .env ファイルに設定してください。",
   );
 }
 

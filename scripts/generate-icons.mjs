@@ -51,7 +51,10 @@ for (const target of targets) {
       .toFile(outPath);
   } else {
     await sharp(source)
-      .resize(target.size, target.size, { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 0 } })
+      .resize(target.size, target.size, {
+        fit: "contain",
+        background: { r: 255, g: 255, b: 255, alpha: 0 },
+      })
       .png()
       .toFile(outPath);
   }
@@ -77,7 +80,10 @@ const ogHeight = 630;
 const ogIconSize = 400;
 
 const ogIcon = await sharp(source)
-  .resize(ogIconSize, ogIconSize, { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 0 } })
+  .resize(ogIconSize, ogIconSize, {
+    fit: "contain",
+    background: { r: 255, g: 255, b: 255, alpha: 0 },
+  })
   .toBuffer();
 
 const ogPath = join(root, "apps/web/public/og-image.png");

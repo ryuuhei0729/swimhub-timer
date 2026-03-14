@@ -11,9 +11,7 @@ import {
 function getDeviceLocale(): SupportedLocale {
   const deviceLocales = getLocales();
   const deviceLang = deviceLocales[0]?.languageCode ?? "ja";
-  if (
-    supportedLocales.includes(deviceLang as SupportedLocale)
-  ) {
+  if (supportedLocales.includes(deviceLang as SupportedLocale)) {
     return deviceLang as SupportedLocale;
   }
   return defaultLocale;

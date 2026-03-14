@@ -9,4 +9,11 @@ export default [
       "import/no-named-as-default-member": "off",
     },
   },
+  {
+    files: ["**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "error",
+      "react-hooks/exhaustive-deps": "error",
+    },
+  },
 ];

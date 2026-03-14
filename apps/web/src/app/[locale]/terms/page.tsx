@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import {
-  supportedLocales,
-  i18nResources,
-  type SupportedLocale,
-} from "@swimhub-timer/i18n";
+import { supportedLocales, i18nResources, type SupportedLocale } from "@swimhub-timer/i18n";
 import { TermsContent } from "./TermsContent";
 
 export function generateStaticParams() {
@@ -26,11 +22,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function TermsPage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
+export default async function TermsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const resource = i18nResources[locale as SupportedLocale];
   if (!resource) notFound();

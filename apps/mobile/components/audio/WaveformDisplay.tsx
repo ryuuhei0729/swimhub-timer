@@ -20,9 +20,7 @@ export function WaveformDisplay({
   onSeek,
 }: Props) {
   const barCount = waveformData.length;
-  const signalPercent = duration > 0 && signalTime >= 0
-    ? (signalTime / duration) * 100
-    : -10;
+  const signalPercent = duration > 0 && signalTime >= 0 ? (signalTime / duration) * 100 : -10;
 
   const containerWidth = useRef(0);
 
@@ -36,7 +34,7 @@ export function WaveformDisplay({
       const ratio = Math.max(0, Math.min(1, locationX / containerWidth.current));
       onSeek(ratio * duration);
     },
-    [onSeek, duration]
+    [onSeek, duration],
   );
 
   return (
@@ -73,24 +71,9 @@ export function WaveformDisplay({
       {/* Signal marker (red line) - pointerEvents="none" so taps pass through to container */}
       {signalTime >= 0 && (
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
-          <View
-            style={[
-              styles.signalGlow,
-              { left: `${signalPercent}%` },
-            ]}
-          />
-          <View
-            style={[
-              styles.signalMarker,
-              { left: `${signalPercent}%` },
-            ]}
-          />
-          <View
-            style={[
-              styles.signalTriangle,
-              { left: `${signalPercent}%` },
-            ]}
-          />
+          <View style={[styles.signalGlow, { left: `${signalPercent}%` }]} />
+          <View style={[styles.signalMarker, { left: `${signalPercent}%` }]} />
+          <View style={[styles.signalTriangle, { left: `${signalPercent}%` }]} />
         </View>
       )}
     </View>

@@ -5,17 +5,23 @@
   "packageManager": "pnpm@10.20.0",
   "scripts": {
     "postinstall": "bash scripts/install-ffmpeg-frameworks.sh",
-    "dev:web": "pnpm --filter @swimhub-timer/web dev",
-    "build:web": "pnpm --filter @swimhub-timer/web build",
-    "lint:web": "pnpm --filter @swimhub-timer/web lint",
-    "lint:mobile": "pnpm --filter @swimhub-timer/mobile lint",
+    "dev": "turbo dev --filter=@swimhub-timer/web",
+    "dev:web": "turbo dev --filter=@swimhub-timer/web",
+    "build": "turbo build --filter=!@swimhub-timer/mobile",
+    "build:web": "turbo build --filter=@swimhub-timer/web",
+    "lint": "turbo lint",
+    "lint:web": "turbo lint --filter=@swimhub-timer/web",
+    "lint:mobile": "turbo lint --filter=@swimhub-timer/mobile",
+    "type-check": "turbo type-check",
     "dev:mobile": "pnpm --filter @swimhub-timer/mobile start",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "deploy:web": "pnpm --filter @swimhub-timer/web run deploy",
-    "test": "pnpm -r --if-present test",
-    "test:core": "pnpm --filter @swimhub-timer/core test",
-    "test:web": "pnpm --filter @swimhub-timer/web test"
+    "test": "turbo test",
+    "test:core": "turbo test --filter=@swimhub-timer/core",
+    "test:web": "turbo test --filter=@swimhub-timer/web",
+    "format": "prettier --write \"**/*.{ts,tsx,js,mjs,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,json,md}\""
   },
   "pnpm": {
     "overrides": {
@@ -25,6 +31,8 @@
   },
   "devDependencies": {
     "png-to-ico": "^3.0.1",
+    "prettier": "^3.8.1",
+    "turbo": "^2.8.16",
     "typescript": "^5"
   },
   "dependencies": {

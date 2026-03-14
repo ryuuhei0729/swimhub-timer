@@ -113,12 +113,7 @@ export default function ExportScreen() {
 
   // If ad loads AFTER export was triggered, show it automatically
   useEffect(() => {
-    if (
-      exportTriggeredRef.current &&
-      adState === "loaded" &&
-      !adRewardEarned &&
-      !adUnavailable
-    ) {
+    if (exportTriggeredRef.current && adState === "loaded" && !adRewardEarned && !adUnavailable) {
       adControllerRef.current?.show().catch(() => setAdUnavailable(true));
     }
   }, [adState, adRewardEarned, adUnavailable]);
@@ -137,22 +132,23 @@ export default function ExportScreen() {
 
     (async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (!user) return;
 
-        const today = new Date(
-          new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
-        )
+        const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }))
           .toISOString()
           .split("T")[0];
 
-        const { data } = await (supabase as any)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase client lacks app_daily_usage table types
+        const { data } = (await (supabase as any)
           .from("app_daily_usage")
           .select("usage_count")
           .eq("user_id", user.id)
           .eq("app", "swimhub_timer")
           .eq("usage_date", today)
-          .single() as { data: { usage_count: number } | null };
+          .single()) as { data: { usage_count: number } | null };
 
         const count = data?.usage_count ?? 0;
         setFetchedRemaining(Math.max(0, 1 - count));
@@ -194,21 +190,22 @@ export default function ExportScreen() {
     } else if (plan === "free") {
       if (supabase) {
         try {
-          const { data: { user } } = await supabase.auth.getUser();
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
           if (user) {
-            const today = new Date(
-              new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
-            )
+            const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }))
               .toISOString()
               .split("T")[0];
 
-            const { data } = await (supabase as any)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase client lacks app_daily_usage table types
+            const { data } = (await (supabase as any)
               .from("app_daily_usage")
               .select("usage_count")
               .eq("user_id", user.id)
               .eq("app", "swimhub_timer")
               .eq("usage_date", today)
-              .single() as { data: { usage_count: number } | null };
+              .single()) as { data: { usage_count: number } | null };
 
             if ((data?.usage_count ?? 0) >= 1) {
               setLimitReached(true);
@@ -263,7 +260,7 @@ export default function ExportScreen() {
             setProgress(Math.min(timeMs / durationMs, 1));
           }
         },
-        showWatermark
+        showWatermark,
       );
       setOutputPath(path);
       setProgress(1);
@@ -273,22 +270,23 @@ export default function ExportScreen() {
         markGuestUsedToday("timer");
       } else if (plan === "free" && supabase) {
         try {
-          const { data: { user } } = await supabase.auth.getUser();
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
           if (user) {
-            const today = new Date(
-              new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
-            )
+            const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }))
               .toISOString()
               .split("T")[0];
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase client lacks app_daily_usage table types
             const db = supabase as any;
-            const { data: existing } = await db
+            const { data: existing } = (await db
               .from("app_daily_usage")
               .select("id, usage_count")
               .eq("user_id", user.id)
               .eq("app", "swimhub_timer")
               .eq("usage_date", today)
-              .single() as { data: { id: string; usage_count: number } | null };
+              .single()) as { data: { id: string; usage_count: number } | null };
 
             if (existing) {
               await db
@@ -314,9 +312,7 @@ export default function ExportScreen() {
         }
       }
     } catch (e) {
-      setError(
-        e instanceof Error ? e.message : t("exportScreen.errorDuringExport")
-      );
+      setError(e instanceof Error ? e.message : t("exportScreen.errorDuringExport"));
     } finally {
       setIsExporting(false);
     }
@@ -343,10 +339,7 @@ export default function ExportScreen() {
       await saveToPhotoLibrary(outputPath);
       Alert.alert(t("exportScreen.saveComplete"), t("exportScreen.savedToLibrary"));
     } catch (e) {
-      Alert.alert(
-        t("common.error"),
-        e instanceof Error ? e.message : t("exportScreen.saveFailed")
-      );
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("exportScreen.saveFailed"));
     }
   }, [outputPath, t]);
 
@@ -389,9 +382,7 @@ export default function ExportScreen() {
         </View>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>{t("exportScreen.splitsLabel")}</Text>
-          <Text style={styles.summaryValue}>
-            {t("splits.count", { count: splitTimes.length })}
-          </Text>
+          <Text style={styles.summaryValue}>{t("splits.count", { count: splitTimes.length })}</Text>
         </View>
       </View>
 
@@ -426,9 +417,7 @@ export default function ExportScreen() {
                 >
                   {r.label}
                 </Text>
-                {isLocked && (
-                  <Text style={styles.premiumBadge}>{t("auth.premiumOnly")}</Text>
-                )}
+                {isLocked && <Text style={styles.premiumBadge}>{t("auth.premiumOnly")}</Text>}
               </Pressable>
             );
           })}
@@ -462,14 +451,10 @@ export default function ExportScreen() {
             {t("exportScreen.encodingPercent", { percent: progressPercent })}
           </Text>
           <View style={styles.progressBar}>
-            <View
-              style={[styles.progressFill, { width: `${progressPercent}%` }]}
-            />
+            <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
           </View>
           {exportComplete && !adRewardEarned && !adUnavailable && (
-            <Text style={styles.adWaitText}>
-              {t("exportScreen.adWatchPrompt")}
-            </Text>
+            <Text style={styles.adWaitText}>{t("exportScreen.adWatchPrompt")}</Text>
           )}
         </View>
       ) : canProceed ? (
@@ -509,9 +494,7 @@ export default function ExportScreen() {
             <Text style={styles.adStatusText}>{t("exportScreen.adLoading")}</Text>
           )}
           {adState === "error" && (
-            <Text style={styles.adStatusText}>
-              {t("exportScreen.adFailed")}
-            </Text>
+            <Text style={styles.adStatusText}>{t("exportScreen.adFailed")}</Text>
           )}
         </View>
       )}

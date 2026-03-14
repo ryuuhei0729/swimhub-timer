@@ -87,18 +87,10 @@ function bitReverse(x: number, bits: number): number {
  * Find peaks in an array that exceed the given threshold.
  * Returns indices of peaks.
  */
-export function findPeaks(
-  data: number[],
-  threshold: number,
-  minDistance: number = 10
-): number[] {
+export function findPeaks(data: number[], threshold: number, minDistance: number = 10): number[] {
   const peaks: number[] = [];
   for (let i = 1; i < data.length - 1; i++) {
-    if (
-      data[i] > threshold &&
-      data[i] > data[i - 1] &&
-      data[i] >= data[i + 1]
-    ) {
+    if (data[i] > threshold && data[i] > data[i - 1] && data[i] >= data[i + 1]) {
       if (peaks.length === 0 || i - peaks[peaks.length - 1] >= minDistance) {
         peaks.push(i);
       }

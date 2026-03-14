@@ -1,10 +1,6 @@
 // Types
 export type { EditorStep } from "./types/editor";
-export type {
-  VideoMetadata,
-  ExportResolution,
-  ExportSettings,
-} from "./types/video";
+export type { VideoMetadata, ExportResolution, ExportSettings } from "./types/video";
 export type { DetectedSignal, AudioAnalysisResult } from "./types/audio";
 export type {
   StopwatchAnchor,
@@ -16,7 +12,12 @@ export type {
 export type { UserPlan, UserProfile, SubscriptionStatus } from "./types/auth";
 
 // Utils
-export { isActivePremium, getAvailableResolutions, getMaxSplitCount, shouldShowWatermark } from "./utils/subscription";
+export {
+  isActivePremium,
+  getAvailableResolutions,
+  getMaxSplitCount,
+  shouldShowWatermark,
+} from "./utils/subscription";
 
 // Constants
 export {
@@ -27,8 +28,5 @@ export {
 } from "./constants";
 
 // Stopwatch
-export {
-  STOPWATCH_PRESETS,
-  DEFAULT_STOPWATCH_CONFIG,
-} from "./stopwatch/presets";
+export { STOPWATCH_PRESETS, DEFAULT_STOPWATCH_CONFIG } from "./stopwatch/presets";
 export { formatTime } from "./stopwatch/formats";

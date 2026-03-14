@@ -10,9 +10,7 @@ function getMMKV() {
 }
 
 function getTodayJST(): string {
-  return new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
-  )
+  return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }))
     .toISOString()
     .split("T")[0];
 }

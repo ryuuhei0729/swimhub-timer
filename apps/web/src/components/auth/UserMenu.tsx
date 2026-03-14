@@ -56,9 +56,7 @@ export function UserMenu() {
             d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
           />
         </svg>
-        <span className="hidden sm:inline max-w-[150px] truncate">
-          {displayName}
-        </span>
+        <span className="hidden sm:inline max-w-[150px] truncate">{displayName}</span>
         <svg
           className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
           fill="none"
@@ -66,24 +64,16 @@ export function UserMenu() {
           stroke="currentColor"
           strokeWidth={2}
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M19.5 8.25l-7.5 7.5-7.5-7.5"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
         </svg>
       </button>
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-56 rounded-md bg-card shadow-lg ring-1 ring-border z-50">
           <div className="px-4 py-3 border-b border-border">
-            <p className="text-sm font-medium text-foreground truncate">
-              {displayName}
-            </p>
+            <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
             {user.email && displayName !== user.email && (
-              <p className="text-xs text-muted-foreground truncate">
-                {user.email}
-              </p>
+              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
             )}
             <span
               className={`inline-block mt-1 text-xs font-semibold px-2 py-0.5 rounded-full ${

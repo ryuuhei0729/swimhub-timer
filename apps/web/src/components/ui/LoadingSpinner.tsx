@@ -15,25 +15,15 @@ const sizeClasses = {
   xl: "h-16 w-16",
 };
 
-export function LoadingSpinner({
-  size = "lg",
-  message,
-  className = "",
-}: LoadingSpinnerProps) {
+export function LoadingSpinner({ size = "lg", message, className = "" }: LoadingSpinnerProps) {
   return (
-    <div
-      className={`flex flex-col items-center justify-center space-y-4 ${className}`}
-    >
+    <div className={`flex flex-col items-center justify-center space-y-4 ${className}`}>
       <div className="relative">
-        <div
-          className={`${sizeClasses[size]} border-4 border-gray-200 rounded-full animate-spin`}
-        >
+        <div className={`${sizeClasses[size]} border-4 border-gray-200 rounded-full animate-spin`}>
           <div className="absolute top-0 left-0 h-full w-full border-4 border-transparent border-t-blue-600 rounded-full animate-spin" />
         </div>
       </div>
-      {message && (
-        <p className="text-sm text-gray-600 animate-pulse">{message}</p>
-      )}
+      {message && <p className="text-sm text-gray-600 animate-pulse">{message}</p>}
     </div>
   );
 }

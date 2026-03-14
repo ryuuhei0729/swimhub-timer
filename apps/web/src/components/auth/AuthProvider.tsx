@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useEffect,
-  useState,
-  useCallback,
-  type ReactNode,
-} from "react";
+import { createContext, useEffect, useState, useCallback, type ReactNode } from "react";
 import type { User, AuthChangeEvent, Session } from "@supabase/supabase-js";
 import type { UserPlan, SubscriptionStatus } from "@swimhub-timer/core";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -130,7 +124,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, plan, subscriptionStatus, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut }}
+      value={{
+        user,
+        loading,
+        plan,
+        subscriptionStatus,
+        signInWithGoogle,
+        signInWithEmail,
+        signUpWithEmail,
+        signOut,
+      }}
     >
       {children}
     </AuthContext.Provider>

@@ -8,10 +8,7 @@ interface WaveformDisplayProps {
   onClickTime?: (time: number) => void;
 }
 
-export function WaveformDisplay({
-  height = 80,
-  onClickTime,
-}: WaveformDisplayProps) {
+export function WaveformDisplay({ height = 80, onClickTime }: WaveformDisplayProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { waveformData, detectedSignalTime, videoMetadata } = useEditorStore();
   const [hoverX, setHoverX] = useState<number | null>(null);
@@ -113,7 +110,7 @@ export function WaveformDisplay({
       const time = ratio * videoMetadata.duration;
       onClickTime(time);
     },
-    [videoMetadata, onClickTime]
+    [videoMetadata, onClickTime],
   );
 
   const handleMouseMove = useCallback(
@@ -128,7 +125,7 @@ export function WaveformDisplay({
       const ratio = x / rect.width;
       setHoverTime(ratio * videoMetadata.duration);
     },
-    [videoMetadata]
+    [videoMetadata],
   );
 
   const handleMouseLeave = useCallback(() => {

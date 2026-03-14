@@ -62,15 +62,10 @@ export function SignalDetector() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <MousePointerClick className="w-3 h-3" />
-              <span className="text-[11px]">
-                {t("signal.clickWaveform")}
-              </span>
+              <span className="text-[11px]">{t("signal.clickWaveform")}</span>
             </div>
           </div>
-          <WaveformDisplay
-            height={72}
-            onClickTime={(time) => setDetectedSignalTime(time)}
-          />
+          <WaveformDisplay height={72} onClickTime={(time) => setDetectedSignalTime(time)} />
         </div>
       )}
 
@@ -95,9 +90,7 @@ export function SignalDetector() {
           )}
         </Button>
 
-        {analysisError && (
-          <p className="text-xs text-destructive">{analysisError}</p>
-        )}
+        {analysisError && <p className="text-xs text-destructive">{analysisError}</p>}
       </div>
 
       {/* Detected time + fine-tune + confirm */}

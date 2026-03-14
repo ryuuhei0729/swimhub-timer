@@ -16,8 +16,7 @@ export function useEmailAuth() {
       try {
         setLoading(true);
         setError(null);
-        const { error: authError } =
-          await supabase.auth.signInWithPassword({ email, password });
+        const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
         if (authError) {
           if (authError.message.includes("Invalid login credentials")) {
             setError(t("auth.errors.invalidCredentials"));

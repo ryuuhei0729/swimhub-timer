@@ -27,9 +27,7 @@ export function TabBar({ tabs, activeKey, onSelect }: Props) {
             onPress={() => onSelect(tab.key)}
           >
             {tab.icon({ color, size: 16 })}
-            <Text style={[styles.tabLabel, { color }]}>
-              {tab.label}
-            </Text>
+            <Text style={[styles.tabLabel, { color }]}>{tab.label}</Text>
           </Pressable>
         );
       })}

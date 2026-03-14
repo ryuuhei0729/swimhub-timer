@@ -20,9 +20,7 @@ export function useAudioAnalysis() {
       setAudioBuffer(result.audioBuffer);
       setWaveformData(result.waveformData);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Audio analysis failed"
-      );
+      setError(err instanceof Error ? err.message : "Audio analysis failed");
     } finally {
       setIsAnalyzing(false);
     }

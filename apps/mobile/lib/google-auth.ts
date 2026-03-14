@@ -29,8 +29,7 @@ export const extractTokensFromUrl = (url: string): ExtractedTokens => {
     const urlObj = new URL(url);
     const hashParams = new URLSearchParams(urlObj.hash.substring(1));
 
-    const error =
-      hashParams.get("error_description") || hashParams.get("error");
+    const error = hashParams.get("error_description") || hashParams.get("error");
     if (error) {
       return {
         accessToken: null,
@@ -44,9 +43,7 @@ export const extractTokensFromUrl = (url: string): ExtractedTokens => {
     return {
       accessToken: hashParams.get("access_token"),
       refreshToken: hashParams.get("refresh_token"),
-      expiresIn: hashParams.get("expires_in")
-        ? parseInt(hashParams.get("expires_in")!, 10)
-        : null,
+      expiresIn: hashParams.get("expires_in") ? parseInt(hashParams.get("expires_in")!, 10) : null,
       tokenType: hashParams.get("token_type"),
       error: null,
     };

@@ -6,9 +6,7 @@ class FFmpegManager {
   private loaded = false;
   private loading: Promise<FFmpeg> | null = null;
 
-  async load(
-    onProgress?: (progress: number) => void
-  ): Promise<FFmpeg> {
+  async load(onProgress?: (progress: number) => void): Promise<FFmpeg> {
     if (this.ffmpeg && this.loaded) return this.ffmpeg;
     if (this.loading) return this.loading;
 
@@ -21,9 +19,7 @@ class FFmpegManager {
     }
   }
 
-  private async _load(
-    onProgress?: (progress: number) => void
-  ): Promise<FFmpeg> {
+  private async _load(onProgress?: (progress: number) => void): Promise<FFmpeg> {
     this.ffmpeg = new FFmpeg();
 
     this.ffmpeg.on("progress", ({ progress }) => {
@@ -33,10 +29,7 @@ class FFmpegManager {
     const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
     await this.ffmpeg.load({
       coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
-      wasmURL: await toBlobURL(
-        `${baseURL}/ffmpeg-core.wasm`,
-        "application/wasm"
-      ),
+      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
     });
 
     this.loaded = true;

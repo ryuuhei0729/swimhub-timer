@@ -1,12 +1,5 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  StyleSheet,
-} from "react-native";
+import { View, Text, TouchableOpacity, Alert, ActivityIndicator, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Constants from "expo-constants";
 import { useTranslation } from "react-i18next";
@@ -38,52 +31,44 @@ export default function AccountScreen() {
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert(
-      t("auth.deleteAccount"),
-      t("auth.deleteAccountConfirm"),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("auth.deleteAccount"),
-          style: "destructive",
-          onPress: async () => {
-            setDeleting(true);
-            try {
-              const session = await supabase?.auth.getSession();
-              const accessToken = session?.data.session?.access_token;
-              if (!accessToken) {
-                throw new Error("No session");
-              }
-
-              const response = await fetch(`${WEB_API_URL}/api/user/delete`, {
-                method: "DELETE",
-                headers: {
-                  Authorization: `Bearer ${accessToken}`,
-                  "Content-Type": "application/json",
-                },
-              });
-
-              if (!response.ok) {
-                const body = await response.json().catch(() => ({}));
-                throw new Error(
-                  body.error || t("auth.errors.deleteAccountFailed"),
-                );
-              }
-
-              await signOut();
-            } catch (err) {
-              const message =
-                err instanceof Error
-                  ? err.message
-                  : t("auth.errors.deleteAccountFailed");
-              Alert.alert(t("common.error"), message);
-            } finally {
-              setDeleting(false);
+    Alert.alert(t("auth.deleteAccount"), t("auth.deleteAccountConfirm"), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("auth.deleteAccount"),
+        style: "destructive",
+        onPress: async () => {
+          setDeleting(true);
+          try {
+            const session = await supabase?.auth.getSession();
+            const accessToken = session?.data.session?.access_token;
+            if (!accessToken) {
+              throw new Error("No session");
             }
-          },
+
+            const response = await fetch(`${WEB_API_URL}/api/user/delete`, {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+              },
+            });
+
+            if (!response.ok) {
+              const body = await response.json().catch(() => ({}));
+              throw new Error(body.error || t("auth.errors.deleteAccountFailed"));
+            }
+
+            await signOut();
+          } catch (err) {
+            const message =
+              err instanceof Error ? err.message : t("auth.errors.deleteAccountFailed");
+            Alert.alert(t("common.error"), message);
+          } finally {
+            setDeleting(false);
+          }
         },
-      ],
-    );
+      },
+    ]);
   };
 
   const appVersion = Constants.expoConfig?.version || "1.0.0";
@@ -103,17 +88,12 @@ export default function AccountScreen() {
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>{t("auth.plan")}</Text>
               <View
-                style={[
-                  styles.badge,
-                  plan === "premium" ? styles.premiumBadge : styles.freeBadge,
-                ]}
+                style={[styles.badge, plan === "premium" ? styles.premiumBadge : styles.freeBadge]}
               >
                 <Text
                   style={[
                     styles.badgeText,
-                    plan === "premium"
-                      ? styles.premiumBadgeText
-                      : styles.freeBadgeText,
+                    plan === "premium" ? styles.premiumBadgeText : styles.freeBadgeText,
                   ]}
                 >
                   {plan === "premium"
@@ -129,10 +109,7 @@ export default function AccountScreen() {
 
         {/* Sign out */}
         <View style={styles.section}>
-          <TouchableOpacity
-            style={styles.signOutButton}
-            onPress={handleSignOut}
-          >
+          <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
             <Text style={styles.signOutButtonText}>{t("auth.logout")}</Text>
           </TouchableOpacity>
         </View>
@@ -147,14 +124,10 @@ export default function AccountScreen() {
             {deleting ? (
               <ActivityIndicator color={colors.destructive} />
             ) : (
-              <Text style={styles.deleteButtonText}>
-                {t("auth.deleteAccount")}
-              </Text>
+              <Text style={styles.deleteButtonText}>{t("auth.deleteAccount")}</Text>
             )}
           </TouchableOpacity>
-          <Text style={styles.deleteWarning}>
-            {t("auth.deleteAccountWarning")}
-          </Text>
+          <Text style={styles.deleteWarning}>{t("auth.deleteAccountWarning")}</Text>
         </View>
 
         {/* App info */}

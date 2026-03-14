@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  applyHannWindow,
-  computeMagnitudeSpectrum,
-  findPeaks,
-} from "../audio-utils";
+import { applyHannWindow, computeMagnitudeSpectrum, findPeaks } from "../audio-utils";
 
 describe("applyHannWindow", () => {
   it("zeros out first and last elements", () => {

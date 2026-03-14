@@ -1,9 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  canGuestUseToday,
-  getGuestTodayCount,
-  markGuestUsedToday,
-} from "../guest-daily-limit";
+import { canGuestUseToday, getGuestTodayCount, markGuestUsedToday } from "../guest-daily-limit";
 
 const STORAGE_KEY = "swimhub_guest_daily_usage_timer";
 
@@ -48,10 +44,7 @@ describe("guest-daily-limit", () => {
     });
 
     it("returns true when usage is from a different day", () => {
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ date: "1999-01-01", count: 1 })
-      );
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: "1999-01-01", count: 1 }));
       expect(canGuestUseToday("timer")).toBe(true);
     });
 
@@ -106,10 +99,7 @@ describe("guest-daily-limit", () => {
     });
 
     it("returns 0 when usage is from different day", () => {
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ date: "1999-01-01", count: 3 })
-      );
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: "1999-01-01", count: 3 }));
       expect(getGuestTodayCount("timer")).toBe(0);
     });
 
@@ -118,10 +108,7 @@ describe("guest-daily-limit", () => {
       const today = getInternalTodayDate();
 
       // Now set up known data with that date
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ date: today, count: 5 })
-      );
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: today, count: 5 }));
       expect(getGuestTodayCount("timer")).toBe(5);
     });
 

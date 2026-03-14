@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  getAvailableResolutions,
-  getMaxSplitCount,
-  shouldShowWatermark,
-} from "../subscription";
+import { getAvailableResolutions, getMaxSplitCount, shouldShowWatermark } from "../subscription";
 import type { UserPlan } from "../../types/auth";
 
 const plans: UserPlan[] = ["guest", "free", "premium"];

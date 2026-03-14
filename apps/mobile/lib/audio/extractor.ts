@@ -28,12 +28,10 @@ export function isFFmpegAvailable(): boolean {
  * Extract audio from a video file as PCM data using FFmpeg.
  * Converts to mono 16-bit PCM WAV at 44100Hz.
  */
-export async function extractAudioFromVideo(
-  videoUri: string
-): Promise<AudioData> {
+export async function extractAudioFromVideo(videoUri: string): Promise<AudioData> {
   if (!isFFmpegAvailable()) {
     throw new Error(
-      "自動検出にはDevelopment Buildが必要です。\nExpo Goでは手動でスタート時刻をセットしてください。"
+      "自動検出にはDevelopment Buildが必要です。\nExpo Goでは手動でスタート時刻をセットしてください。",
     );
   }
 
@@ -90,11 +88,7 @@ function parseWavBytes(bytes: Uint8Array): Float32Array {
       bytes[i + 2] === 0x74 && // 't'
       bytes[i + 3] === 0x61 // 'a'
     ) {
-      dataSize =
-        bytes[i + 4] |
-        (bytes[i + 5] << 8) |
-        (bytes[i + 6] << 16) |
-        (bytes[i + 7] << 24);
+      dataSize = bytes[i + 4] | (bytes[i + 5] << 8) | (bytes[i + 6] << 16) | (bytes[i + 7] << 24);
       dataOffset = i + 8;
       break;
     }
@@ -123,10 +117,7 @@ function parseWavBytes(bytes: Uint8Array): Float32Array {
  * Generate waveform visualization data by downsampling PCM data.
  * Returns peak values for each segment.
  */
-export function generateWaveformData(
-  pcmData: Float32Array,
-  numBars: number = 200
-): Float32Array {
+export function generateWaveformData(pcmData: Float32Array, numBars: number = 200): Float32Array {
   const samplesPerBar = Math.floor(pcmData.length / numBars);
   const waveform = new Float32Array(numBars);
 

@@ -48,20 +48,14 @@ function getErrorFromCode(code: string, t: TFunction): string {
 }
 
 // エラーメッセージ文字列からOWASP準拠のi18nキーを返す（swim-hub の formatAuthError に準拠）
-function formatAuthError(
-  err: unknown,
-  action: "signin" | "signup",
-  t: TFunction,
-): string {
-  const errMsg =
-    err instanceof Error ? err.message : typeof err === "string" ? err : "";
+function formatAuthError(err: unknown, action: "signin" | "signup", t: TFunction): string {
+  const errMsg = err instanceof Error ? err.message : typeof err === "string" ? err : "";
   const msg = errMsg.toLowerCase();
 
   // ログイン認証エラー（OWASP準拠: アカウント列挙攻撃を防止）
   if (action === "signin") {
     if (
-      (msg.includes("invalid") &&
-        (msg.includes("credentials") || msg.includes("email"))) ||
+      (msg.includes("invalid") && (msg.includes("credentials") || msg.includes("email"))) ||
       msg.includes("email not confirmed")
     ) {
       return t("auth.errors.invalidCredentials");
@@ -102,13 +96,7 @@ function formatAuthError(
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  const {
-    user,
-    loading,
-    signInWithGoogle,
-    signInWithEmail,
-    signUpWithEmail,
-  } = useAuth();
+  const { user, loading, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = useParams();
@@ -144,9 +132,7 @@ export default function LoginPage() {
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < PASSWORD_MIN_LENGTH) {
-      setError(
-        t("auth.errors.passwordTooShort", { minLength: PASSWORD_MIN_LENGTH }),
-      );
+      setError(t("auth.errors.passwordTooShort", { minLength: PASSWORD_MIN_LENGTH }));
       return;
     }
     try {
@@ -184,16 +170,22 @@ export default function LoginPage() {
           <h2 className="text-xl sm:text-2xl font-extrabold text-foreground mb-2">
             {t("common.appName")}
           </h2>
-          <p className="text-xs sm:text-sm text-muted-foreground">
-            {t("import.subtitle")}
-          </p>
+          <p className="text-xs sm:text-sm text-muted-foreground">{t("import.subtitle")}</p>
         </div>
 
         {error && (
           <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
             <div className="flex items-start">
-              <svg className="w-5 h-5 text-red-400 mt-0.5 mr-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              <svg
+                className="w-5 h-5 text-red-400 mt-0.5 mr-3 shrink-0"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
               </svg>
               <div className="text-sm leading-relaxed">{error}</div>
             </div>
@@ -203,12 +195,18 @@ export default function LoginPage() {
         {confirmationSent && (
           <div className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">
             <div className="flex items-start">
-              <svg className="w-5 h-5 text-green-400 mt-0.5 mr-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              <svg
+                className="w-5 h-5 text-green-400 mt-0.5 mr-3 shrink-0"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
               </svg>
-              <div className="text-sm leading-relaxed">
-                {t("auth.confirmationSent")}
-              </div>
+              <div className="text-sm leading-relaxed">{t("auth.confirmationSent")}</div>
             </div>
           </div>
         )}
@@ -247,9 +245,7 @@ export default function LoginPage() {
             <div className="w-full border-t border-border" />
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-card px-3 text-muted-foreground">
-              {t("auth.or")}
-            </span>
+            <span className="bg-card px-3 text-muted-foreground">{t("auth.or")}</span>
           </div>
         </div>
 
@@ -290,9 +286,7 @@ export default function LoginPage() {
             }}
             className="w-full text-xs text-muted-foreground hover:text-foreground transition"
           >
-            {isSignUp
-              ? t("auth.switchToSignIn")
-              : t("auth.switchToSignUp")}
+            {isSignUp ? t("auth.switchToSignIn") : t("auth.switchToSignUp")}
           </button>
         </form>
 
@@ -301,9 +295,7 @@ export default function LoginPage() {
             <div className="w-full border-t border-border" />
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-card px-3 text-muted-foreground">
-              {t("auth.or")}
-            </span>
+            <span className="bg-card px-3 text-muted-foreground">{t("auth.or")}</span>
           </div>
         </div>
 

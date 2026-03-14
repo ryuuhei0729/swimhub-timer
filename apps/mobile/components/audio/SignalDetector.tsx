@@ -47,9 +47,7 @@ export function SignalDetector() {
         setWaveformData(waveform);
       } catch (e) {
         if (!cancelled) {
-          setError(
-            e instanceof Error ? e.message : t("signal.audioExtractionError")
-          );
+          setError(e instanceof Error ? e.message : t("signal.audioExtractionError"));
         }
       } finally {
         if (!cancelled) setIsExtracting(false);
@@ -79,9 +77,7 @@ export function SignalDetector() {
         setError(t("signal.notDetected"));
       }
     } catch (e) {
-      setError(
-        e instanceof Error ? e.message : t("signal.audioAnalysisError")
-      );
+      setError(e instanceof Error ? e.message : t("signal.audioAnalysisError"));
     } finally {
       setIsDetecting(false);
     }
@@ -92,7 +88,7 @@ export function SignalDetector() {
       setDetectedSignalTime(time);
       seekVideoAndPause(time);
     },
-    [setDetectedSignalTime, seekVideoAndPause]
+    [setDetectedSignalTime, seekVideoAndPause],
   );
 
   const adjustSignal = (delta: number) => {
@@ -111,9 +107,7 @@ export function SignalDetector() {
   const isConfirmed = startTime !== null;
 
   const isLoading = isExtracting || isDetecting;
-  const loadingMessage = isExtracting
-    ? t("signal.extracting")
-    : t("signal.analyzingStart");
+  const loadingMessage = isExtracting ? t("signal.extracting") : t("signal.analyzingStart");
 
   return (
     <View style={styles.container}>
@@ -143,18 +137,13 @@ export function SignalDetector() {
       {/* Auto detect button */}
       {!isConfirmed && !isDetecting && audioData && (
         <Pressable
-          style={({ pressed }) => [
-            styles.autoDetectBtn,
-            pressed && styles.autoDetectBtnPressed,
-          ]}
+          style={({ pressed }) => [styles.autoDetectBtn, pressed && styles.autoDetectBtnPressed]}
           onPress={runAutoDetect}
         >
           <Ionicons name="scan" size={24} color={colors.primary} />
           <View>
             <Text style={styles.autoDetectBtnText}>{t("signal.autoDetect")}</Text>
-            <Text style={styles.autoDetectBtnSub}>
-              {t("signal.autoDetectDesc")}
-            </Text>
+            <Text style={styles.autoDetectBtnSub}>{t("signal.autoDetectDesc")}</Text>
           </View>
         </Pressable>
       )}
@@ -172,52 +161,41 @@ export function SignalDetector() {
           <>
             <Text style={styles.statusLabel}>{t("signal.confirmedTime")}</Text>
             <Text style={styles.statusTime}>{formatTime(startTime)}</Text>
-            <Pressable
-              style={styles.resetBtn}
-              onPress={() => setStartTime(null)}
-            >
+            <Pressable style={styles.resetBtn} onPress={() => setStartTime(null)}>
               <Text style={styles.resetBtnText}>{t("signal.change")}</Text>
             </Pressable>
           </>
         ) : detectedSignalTime !== null ? (
           <>
             <Text style={styles.statusLabel}>{t("signal.candidateTime")}</Text>
-            <Text style={styles.statusTime}>
-              {formatTime(detectedSignalTime)}
-            </Text>
+            <Text style={styles.statusTime}>{formatTime(detectedSignalTime)}</Text>
           </>
         ) : (
-          <Text style={styles.statusHint}>
-            {t("signal.hintText")}
-          </Text>
+          <Text style={styles.statusHint}>{t("signal.hintText")}</Text>
         )}
       </View>
 
       {/* Fine-tune + confirm */}
       {!isConfirmed && detectedSignalTime !== null && (
-            <View style={styles.tuneSection}>
-              <Text style={styles.tuneLabel}>{t("signal.fineTune")}</Text>
-              <View style={styles.tuneRow}>
-                {[
-                  { label: "-100ms", delta: -0.1 },
-                  { label: "-10ms", delta: -0.01 },
-                  { label: "+10ms", delta: 0.01 },
-                  { label: "+100ms", delta: 0.1 },
-                ].map(({ label, delta }) => (
-                  <Pressable
-                    key={label}
-                    style={styles.tuneBtn}
-                    onPress={() => adjustSignal(delta)}
-                  >
-                    <Text style={styles.tuneBtnText}>{label}</Text>
-                  </Pressable>
-                ))}
-              </View>
-
-              <Pressable style={styles.confirmBtn} onPress={confirmStart}>
-                <Text style={styles.confirmBtnText}>{t("signal.setAsStartPoint")}</Text>
+        <View style={styles.tuneSection}>
+          <Text style={styles.tuneLabel}>{t("signal.fineTune")}</Text>
+          <View style={styles.tuneRow}>
+            {[
+              { label: "-100ms", delta: -0.1 },
+              { label: "-10ms", delta: -0.01 },
+              { label: "+10ms", delta: 0.01 },
+              { label: "+100ms", delta: 0.1 },
+            ].map(({ label, delta }) => (
+              <Pressable key={label} style={styles.tuneBtn} onPress={() => adjustSignal(delta)}>
+                <Text style={styles.tuneBtnText}>{label}</Text>
               </Pressable>
-            </View>
+            ))}
+          </View>
+
+          <Pressable style={styles.confirmBtn} onPress={confirmStart}>
+            <Text style={styles.confirmBtnText}>{t("signal.setAsStartPoint")}</Text>
+          </Pressable>
+        </View>
       )}
     </View>
   );

@@ -22,7 +22,7 @@ export function VideoImporter() {
         setError(err instanceof Error ? err.message : t("import.failedToLoad"));
       }
     },
-    [handleFile, t]
+    [handleFile, t],
   );
 
   const onDrop = useCallback(
@@ -32,7 +32,7 @@ export function VideoImporter() {
       const file = e.dataTransfer.files[0];
       if (file) processFile(file);
     },
-    [processFile]
+    [processFile],
   );
 
   const onDragOver = useCallback((e: React.DragEvent) => {
@@ -49,7 +49,7 @@ export function VideoImporter() {
       const file = e.target.files?.[0];
       if (file) processFile(file);
     },
-    [processFile]
+    [processFile],
   );
 
   const steps = [
@@ -100,12 +100,8 @@ export function VideoImporter() {
           />
         </div>
         <div className="text-center space-y-1.5">
-          <p className="font-medium text-sm">
-            {t("import.dropHere")}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {t("import.orClickToBrowse")}
-          </p>
+          <p className="font-medium text-sm">{t("import.dropHere")}</p>
+          <p className="text-xs text-muted-foreground">{t("import.orClickToBrowse")}</p>
         </div>
         <span className="text-[11px] text-muted-foreground/60 tracking-wide uppercase">
           {t("import.supportedFormats")}
@@ -119,9 +115,7 @@ export function VideoImporter() {
         />
       </div>
 
-      {error && (
-        <p className="text-sm text-destructive text-center">{error}</p>
-      )}
+      {error && <p className="text-sm text-destructive text-center">{error}</p>}
 
       {/* Steps */}
       <div className="flex items-center gap-3 sm:gap-5">
@@ -138,14 +132,14 @@ export function VideoImporter() {
                 <s.icon className="w-4 h-4" />
               </div>
               <div className="text-center">
-                <p className={`text-[11px] font-medium ${i === 0 ? "text-primary" : "text-muted-foreground"}`}>
+                <p
+                  className={`text-[11px] font-medium ${i === 0 ? "text-primary" : "text-muted-foreground"}`}
+                >
                   {s.label}
                 </p>
               </div>
             </div>
-            {i < steps.length - 1 && (
-              <div className="w-8 sm:w-12 h-px bg-border -mt-5" />
-            )}
+            {i < steps.length - 1 && <div className="w-8 sm:w-12 h-px bg-border -mt-5" />}
           </div>
         ))}
       </div>

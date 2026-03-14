@@ -1,9 +1,7 @@
 const STORAGE_KEY_PREFIX = "swimhub_guest_daily_usage";
 
 function getTodayJST(): string {
-  return new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
-  )
+  return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }))
     .toISOString()
     .split("T")[0];
 }

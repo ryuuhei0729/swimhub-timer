@@ -1,10 +1,7 @@
 import type { StopwatchConfig, ExportSettings } from "@swimhub-timer/core";
 import { ffmpegManager, fetchFile } from "./ffmpeg-manager";
 
-function buildDrawtextFilter(
-  startSignalTime: number,
-  config: StopwatchConfig
-): string {
+function buildDrawtextFilter(startSignalTime: number, config: StopwatchConfig): string {
   const startT = startSignalTime.toFixed(3);
 
   // Elapsed time calculation: show 0:00.00 before start, count up after
@@ -65,9 +62,7 @@ function buildPositionY(config: StopwatchConfig): string {
 function rgbaToFFmpegColor(rgba: string): string {
   // Convert "rgba(r,g,b,a)" or hex with alpha to ffmpeg-compatible color
   if (rgba.startsWith("rgba")) {
-    const match = rgba.match(
-      /rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/
-    );
+    const match = rgba.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
     if (match) {
       const r = parseInt(match[1]).toString(16).padStart(2, "0");
       const g = parseInt(match[2]).toString(16).padStart(2, "0");
@@ -75,7 +70,7 @@ function rgbaToFFmpegColor(rgba: string): string {
       Math.round(parseFloat(match[4]) * 255)
         .toString(16)
         .padStart(2, "0");
-      return `#${r}${g}${b}@${(parseFloat(match[4])).toFixed(2)}`;
+      return `#${r}${g}${b}@${parseFloat(match[4]).toFixed(2)}`;
     }
   }
   return rgba;
@@ -108,7 +103,7 @@ export async function exportVideoWithStopwatch(
   originalVideoHeight: number,
   exportSettings: ExportSettings,
   onProgress: (percent: number) => void,
-  showWatermark = true
+  showWatermark = true,
 ): Promise<Blob> {
   const ffmpeg = await ffmpegManager.load(onProgress);
 
@@ -118,10 +113,7 @@ export async function exportVideoWithStopwatch(
   // Scale font/padding when exporting at different resolution
   // so the stopwatch maintains the same proportional size as the preview
   let scaledConfig = stopwatchConfig;
-  if (
-    exportSettings.resolution !== "original" &&
-    originalVideoHeight > 0
-  ) {
+  if (exportSettings.resolution !== "original" && originalVideoHeight > 0) {
     const outputHeight = parseInt(exportSettings.resolution);
     const resScale = outputHeight / originalVideoHeight;
     scaledConfig = {
@@ -147,7 +139,7 @@ export async function exportVideoWithStopwatch(
   const watermarkHeight =
     exportSettings.resolution !== "original"
       ? parseInt(exportSettings.resolution)
-      : (originalVideoHeight || 1080);
+      : originalVideoHeight || 1080;
   if (showWatermark) {
     filters.push(buildWatermarkFilter(watermarkHeight));
   }
@@ -182,30 +174,48 @@ export async function exportVideoWithStopwatch(
     const iconY = `H-h-H*0.03`;
 
     await ffmpeg.exec([
-      "-i", "input.mp4",
-      "-i", "icon.png",
+      "-i",
+      "input.mp4",
+      "-i",
+      "icon.png",
       "-filter_complex",
       `[0:v]${filterChain}[bg];[1:v]scale=${iconSize}:${iconSize},format=rgba,colorchannelmixer=aa=0.30[icon];[bg][icon]overlay=${iconX}:${iconY}[v]`,
-      "-map", "[v]",
-      "-map", "0:a",
-      "-c:v", "libx264",
-      "-preset", "medium",
-      "-crf", crf,
-      "-c:a", "aac",
-      "-b:a", "128k",
-      "-movflags", "+faststart",
+      "-map",
+      "[v]",
+      "-map",
+      "0:a",
+      "-c:v",
+      "libx264",
+      "-preset",
+      "medium",
+      "-crf",
+      crf,
+      "-c:a",
+      "aac",
+      "-b:a",
+      "128k",
+      "-movflags",
+      "+faststart",
       "output.mp4",
     ]);
   } else {
     await ffmpeg.exec([
-      "-i", "input.mp4",
-      "-vf", filterChain,
-      "-c:v", "libx264",
-      "-preset", "medium",
-      "-crf", crf,
-      "-c:a", "aac",
-      "-b:a", "128k",
-      "-movflags", "+faststart",
+      "-i",
+      "input.mp4",
+      "-vf",
+      filterChain,
+      "-c:v",
+      "libx264",
+      "-preset",
+      "medium",
+      "-crf",
+      crf,
+      "-c:a",
+      "aac",
+      "-b:a",
+      "128k",
+      "-movflags",
+      "+faststart",
       "output.mp4",
     ]);
   }

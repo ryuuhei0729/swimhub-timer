@@ -13,18 +13,12 @@ const SPLIT_DISPLAY_DURATION = 3;
 
 /** Escape text for FFmpeg drawtext text value (inside single quotes) */
 function escapeDrawtextText(text: string): string {
-  return text
-    .replace(/\\/g, "\\\\")
-    .replace(/'/g, "\\'")
-    .replace(/:/g, "\\:")
-    .replace(/%/g, "%%");
+  return text.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/:/g, "\\:").replace(/%/g, "%%");
 }
 
 function rgbaToFFmpegColor(rgba: string): string {
   if (rgba.startsWith("rgba")) {
-    const match = rgba.match(
-      /rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/
-    );
+    const match = rgba.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
     if (match) {
       const r = parseInt(match[1]).toString(16).padStart(2, "0");
       const g = parseInt(match[2]).toString(16).padStart(2, "0");
@@ -71,23 +65,19 @@ function buildStopwatchFilters(
   startSignalTime: number,
   config: StopwatchConfig,
   isFinished: boolean,
-  finishTime: number | null
+  finishTime: number | null,
 ): string[] {
   const startT = startSignalTime.toFixed(3);
 
   // Elapsed for text expressions (commas escaped with \, for %{eif} syntax)
   const rawText = `max(0\\, t-${startT})`;
   const elapsedText =
-    isFinished && finishTime !== null
-      ? `min(${finishTime.toFixed(3)}\\, ${rawText})`
-      : rawText;
+    isFinished && finishTime !== null ? `min(${finishTime.toFixed(3)}\\, ${rawText})` : rawText;
 
   // Elapsed for enable expressions (regular commas, inside single quotes)
   const rawEnable = `max(0, t-${startT})`;
   const elapsedEnable =
-    isFinished && finishTime !== null
-      ? `min(${finishTime.toFixed(3)}, ${rawEnable})`
-      : rawEnable;
+    isFinished && finishTime !== null ? `min(${finishTime.toFixed(3)}, ${rawEnable})` : rawEnable;
 
   const minutes = `trunc(${elapsedText}/60)`;
   const seconds = `trunc(mod(${elapsedText}\\,60))`;
@@ -135,7 +125,7 @@ function formatSplitText(split: SplitTime): string {
 function buildSplitPositionY(
   config: StopwatchConfig,
   splitFontSize: number,
-  splitPadding: number
+  splitPadding: number,
 ): string {
   const gap = 4;
   const isBottom = config.anchor.startsWith("bottom");
@@ -144,8 +134,7 @@ function buildSplitPositionY(
   if (isBottom) {
     // Stopwatch box top ≈ base - fontSize - padding
     // Split goes above: splitY = boxTop - gap - splitFontSize - splitPadding
-    const offset =
-      config.fontSize + config.padding + gap + splitFontSize + splitPadding;
+    const offset = config.fontSize + config.padding + gap + splitFontSize + splitPadding;
     return `${base}-${offset}`;
   } else {
     // Stopwatch box bottom ≈ base + fontSize + padding
@@ -162,7 +151,7 @@ function buildSplitPositionY(
 function buildSplitFilters(
   startSignalTime: number,
   config: StopwatchConfig,
-  splitTimes: SplitTime[]
+  splitTimes: SplitTime[],
 ): string[] {
   if (splitTimes.length === 0) return [];
 
@@ -184,10 +173,7 @@ function buildSplitFilters(
     const absStart = startSignalTime + split.time;
     // Truncate at next split's start time if it arrives within the display window
     const absEnd = nextSplit
-      ? Math.min(
-          absStart + SPLIT_DISPLAY_DURATION,
-          startSignalTime + nextSplit.time
-        )
+      ? Math.min(absStart + SPLIT_DISPLAY_DURATION, startSignalTime + nextSplit.time)
       : absStart + SPLIT_DISPLAY_DURATION;
 
     if (absEnd <= absStart) continue;
@@ -260,7 +246,7 @@ export async function exportVideoWithStopwatch(
   originalVideoHeight: number,
   exportSettings: ExportSettings,
   onProgress: (percent: number) => void,
-  showWatermark = true
+  showWatermark = true,
 ): Promise<string> {
   const { Paths, File } = require("expo-file-system") as typeof import("expo-file-system");
   const outputFile = new File(Paths.cache, "export_output.mp4");
@@ -269,10 +255,7 @@ export async function exportVideoWithStopwatch(
   // Scale font/padding when exporting at different resolution
   // so the stopwatch maintains the same proportional size as the preview
   let scaledConfig = stopwatchConfig;
-  if (
-    exportSettings.resolution !== "original" &&
-    originalVideoHeight > 0
-  ) {
+  if (exportSettings.resolution !== "original" && originalVideoHeight > 0) {
     const outputHeight = parseInt(exportSettings.resolution);
     const resScale = outputHeight / originalVideoHeight;
     scaledConfig = {
@@ -290,17 +273,8 @@ export async function exportVideoWithStopwatch(
     filters.push(`scale=-2:${exportSettings.resolution}`);
   }
 
-  filters.push(
-    ...buildStopwatchFilters(
-      startSignalTime,
-      scaledConfig,
-      isFinished,
-      finishTime
-    )
-  );
-  filters.push(
-    ...buildSplitFilters(startSignalTime, scaledConfig, splitTimes)
-  );
+  filters.push(...buildStopwatchFilters(startSignalTime, scaledConfig, isFinished, finishTime));
+  filters.push(...buildSplitFilters(startSignalTime, scaledConfig, splitTimes));
 
   // Watermark: use output height (after scale) for font sizing
   const watermarkHeight =
@@ -317,7 +291,7 @@ export async function exportVideoWithStopwatch(
   const { FFmpegKit, FFmpegKitConfig, ReturnCode } = getFFmpeg();
 
   // Enable progress callback
-  FFmpegKitConfig.enableStatisticsCallback((statistics: any) => {
+  FFmpegKitConfig.enableStatisticsCallback((statistics: { getTime: () => number }) => {
     const time = statistics.getTime();
     if (time > 0) {
       onProgress(time);

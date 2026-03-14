@@ -6,19 +6,16 @@ import type { VideoMetadata } from "@swimhub-timer/core";
 import { SUPPORTED_VIDEO_TYPES } from "@swimhub-timer/core";
 
 export function useVideoFile() {
-  const { setVideoFile, setVideoMetadata, videoUrl, videoFile, videoMetadata } =
-    useEditorStore();
+  const { setVideoFile, setVideoMetadata, videoUrl, videoFile, videoMetadata } = useEditorStore();
 
   const handleFile = useCallback(
     (file: File) => {
       if (!SUPPORTED_VIDEO_TYPES.includes(file.type)) {
-        throw new Error(
-          `Unsupported video format: ${file.type}. Supported: MP4, MOV, WebM`
-        );
+        throw new Error(`Unsupported video format: ${file.type}. Supported: MP4, MOV, WebM`);
       }
       setVideoFile(file);
     },
-    [setVideoFile]
+    [setVideoFile],
   );
 
   const loadMetadata = useCallback(
@@ -31,7 +28,7 @@ export function useVideoFile() {
       };
       setVideoMetadata(metadata);
     },
-    [videoFile, setVideoMetadata]
+    [videoFile, setVideoMetadata],
   );
 
   return { handleFile, loadMetadata, videoUrl, videoFile, videoMetadata };

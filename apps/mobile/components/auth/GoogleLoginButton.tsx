@@ -1,10 +1,4 @@
-import {
-  Pressable,
-  Text,
-  View,
-  ActivityIndicator,
-  StyleSheet,
-} from "react-native";
+import { Pressable, Text, View, ActivityIndicator, StyleSheet } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { colors, radius } from "../../lib/theme";
 

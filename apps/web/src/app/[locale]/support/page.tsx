@@ -1,9 +1,5 @@
 import type { Metadata } from "next";
-import {
-  supportedLocales,
-  i18nResources,
-  type SupportedLocale,
-} from "@swimhub-timer/i18n";
+import { supportedLocales, i18nResources, type SupportedLocale } from "@swimhub-timer/i18n";
 import { SupportContent } from "./SupportContent";
 
 export function generateStaticParams() {
@@ -23,11 +19,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function SupportPage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
+export default async function SupportPage({ params }: { params: Promise<{ locale: string }> }) {
   await params;
   return <SupportContent />;
 }

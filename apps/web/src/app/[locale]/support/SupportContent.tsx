@@ -12,9 +12,7 @@ export function SupportContent() {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-16 text-foreground/80">
-      <h1 className="mb-8 text-2xl font-bold text-foreground">
-        {t("support.heading")}
-      </h1>
+      <h1 className="mb-8 text-2xl font-bold text-foreground">{t("support.heading")}</h1>
 
       <section className="space-y-6 text-sm leading-relaxed">
         <p>{t("support.description")}</p>
@@ -29,21 +27,15 @@ export function SupportContent() {
           >
             {t("support.email")}
           </a>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {t("support.responseNote")}
-          </p>
+          <p className="mt-2 text-xs text-muted-foreground">{t("support.responseNote")}</p>
         </div>
 
         <div>
-          <h2 className="mb-4 text-lg font-semibold text-foreground">
-            {t("support.faqTitle")}
-          </h2>
+          <h2 className="mb-4 text-lg font-semibold text-foreground">{t("support.faqTitle")}</h2>
           <div className="space-y-4">
             {faqItems.map((item, i) => (
               <div key={i} className="rounded-lg border border-border p-4">
-                <h3 className="mb-2 font-medium text-foreground">
-                  {item.question}
-                </h3>
+                <h3 className="mb-2 font-medium text-foreground">{item.question}</h3>
                 <p className="text-muted-foreground">{item.answer}</p>
               </div>
             ))}

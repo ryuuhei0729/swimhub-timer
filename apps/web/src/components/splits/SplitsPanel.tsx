@@ -5,8 +5,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { formatTime, getMaxSplitCount } from "@swimhub-timer/core";
 import { useTranslation } from "react-i18next";
 import {
-  ListOrdered, Trash2, RotateCcw, Trophy,
-  CircleDot, Flag, Minus, Plus, Lock,
+  ListOrdered,
+  Trash2,
+  RotateCcw,
+  Trophy,
+  CircleDot,
+  Flag,
+  Minus,
+  Plus,
+  Lock,
 } from "lucide-react";
 
 export function SplitsPanel() {
@@ -180,18 +187,14 @@ export function SplitsPanel() {
             <div className="text-lg font-bold font-mono text-primary tabular-nums">
               {formatTime(finishTime)}
             </div>
-            {finishMemo && (
-              <p className="text-[10px] text-muted-foreground mt-0.5">{finishMemo}</p>
-            )}
+            {finishMemo && <p className="text-[10px] text-muted-foreground mt-0.5">{finishMemo}</p>}
           </div>
         </div>
       )}
 
       {/* Split list */}
       {splitTimes.length === 0 && !isFinished ? (
-        <p className="text-xs text-muted-foreground/60 text-center py-6">
-          {t("splits.emptyHint")}
-        </p>
+        <p className="text-xs text-muted-foreground/60 text-center py-6">{t("splits.emptyHint")}</p>
       ) : (
         <div className="flex flex-col gap-1">
           {splitTimes.map((split, index) => (
@@ -221,7 +224,10 @@ export function SplitsPanel() {
                 {/* Delete button */}
                 {!isFinished && (
                   <button
-                    onClick={(e) => { e.stopPropagation(); removeSplit(index); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeSplit(index);
+                    }}
                     className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground/40 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover:opacity-100 transition-all"
                   >
                     <Trash2 className="w-3 h-3" />
@@ -229,9 +235,7 @@ export function SplitsPanel() {
                 )}
               </div>
               {split.memo && (
-                <p className="text-[10px] text-muted-foreground mt-1 ml-[56px]">
-                  {split.memo}
-                </p>
+                <p className="text-[10px] text-muted-foreground mt-1 ml-[56px]">{split.memo}</p>
               )}
             </div>
           ))}

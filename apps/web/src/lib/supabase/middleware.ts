@@ -44,8 +44,7 @@ export async function updateSession(request: NextRequest) {
   const rawPathWithoutLocale = localeMatch
     ? pathname.slice(localeMatch[0].length - (localeMatch[2] === "/" ? 1 : 0))
     : pathname;
-  const pathWithoutLocale =
-    rawPathWithoutLocale === "" ? "/" : rawPathWithoutLocale;
+  const pathWithoutLocale = rawPathWithoutLocale === "" ? "/" : rawPathWithoutLocale;
 
   // Logged in + accessing login → redirect to home
   if (user && pathWithoutLocale === "/login") {

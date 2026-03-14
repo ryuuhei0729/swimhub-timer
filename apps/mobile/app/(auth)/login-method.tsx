@@ -45,10 +45,7 @@ export default function LoginMethodScreen() {
   };
 
   return (
-    <SafeAreaView
-      style={styles.container}
-      edges={["top", "left", "right", "bottom"]}
-    >
+    <SafeAreaView style={styles.container} edges={["top", "left", "right", "bottom"]}>
       <View style={styles.header}>
         <Pressable style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
@@ -58,9 +55,7 @@ export default function LoginMethodScreen() {
       <View style={styles.content}>
         <View style={styles.titleContainer}>
           <Text style={styles.title}>{t("auth.loginMethod.title")}</Text>
-          <Text style={styles.subtitle}>
-            {t("auth.loginMethod.subtitle")}
-          </Text>
+          <Text style={styles.subtitle}>{t("auth.loginMethod.subtitle")}</Text>
         </View>
 
         {displayError && (
@@ -95,9 +90,7 @@ export default function LoginMethodScreen() {
           >
             <View style={styles.buttonContent}>
               <Ionicons name="mail-outline" size={20} color="#FFFFFF" />
-              <Text style={styles.emailButtonText}>
-                {t("auth.loginMethod.withEmail")}
-              </Text>
+              <Text style={styles.emailButtonText}>{t("auth.loginMethod.withEmail")}</Text>
             </View>
           </Pressable>
         </View>

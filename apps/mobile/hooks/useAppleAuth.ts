@@ -59,8 +59,7 @@ export const useAppleAuth = (): UseAppleAuthReturn => {
     }, APPLE_AUTH_TIMEOUT_MS);
 
     try {
-      const isAppleAuthAvailable =
-        await AppleAuthentication.isAvailableAsync();
+      const isAppleAuthAvailable = await AppleAuthentication.isAvailableAsync();
       if (!isAppleAuthAvailable) {
         setError("このデバイスではApple認証を利用できません");
         return {
@@ -72,11 +71,11 @@ export const useAppleAuth = (): UseAppleAuthReturn => {
       // nonce生成（リプレイ攻撃防止）
       const rawNonce = Crypto.getRandomValues(new Uint8Array(32)).reduce(
         (acc, val) => acc + val.toString(16).padStart(2, "0"),
-        ""
+        "",
       );
       const hashedNonce = await Crypto.digestStringAsync(
         Crypto.CryptoDigestAlgorithm.SHA256,
-        rawNonce
+        rawNonce,
       );
 
       const credential = await AppleAuthentication.signInAsync({

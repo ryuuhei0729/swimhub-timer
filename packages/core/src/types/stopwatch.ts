@@ -26,8 +26,8 @@ export interface StopwatchPreset {
 }
 
 export interface SplitTime {
-  distance: number;       // 5, 12.5, 25, 50 etc.
-  time: number;           // elapsed seconds from start
+  distance: number; // 5, 12.5, 25, 50 etc.
+  time: number; // elapsed seconds from start
   lapTime: number | null; // calculated only at 50m intervals
-  memo: string;           // optional short note (e.g. "ドルフィンキック5回")
+  memo: string; // optional short note (e.g. "ドルフィンキック5回")
 }

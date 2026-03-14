@@ -72,7 +72,7 @@ export function VideoPlayer() {
       player.currentTime = targetTime;
       setCurrentVideoTime(targetTime);
     },
-    [player, duration, setCurrentVideoTime]
+    [player, duration, setCurrentVideoTime],
   );
 
   return (
@@ -96,11 +96,7 @@ export function VideoPlayer() {
       {/* Controls: [Play] [SeekBar] [Time] */}
       <View style={styles.controls}>
         <Pressable style={styles.playBtn} onPress={togglePlay}>
-          <Ionicons
-            name={isPlaying ? "pause" : "play"}
-            size={18}
-            color={colors.muted}
-          />
+          <Ionicons name={isPlaying ? "pause" : "play"} size={18} color={colors.muted} />
         </Pressable>
 
         <View
@@ -121,16 +117,9 @@ export function VideoPlayer() {
           <View style={StyleSheet.absoluteFill} pointerEvents="none">
             <View style={styles.seekBarInner}>
               <View style={styles.seekBarBg}>
-                <View
-                  style={[styles.seekBarFill, { width: `${progress * 100}%` }]}
-                />
+                <View style={[styles.seekBarFill, { width: `${progress * 100}%` }]} />
               </View>
-              <View
-                style={[
-                  styles.seekThumb,
-                  { left: `${progress * 100}%` },
-                ]}
-              />
+              <View style={[styles.seekThumb, { left: `${progress * 100}%` }]} />
             </View>
           </View>
         </View>

@@ -37,8 +37,7 @@ function AuthGate() {
 export default function RootLayout() {
   useEffect(() => {
     try {
-      const mobileAds =
-        require("react-native-google-mobile-ads").default;
+      const mobileAds = require("react-native-google-mobile-ads").default;
       mobileAds().initialize();
     } catch {
       // Ad module not available (e.g., running in Expo Go)

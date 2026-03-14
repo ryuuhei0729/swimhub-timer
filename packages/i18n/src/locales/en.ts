@@ -34,11 +34,9 @@ const en: TranslationShape = {
   },
 
   import: {
-    subtitle:
-      "Automatically overlay a stopwatch on your swimming race videos",
+    subtitle: "Automatically overlay a stopwatch on your swimming race videos",
     selectVideo: "Select Video",
-    selectVideoDesc:
-      "Choose a swimming race video from your photo library",
+    selectVideoDesc: "Choose a swimming race video from your photo library",
     dropHere: "Drop your race video here",
     orClickToBrowse: "or click to browse",
     supportedFormats: "MP4 / MOV / WebM",
@@ -68,11 +66,9 @@ const en: TranslationShape = {
     candidateTime: "Candidate Time",
     startConfirmed: "Start confirmed",
     change: "Change",
-    hintText:
-      "Tap the waveform or use \"Auto-Detect\"\nto set the start sound",
+    hintText: 'Tap the waveform or use "Auto-Detect"\nto set the start sound',
     fineTune: "Fine-tune",
-    notDetected:
-      "Could not auto-detect start signal. Please set it manually.",
+    notDetected: "Could not auto-detect start signal. Please set it manually.",
     audioExtractionError: "An error occurred while extracting audio",
     audioAnalysisError: "An error occurred during audio analysis",
   },
@@ -95,12 +91,10 @@ const en: TranslationShape = {
     finalTime: "Final Time",
     distancePlaceholder: "Distance (m)",
     memoPlaceholder: "Memo (optional)",
-    emptyHint:
-      "Pause the video, enter distance,\nand tap Record to log a split",
+    emptyHint: "Pause the video, enter distance,\nand tap Record to log a split",
     lap: "lap",
     count: "{{count}}",
-    limitReached:
-      "Split limit ({{max}}) reached. Upgrade to Premium for unlimited splits.",
+    limitReached: "Split limit ({{max}}) reached. Upgrade to Premium for unlimited splits.",
   },
 
   exportScreen: {
@@ -125,8 +119,7 @@ const en: TranslationShape = {
     saveToLibrary: "Save to Photo Library",
     share: "Share",
     startExport: "Start Export",
-    timeEstimate:
-      "This may take a few minutes depending on video length",
+    timeEstimate: "This may take a few minutes depending on video length",
     errorDuringExport: "An error occurred during export",
     needVideoAndStart: "Please set a video and start time",
     savedToLibrary: "Saved to Photo Library",
@@ -205,8 +198,7 @@ const en: TranslationShape = {
       invalidCredentials: "Invalid email or password. Please check your input and try again.",
       alreadyRegistered: "Account creation failed. Please check your input and try again.",
       passwordTooShort: "Password must be at least {{minLength}} characters",
-      deleteAccountFailed:
-        "Failed to delete account. Please try again.",
+      deleteAccountFailed: "Failed to delete account. Please try again.",
       accessDenied: "Access denied",
       invalidRequest: "Invalid request",
       serverError: "A server error occurred",
@@ -228,8 +220,10 @@ const en: TranslationShape = {
       expiredOtp: "Verification code has expired",
       tooManyRequests: "Too many requests. Please wait a moment and try again.",
       rateLimitExceeded: "Rate limit exceeded. Please wait a moment and try again.",
-      captchaRequired: "Captcha verification is required. Please complete the captcha and try again.",
-      networkError: "A network error occurred. Please check your internet connection and try again.",
+      captchaRequired:
+        "Captcha verification is required. Please complete the captcha and try again.",
+      networkError:
+        "A network error occurred. Please check your internet connection and try again.",
     },
   },
 
@@ -240,7 +234,7 @@ const en: TranslationShape = {
     lastUpdated: "Last updated: February 24, 2026",
     introTitle: "Introduction",
     introBody:
-      "These Terms of Service (hereinafter \"the Terms\") set forth the conditions for using SwimHub Timer (hereinafter \"the App\"). By using the App, you are deemed to have agreed to the Terms.",
+      'These Terms of Service (hereinafter "the Terms") set forth the conditions for using SwimHub Timer (hereinafter "the App"). By using the App, you are deemed to have agreed to the Terms.',
     serviceTitle: "Service Description",
     serviceBody:
       "The App is a tool for overlaying a stopwatch on swimming race videos and exporting the result.",
@@ -269,7 +263,7 @@ const en: TranslationShape = {
     ],
     disclaimerTitle: "Disclaimer",
     disclaimerBody:
-      "The App is provided \"as is.\" The operator assumes no liability for any damages arising from the use of the App.",
+      'The App is provided "as is." The operator assumes no liability for any damages arising from the use of the App.',
     changesTitle: "Changes to Terms",
     changesBody:
       "The operator may modify these Terms as necessary. Modified Terms take effect upon publication within the App.",
@@ -286,17 +280,14 @@ const en: TranslationShape = {
     lastUpdated: "Last updated: February 17, 2026",
     introTitle: "Introduction",
     introBody:
-      "SwimHub Timer (hereinafter \"the App\") is an application for overlaying a stopwatch on swimming race videos. This Privacy Policy explains how personal information is handled in the App.",
+      'SwimHub Timer (hereinafter "the App") is an application for overlaying a stopwatch on swimming race videos. This Privacy Policy explains how personal information is handled in the App.',
     collectionTitle: "Information We Collect",
     collectionBody:
       "The App does not collect personal information. All video processing is performed locally on your device, and no data is transmitted to external servers.",
     accessTitle: "Device Access",
-    accessBody:
-      "The App may access the following features:",
-    accessPhotoLibrary:
-      "Photo Library: To import videos and save exported videos",
-    accessMicrophone:
-      "Microphone: To detect start signal sounds within videos",
+    accessBody: "The App may access the following features:",
+    accessPhotoLibrary: "Photo Library: To import videos and save exported videos",
+    accessMicrophone: "Microphone: To detect start signal sounds within videos",
     accessNote:
       "These accesses are used only for on-device processing, and no data is transmitted externally.",
     paymentTitle: "Payment Information Handling",
@@ -341,8 +332,7 @@ const en: TranslationShape = {
       },
       {
         question: "I want to delete my account",
-        answer:
-          "To request account deletion, please contact us at the email address above.",
+        answer: "To request account deletion, please contact us at the email address above.",
       },
     ],
   },

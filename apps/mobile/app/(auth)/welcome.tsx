@@ -11,16 +11,10 @@ export default function WelcomeScreen() {
   const { continueAsGuest } = useAuth();
 
   return (
-    <SafeAreaView
-      style={styles.container}
-      edges={["top", "left", "right", "bottom"]}
-    >
+    <SafeAreaView style={styles.container} edges={["top", "left", "right", "bottom"]}>
       <View style={styles.content}>
         <View style={styles.logoContainer}>
-          <Image
-            source={require("../../assets/splash-icon.png")}
-            style={styles.appIcon}
-          />
+          <Image source={require("../../assets/splash-icon.png")} style={styles.appIcon} />
           <Text style={styles.appName}>{t("common.appName")}</Text>
           <Text style={styles.tagline}>{t("import.subtitle")}</Text>
         </View>
@@ -28,15 +22,10 @@ export default function WelcomeScreen() {
 
       <View style={styles.bottomContainer}>
         <Pressable
-          style={({ pressed }) => [
-            styles.primaryButton,
-            pressed && styles.primaryButtonPressed,
-          ]}
+          style={({ pressed }) => [styles.primaryButton, pressed && styles.primaryButtonPressed]}
           onPress={() => router.push("/(auth)/get-started")}
         >
-          <Text style={styles.primaryButtonText}>
-            {t("auth.welcome.getStarted")}
-          </Text>
+          <Text style={styles.primaryButtonText}>{t("auth.welcome.getStarted")}</Text>
         </Pressable>
 
         <Pressable
@@ -46,21 +35,14 @@ export default function WelcomeScreen() {
           ]}
           onPress={() => router.push("/(auth)/login-method")}
         >
-          <Text style={styles.secondaryButtonText}>
-            {t("auth.welcome.login")}
-          </Text>
+          <Text style={styles.secondaryButtonText}>{t("auth.welcome.login")}</Text>
         </Pressable>
 
         <Pressable
-          style={({ pressed }) => [
-            styles.guestButton,
-            pressed && styles.guestButtonPressed,
-          ]}
+          style={({ pressed }) => [styles.guestButton, pressed && styles.guestButtonPressed]}
           onPress={continueAsGuest}
         >
-          <Text style={styles.guestButtonText}>
-            {t("auth.continueAsGuest")}
-          </Text>
+          <Text style={styles.guestButtonText}>{t("auth.continueAsGuest")}</Text>
         </Pressable>
       </View>
     </SafeAreaView>

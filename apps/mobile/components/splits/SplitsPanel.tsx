@@ -1,11 +1,4 @@
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  Pressable,
-  FlatList,
-} from "react-native";
+import { View, Text, TextInput, StyleSheet, Pressable, FlatList } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../../stores/editor-store";
@@ -35,8 +28,7 @@ export function SplitsPanel() {
     seekVideo,
   } = useEditorStore();
 
-  const elapsed =
-    startTime !== null ? Math.max(0, currentVideoTime - startTime) : 0;
+  const elapsed = startTime !== null ? Math.max(0, currentVideoTime - startTime) : 0;
   const splitLimitReached = splitTimes.length >= maxSplits;
 
   const handleRecord = () => {
@@ -81,11 +73,7 @@ export function SplitsPanel() {
               { label: "+10ms", delta: 0.01 },
               { label: "+100ms", delta: 0.1 },
             ].map(({ label, delta }) => (
-              <Pressable
-                key={label}
-                style={styles.tuneBtn}
-                onPress={() => adjustVideo(delta)}
-              >
+              <Pressable key={label} style={styles.tuneBtn} onPress={() => adjustVideo(delta)}>
                 <Text style={styles.tuneBtnText}>{label}</Text>
               </Pressable>
             ))}
@@ -147,9 +135,7 @@ export function SplitsPanel() {
           >
             <Text style={styles.finishLabel}>{t("splits.finalTime")}</Text>
             <Text style={styles.finishTimeText}>{formatTime(finishTime)}</Text>
-            {finishMemo ? (
-              <Text style={styles.finishMemoText}>{finishMemo}</Text>
-            ) : null}
+            {finishMemo ? <Text style={styles.finishMemoText}>{finishMemo}</Text> : null}
           </Pressable>
           <Pressable style={styles.resetBtn} onPress={resetSplits}>
             <Text style={styles.resetBtnText}>{t("common.reset")}</Text>
@@ -159,9 +145,7 @@ export function SplitsPanel() {
 
       {/* Split list */}
       {splitTimes.length === 0 && !isFinished ? (
-        <Text style={styles.emptyText}>
-          {t("splits.emptyHint")}
-        </Text>
+        <Text style={styles.emptyText}>{t("splits.emptyHint")}</Text>
       ) : (
         <FlatList
           data={splitTimes}
@@ -170,9 +154,7 @@ export function SplitsPanel() {
           renderItem={({ item, index }) => (
             <Pressable
               style={styles.splitRow}
-              onPress={() =>
-                startTime !== null && seekVideo(startTime + item.time)
-              }
+              onPress={() => startTime !== null && seekVideo(startTime + item.time)}
             >
               <View style={styles.distanceBadge}>
                 <Text style={styles.distanceBadgeText}>{item.distance}m</Text>
@@ -184,10 +166,7 @@ export function SplitsPanel() {
                 </Text>
               )}
               {!isFinished && (
-                <Pressable
-                  style={styles.deleteBtn}
-                  onPress={() => removeSplit(index)}
-                >
+                <Pressable style={styles.deleteBtn} onPress={() => removeSplit(index)}>
                   <Text style={styles.deleteBtnText}>×</Text>
                 </Pressable>
               )}

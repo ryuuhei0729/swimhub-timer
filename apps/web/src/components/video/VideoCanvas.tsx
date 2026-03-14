@@ -10,9 +10,16 @@ export function VideoCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const {
-    videoUrl, videoFile, stopwatchConfig, detectedSignalTime, startTime,
-    updateStopwatchConfig, setVideoMetadata, setCurrentVideoTime,
-    pendingVideoSeek, clearPendingSeek,
+    videoUrl,
+    videoFile,
+    stopwatchConfig,
+    detectedSignalTime,
+    startTime,
+    updateStopwatchConfig,
+    setVideoMetadata,
+    setCurrentVideoTime,
+    pendingVideoSeek,
+    clearPendingSeek,
   } = useEditorStore();
   const { start, stop, render } = useCanvasCompositor(canvasRef, videoRef);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -129,40 +136,37 @@ export function VideoCanvas() {
       const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
       video.currentTime = ratio * duration;
     },
-    [duration]
+    [duration],
   );
 
   // Convert DOM coordinates to canvas coordinates,
   // accounting for object-contain letterboxing offset.
-  const domToCanvas = useCallback(
-    (clientX: number, clientY: number) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return null;
-      const rect = canvas.getBoundingClientRect();
-      const canvasAspect = canvas.width / canvas.height;
-      const elementAspect = rect.width / rect.height;
+  const domToCanvas = useCallback((clientX: number, clientY: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    const canvasAspect = canvas.width / canvas.height;
+    const elementAspect = rect.width / rect.height;
 
-      let contentWidth: number, contentHeight: number, offsetX: number, offsetY: number;
-      if (canvasAspect > elementAspect) {
-        contentWidth = rect.width;
-        contentHeight = rect.width / canvasAspect;
-        offsetX = 0;
-        offsetY = (rect.height - contentHeight) / 2;
-      } else {
-        contentHeight = rect.height;
-        contentWidth = rect.height * canvasAspect;
-        offsetX = (rect.width - contentWidth) / 2;
-        offsetY = 0;
-      }
+    let contentWidth: number, contentHeight: number, offsetX: number, offsetY: number;
+    if (canvasAspect > elementAspect) {
+      contentWidth = rect.width;
+      contentHeight = rect.width / canvasAspect;
+      offsetX = 0;
+      offsetY = (rect.height - contentHeight) / 2;
+    } else {
+      contentHeight = rect.height;
+      contentWidth = rect.height * canvasAspect;
+      offsetX = (rect.width - contentWidth) / 2;
+      offsetY = 0;
+    }
 
-      const scaleX = canvas.width / contentWidth;
-      const scaleY = canvas.height / contentHeight;
-      const mx = (clientX - rect.left - offsetX) * scaleX;
-      const my = (clientY - rect.top - offsetY) * scaleY;
-      return { mx, my };
-    },
-    []
-  );
+    const scaleX = canvas.width / contentWidth;
+    const scaleY = canvas.height / contentHeight;
+    const mx = (clientX - rect.left - offsetX) * scaleX;
+    const my = (clientY - rect.top - offsetY) * scaleY;
+    return { mx, my };
+  }, []);
 
   // Shared pointer-down logic (mouse & touch)
   const handlePointerDown = useCallback(
@@ -192,7 +196,7 @@ export function VideoCanvas() {
         togglePlay();
       }
     },
-    [startTime, stopwatchConfig, togglePlay, domToCanvas]
+    [startTime, stopwatchConfig, togglePlay, domToCanvas],
   );
 
   // Shared pointer-move logic (mouse & touch)
@@ -224,14 +228,14 @@ export function VideoCanvas() {
           const bounds = getStopwatchBounds(ctx, stopwatchConfig, elapsed);
           setIsHoveringStopwatch(
             mx >= bounds.x &&
-            mx <= bounds.x + bounds.width &&
-            my >= bounds.y &&
-            my <= bounds.y + bounds.height
+              mx <= bounds.x + bounds.width &&
+              my >= bounds.y &&
+              my <= bounds.y + bounds.height,
           );
         }
       }
     },
-    [isDragging, stopwatchConfig, startTime, updateStopwatchConfig, domToCanvas]
+    [isDragging, stopwatchConfig, startTime, updateStopwatchConfig, domToCanvas],
   );
 
   const handlePointerUp = useCallback(() => {
@@ -243,11 +247,11 @@ export function VideoCanvas() {
   // Mouse handlers
   const handleCanvasMouseDown = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => handlePointerDown(e.clientX, e.clientY),
-    [handlePointerDown]
+    [handlePointerDown],
   );
   const handleCanvasMouseMove = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => handlePointerMove(e.clientX, e.clientY),
-    [handlePointerMove]
+    [handlePointerMove],
   );
 
   // Touch handlers
@@ -258,7 +262,7 @@ export function VideoCanvas() {
       const t = e.touches[0];
       handlePointerDown(t.clientX, t.clientY);
     },
-    [handlePointerDown]
+    [handlePointerDown],
   );
   const handleCanvasTouchMove = useCallback(
     (e: React.TouchEvent<HTMLCanvasElement>) => {
@@ -267,12 +271,9 @@ export function VideoCanvas() {
       const t = e.touches[0];
       handlePointerMove(t.clientX, t.clientY);
     },
-    [handlePointerMove]
+    [handlePointerMove],
   );
-  const handleCanvasTouchEnd = useCallback(
-    () => handlePointerUp(),
-    [handlePointerUp]
-  );
+  const handleCanvasTouchEnd = useCallback(() => handlePointerUp(), [handlePointerUp]);
 
   const formatTimeDisplay = (t: number) => {
     const m = Math.floor(t / 60);
@@ -317,11 +318,7 @@ export function VideoCanvas() {
             onClick={togglePlay}
             className="w-8 h-8 rounded-lg flex items-center justify-center text-primary hover:bg-primary/10 transition-colors"
           >
-            {isPlaying ? (
-              <Pause className="w-4 h-4" />
-            ) : (
-              <Play className="w-4 h-4" />
-            )}
+            {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
           </button>
         </div>
 
@@ -337,7 +334,10 @@ export function VideoCanvas() {
             />
             <div
               className="absolute top-1/2 w-3.5 h-3.5 bg-primary rounded-full shadow-[0_0_8px_rgba(6,182,212,0.5)] opacity-0 group-hover:opacity-100 transition-opacity"
-              style={{ left: `${duration ? (currentTime / duration) * 100 : 0}%`, transform: "translate(-50%, -50%)" }}
+              style={{
+                left: `${duration ? (currentTime / duration) * 100 : 0}%`,
+                transform: "translate(-50%, -50%)",
+              }}
             />
           </div>
         </div>

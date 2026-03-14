@@ -46,8 +46,7 @@ export const useGoogleAuth = (): UseGoogleAuthReturn => {
       });
 
       if (oauthError || !data.url) {
-        const errorMessage =
-          oauthError?.message ?? "OAuth URLの生成に失敗しました";
+        const errorMessage = oauthError?.message ?? "OAuth URLの生成に失敗しました";
         setError(errorMessage);
         return {
           success: false,
@@ -55,10 +54,7 @@ export const useGoogleAuth = (): UseGoogleAuthReturn => {
         };
       }
 
-      const result = await WebBrowser.openAuthSessionAsync(
-        data.url,
-        redirectUri
-      );
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
 
       if (result.type === "success" && result.url) {
         const tokens = extractTokensFromUrl(result.url);
@@ -100,8 +96,7 @@ export const useGoogleAuth = (): UseGoogleAuthReturn => {
       setError("認証に失敗しました");
       return { success: false, error: new Error("認証に失敗しました") };
     } catch (err) {
-      const rawMessage =
-        err instanceof Error ? err.message : "不明なエラーが発生しました";
+      const rawMessage = err instanceof Error ? err.message : "不明なエラーが発生しました";
       setError(rawMessage);
       return {
         success: false,

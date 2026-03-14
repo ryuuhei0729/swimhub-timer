@@ -40,7 +40,11 @@ function validateRedirectPath(redirectTo: string | null, origin?: string, locale
 
   for (let i = 0; i < decoded.length; i++) {
     const charCode = decoded.charCodeAt(i);
-    if ((charCode >= 0x00 && charCode <= 0x1F) || charCode === 0x7F || (charCode >= 0x80 && charCode <= 0x9F)) {
+    if (
+      (charCode >= 0x00 && charCode <= 0x1f) ||
+      charCode === 0x7f ||
+      (charCode >= 0x80 && charCode <= 0x9f)
+    ) {
       return defaultPath;
     }
   }
@@ -95,7 +99,11 @@ export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const locale = resolveLocale(request);
-  const redirectTo = validateRedirectPath(requestUrl.searchParams.get("redirect_to"), requestUrl.origin, locale);
+  const redirectTo = validateRedirectPath(
+    requestUrl.searchParams.get("redirect_to"),
+    requestUrl.origin,
+    locale,
+  );
 
   if (!code) {
     return NextResponse.redirect(requestUrl.origin + `/${locale}/login?error=missing_code`);

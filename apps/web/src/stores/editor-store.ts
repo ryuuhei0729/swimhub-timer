@@ -1,5 +1,11 @@
 import { create } from "zustand";
-import type { EditorStep, StopwatchConfig, SplitTime, VideoMetadata, ExportSettings } from "@swimhub-timer/core";
+import type {
+  EditorStep,
+  StopwatchConfig,
+  SplitTime,
+  VideoMetadata,
+  ExportSettings,
+} from "@swimhub-timer/core";
 import { DEFAULT_STOPWATCH_CONFIG } from "@swimhub-timer/core";
 
 interface EditorState {
@@ -151,10 +157,13 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       }
     }
 
-    const newSplit: SplitTime = { distance, time: elapsedSeconds, lapTime, memo: currentMemoInput.trim() };
-    const updated = [...splitTimes, newSplit].sort(
-      (a, b) => a.distance - b.distance
-    );
+    const newSplit: SplitTime = {
+      distance,
+      time: elapsedSeconds,
+      lapTime,
+      memo: currentMemoInput.trim(),
+    };
+    const updated = [...splitTimes, newSplit].sort((a, b) => a.distance - b.distance);
     set({ splitTimes: updated, currentDistanceInput: "", currentMemoInput: "" });
   },
 

@@ -57,10 +57,8 @@ function fftInPlace(real: Float32Array, imag: Float32Array): void {
       let curImag = 0;
 
       for (let j = 0; j < halfM; j++) {
-        const tReal =
-          curReal * real[k + j + halfM] - curImag * imag[k + j + halfM];
-        const tImag =
-          curReal * imag[k + j + halfM] + curImag * real[k + j + halfM];
+        const tReal = curReal * real[k + j + halfM] - curImag * imag[k + j + halfM];
+        const tImag = curReal * imag[k + j + halfM] + curImag * real[k + j + halfM];
 
         real[k + j + halfM] = real[k + j] - tReal;
         imag[k + j + halfM] = imag[k + j] - tImag;
@@ -89,18 +87,10 @@ function bitReverse(x: number, bits: number): number {
  * Find peaks in an array that exceed the given threshold.
  * Returns indices of peaks.
  */
-export function findPeaks(
-  data: number[],
-  threshold: number,
-  minDistance: number = 10
-): number[] {
+export function findPeaks(data: number[], threshold: number, minDistance: number = 10): number[] {
   const peaks: number[] = [];
   for (let i = 1; i < data.length - 1; i++) {
-    if (
-      data[i] > threshold &&
-      data[i] > data[i - 1] &&
-      data[i] >= data[i + 1]
-    ) {
+    if (data[i] > threshold && data[i] > data[i - 1] && data[i] >= data[i + 1]) {
       if (peaks.length === 0 || i - peaks[peaks.length - 1] >= minDistance) {
         peaks.push(i);
       }

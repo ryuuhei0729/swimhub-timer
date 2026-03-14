@@ -9,8 +9,7 @@ import { useTranslation } from "react-i18next";
 
 export function StopwatchDesigner() {
   const { t } = useTranslation();
-  const { stopwatchConfig, updateStopwatchConfig, setStopwatchConfig } =
-    useEditorStore();
+  const { stopwatchConfig, updateStopwatchConfig, setStopwatchConfig } = useEditorStore();
 
   const isActivePreset = (presetId: string) => {
     const preset = STOPWATCH_PRESETS.find((p) => p.id === presetId);
@@ -54,7 +53,9 @@ export function StopwatchDesigner() {
             >
               0:00.00
             </div>
-            <span className={`text-[10px] font-medium ${isActivePreset(preset.id) ? "text-primary" : "text-muted-foreground"}`}>
+            <span
+              className={`text-[10px] font-medium ${isActivePreset(preset.id) ? "text-primary" : "text-muted-foreground"}`}
+            >
               {t(`design.preset.${preset.id}`)}
             </span>
           </button>
@@ -67,9 +68,7 @@ export function StopwatchDesigner() {
           <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">
             {t("design.size")}
           </Label>
-          <span className="text-xs font-mono text-primary">
-            {stopwatchConfig.fontSize}px
-          </span>
+          <span className="text-xs font-mono text-primary">{stopwatchConfig.fontSize}px</span>
         </div>
         <Slider
           min={20}
@@ -79,7 +78,6 @@ export function StopwatchDesigner() {
           onValueChange={([v]) => updateStopwatchConfig({ fontSize: v })}
         />
       </div>
-
     </div>
   );
 }

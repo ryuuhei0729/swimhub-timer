@@ -1,9 +1,5 @@
 import type { DetectedSignal } from "@swimhub-timer/core";
-import {
-  BEEP_FREQUENCY_RANGE,
-  FFT_WINDOW_SIZE,
-  FFT_HOP_SIZE,
-} from "@swimhub-timer/core";
+import { BEEP_FREQUENCY_RANGE, FFT_WINDOW_SIZE, FFT_HOP_SIZE } from "@swimhub-timer/core";
 import { applyHannWindow, computeMagnitudeSpectrum } from "./audio-utils";
 
 interface AudioData {
@@ -25,9 +21,7 @@ interface AudioData {
  *   4. Reject runs whose dominant frequency sits in the whistle range (> 2500Hz).
  *   5. Return the last qualifying run (beep comes after whistles).
  */
-export function detectStartSignal(
-  audioData: AudioData
-): DetectedSignal | null {
+export function detectStartSignal(audioData: AudioData): DetectedSignal | null {
   const { pcmData, sampleRate } = audioData;
   const windowSize = FFT_WINDOW_SIZE;
   const hopSize = FFT_HOP_SIZE;
@@ -56,11 +50,7 @@ export function detectStartSignal(
     let peakMag = 0;
     let totalEnergy = 0;
 
-    for (
-      let bin = beepLowBin;
-      bin <= beepHighBin && bin < spectrum.length;
-      bin++
-    ) {
+    for (let bin = beepLowBin; bin <= beepHighBin && bin < spectrum.length; bin++) {
       const mag = spectrum[bin];
       totalEnergy += mag;
       if (mag > peakMag) {
@@ -73,8 +63,7 @@ export function detectStartSignal(
     let peakRegionEnergy = 0;
     for (
       let bin = Math.max(beepLowBin, peakBin - peakRadius);
-      bin <= Math.min(beepHighBin, peakBin + peakRadius) &&
-      bin < spectrum.length;
+      bin <= Math.min(beepHighBin, peakBin + peakRadius) && bin < spectrum.length;
       bin++
     ) {
       peakRegionEnergy += spectrum[bin];
@@ -111,9 +100,7 @@ export function detectStartSignal(
   let gapCount = 0;
 
   for (let i = 0; i < numWindows; i++) {
-    const isTonal =
-      frameTonality[i] >= tonalityThreshold &&
-      frameEnergy[i] >= energyThreshold;
+    const isTonal = frameTonality[i] >= tonalityThreshold && frameEnergy[i] >= energyThreshold;
 
     if (isTonal) {
       if (runStart === -1) {
@@ -128,15 +115,7 @@ export function detectStartSignal(
         if (gapCount > maxGapFrames) {
           const endFrame = i - gapCount;
           if (endFrame - runStart + 1 >= minRunFrames) {
-            runs.push(
-              buildRun(
-                runStart,
-                endFrame,
-                frameDominantFreq,
-                frameTonality,
-                frameEnergy
-              )
-            );
+            runs.push(buildRun(runStart, endFrame, frameDominantFreq, frameTonality, frameEnergy));
           }
           runStart = -1;
           gapCount = 0;
@@ -148,15 +127,7 @@ export function detectStartSignal(
   if (runStart !== -1) {
     const endFrame = numWindows - 1 - gapCount;
     if (endFrame - runStart + 1 >= minRunFrames) {
-      runs.push(
-        buildRun(
-          runStart,
-          endFrame,
-          frameDominantFreq,
-          frameTonality,
-          frameEnergy
-        )
-      );
+      runs.push(buildRun(runStart, endFrame, frameDominantFreq, frameTonality, frameEnergy));
     }
   }
 
@@ -194,7 +165,7 @@ function buildRun(
   endFrame: number,
   frameDominantFreq: number[],
   frameTonality: number[],
-  frameEnergy: number[]
+  frameEnergy: number[],
 ) {
   let freqSum = 0;
   let tonalSum = 0;

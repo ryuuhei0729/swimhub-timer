@@ -158,9 +158,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       lapTime,
       memo: currentMemoInput.trim(),
     };
-    const updated = [...splitTimes, newSplit].sort(
-      (a, b) => a.distance - b.distance
-    );
+    const updated = [...splitTimes, newSplit].sort((a, b) => a.distance - b.distance);
     set({
       splitTimes: updated,
       currentDistanceInput: "",

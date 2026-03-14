@@ -41,38 +41,26 @@ export default function ImportScreen() {
     } catch (error) {
       Alert.alert(
         t("common.error"),
-        error instanceof Error ? error.message : t("import.failedToPick")
+        error instanceof Error ? error.message : t("import.failedToPick"),
       );
     } finally {
       setLoading(false);
     }
   };
 
-  const steps = [
-    t("import.stepImport"),
-    t("import.stepDetect"),
-    t("import.stepExport"),
-  ];
+  const steps = [t("import.stepImport"), t("import.stepDetect"), t("import.stepExport")];
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Image
-          source={require("../../assets/icon.png")}
-          style={styles.appIcon}
-        />
+        <Image source={require("../../assets/icon.png")} style={styles.appIcon} />
         <View style={styles.headerRow}>
           <Text style={styles.title}>{t("common.appName")}</Text>
-          <Pressable
-            style={styles.accountButton}
-            onPress={() => router.push("/account")}
-          >
+          <Pressable style={styles.accountButton} onPress={() => router.push("/account")}>
             <Ionicons name="person-circle-outline" size={28} color={colors.muted} />
           </Pressable>
         </View>
-        <Text style={styles.subtitle}>
-          {t("import.subtitle")}
-        </Text>
+        <Text style={styles.subtitle}>{t("import.subtitle")}</Text>
       </View>
 
       <View style={styles.card}>
@@ -80,9 +68,7 @@ export default function ImportScreen() {
           <Ionicons name="videocam-outline" size={26} color={colors.muted} />
         </View>
         <Text style={styles.cardTitle}>{t("import.selectVideo")}</Text>
-        <Text style={styles.cardDescription}>
-          {t("import.selectVideoDesc")}
-        </Text>
+        <Text style={styles.cardDescription}>{t("import.selectVideoDesc")}</Text>
 
         <Pressable
           style={({ pressed }) => [
@@ -102,24 +88,10 @@ export default function ImportScreen() {
       <View style={styles.steps}>
         {steps.map((label, i) => (
           <View key={label} style={styles.stepRow}>
-            <View
-              style={[
-                styles.stepDot,
-                i === 0 && styles.stepDotActive,
-              ]}
-            >
-              <Text style={[styles.stepNumber, i === 0 && styles.stepNumberActive]}>
-                {i + 1}
-              </Text>
+            <View style={[styles.stepDot, i === 0 && styles.stepDotActive]}>
+              <Text style={[styles.stepNumber, i === 0 && styles.stepNumberActive]}>{i + 1}</Text>
             </View>
-            <Text
-              style={[
-                styles.stepLabel,
-                i === 0 && styles.stepLabelActive,
-              ]}
-            >
-              {label}
-            </Text>
+            <Text style={[styles.stepLabel, i === 0 && styles.stepLabelActive]}>{label}</Text>
           </View>
         ))}
       </View>

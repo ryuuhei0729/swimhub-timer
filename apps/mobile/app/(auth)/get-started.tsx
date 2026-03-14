@@ -45,10 +45,7 @@ export default function GetStartedScreen() {
   };
 
   return (
-    <SafeAreaView
-      style={styles.container}
-      edges={["top", "left", "right", "bottom"]}
-    >
+    <SafeAreaView style={styles.container} edges={["top", "left", "right", "bottom"]}>
       <View style={styles.header}>
         <Pressable style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
@@ -98,9 +95,7 @@ export default function GetStartedScreen() {
           >
             <View style={styles.buttonContent}>
               <Ionicons name="mail-outline" size={20} color="#FFFFFF" />
-              <Text style={styles.emailButtonText}>
-                {t("auth.getStarted.withEmail")}
-              </Text>
+              <Text style={styles.emailButtonText}>{t("auth.getStarted.withEmail")}</Text>
             </View>
           </Pressable>
         </View>
@@ -143,7 +138,7 @@ export default function GetStartedScreen() {
                   onPress={() => Linking.openURL(matched!.url)}
                 >
                   {matched.text}
-                </Text>
+                </Text>,
               );
               remaining = remaining.slice(earliest + matched.text.length);
             }

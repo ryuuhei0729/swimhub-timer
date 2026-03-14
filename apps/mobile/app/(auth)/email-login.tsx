@@ -22,12 +22,7 @@ const PASSWORD_MIN_LENGTH = 6;
 export default function EmailLoginScreen() {
   const router = useRouter();
   const { t } = useTranslation();
-  const {
-    signInWithEmail,
-    loading,
-    error: authError,
-    clearError,
-  } = useEmailAuth();
+  const { signInWithEmail, loading, error: authError, clearError } = useEmailAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

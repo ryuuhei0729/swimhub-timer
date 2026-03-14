@@ -15,16 +15,12 @@ import { applyHannWindow, computeMagnitudeSpectrum } from "./audio-utils";
  *   4. Reject runs whose dominant frequency sits in the whistle range (> 2500Hz).
  *   5. Return the last qualifying run (beep comes after whistles).
  */
-export function detectStartSignal(
-  audioBuffer: AudioBuffer
-): DetectedSignal | null {
+export function detectStartSignal(audioBuffer: AudioBuffer): DetectedSignal | null {
   const sampleRate = audioBuffer.sampleRate;
   const channelData = audioBuffer.getChannelData(0);
   const windowSize = FFT_WINDOW_SIZE;
   const hopSize = FFT_HOP_SIZE;
-  const numWindows = Math.floor(
-    (channelData.length - windowSize) / hopSize
-  );
+  const numWindows = Math.floor((channelData.length - windowSize) / hopSize);
 
   if (numWindows < 2) return null;
 
@@ -106,9 +102,7 @@ export function detectStartSignal(
   let gapCount = 0;
 
   for (let i = 0; i < numWindows; i++) {
-    const isTonal =
-      frameTonality[i] >= tonalityThreshold &&
-      frameEnergy[i] >= energyThreshold;
+    const isTonal = frameTonality[i] >= tonalityThreshold && frameEnergy[i] >= energyThreshold;
 
     if (isTonal) {
       if (runStart === -1) {
@@ -181,7 +175,7 @@ function buildRun(
   endFrame: number,
   frameDominantFreq: number[],
   frameTonality: number[],
-  frameEnergy: number[]
+  frameEnergy: number[],
 ) {
   let freqSum = 0;
   let tonalSum = 0;

@@ -3,11 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import { notFound } from "next/navigation";
 import { I18nProvider } from "@/components/I18nProvider";
 import { AuthProvider } from "@/components/auth/AuthProvider";
-import {
-  supportedLocales,
-  i18nResources,
-  type SupportedLocale,
-} from "@swimhub-timer/i18n";
+import { supportedLocales, i18nResources, type SupportedLocale } from "@swimhub-timer/i18n";
 
 const inter = Inter({
   variable: "--font-geist-sans",
@@ -121,14 +117,10 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} className="h-full">
-      <body
-        className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
-      >
+      <body className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}>
         <I18nProvider locale={locale}>
           <AuthProvider>
-            <script type="application/ld+json">
-              {JSON.stringify(jsonLd)}
-            </script>
+            <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
             {children}
           </AuthProvider>
         </I18nProvider>

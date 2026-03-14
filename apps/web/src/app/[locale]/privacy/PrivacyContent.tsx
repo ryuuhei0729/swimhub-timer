@@ -7,16 +7,12 @@ export function PrivacyContent() {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-16 text-foreground/80">
-      <h1 className="mb-8 text-2xl font-bold text-foreground">
-        {t("privacy.title")}
-      </h1>
+      <h1 className="mb-8 text-2xl font-bold text-foreground">{t("privacy.title")}</h1>
       <p className="mb-6 text-sm text-muted-foreground">{t("privacy.lastUpdated")}</p>
 
       <section className="space-y-6 text-sm leading-relaxed">
         <div>
-          <h2 className="mb-2 text-lg font-semibold text-foreground">
-            {t("privacy.introTitle")}
-          </h2>
+          <h2 className="mb-2 text-lg font-semibold text-foreground">{t("privacy.introTitle")}</h2>
           <p>{t("privacy.introBody")}</p>
         </div>
 
@@ -28,9 +24,7 @@ export function PrivacyContent() {
         </div>
 
         <div>
-          <h2 className="mb-2 text-lg font-semibold text-foreground">
-            {t("privacy.accessTitle")}
-          </h2>
+          <h2 className="mb-2 text-lg font-semibold text-foreground">{t("privacy.accessTitle")}</h2>
           <p>{t("privacy.accessBody")}</p>
           <ul className="mt-2 list-disc space-y-1 pl-6">
             <li>{t("privacy.accessPhotoLibrary")}</li>

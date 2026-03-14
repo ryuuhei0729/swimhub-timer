@@ -10,11 +10,7 @@ declare global {
 function isLocalEnvironment(): boolean {
   if (typeof window === "undefined") return false;
   const hostname = window.location.hostname;
-  return (
-    hostname === "localhost" ||
-    hostname === "127.0.0.1" ||
-    hostname === "[::1]"
-  );
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
 }
 
 export const supabase: SupabaseClient | undefined =
@@ -34,9 +30,7 @@ export const supabase: SupabaseClient | undefined =
 
 export function getSupabaseBrowserClient(): SupabaseClient {
   if (typeof window === "undefined") {
-    throw new Error(
-      "getSupabaseBrowserClient()はブラウザ環境でのみ使用できます",
-    );
+    throw new Error("getSupabaseBrowserClient()はブラウザ環境でのみ使用できます");
   }
   if (!supabase) {
     throw new Error("Supabaseクライアントが初期化されていません");

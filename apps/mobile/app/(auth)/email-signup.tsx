@@ -23,12 +23,7 @@ const PASSWORD_MIN_LENGTH = 6;
 export default function EmailSignupScreen() {
   const router = useRouter();
   const { t } = useTranslation();
-  const {
-    signUpWithEmail,
-    loading,
-    error: authError,
-    clearError,
-  } = useEmailAuth();
+  const { signUpWithEmail, loading, error: authError, clearError } = useEmailAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -84,9 +79,7 @@ export default function EmailSignupScreen() {
 
             {confirmationSent && (
               <View style={styles.confirmationContainer}>
-                <Text style={styles.confirmationText}>
-                  {t("auth.confirmationSent")}
-                </Text>
+                <Text style={styles.confirmationText}>{t("auth.confirmationSent")}</Text>
               </View>
             )}
 
@@ -135,9 +128,7 @@ export default function EmailSignupScreen() {
                 {loading ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                  <Text style={styles.submitButtonText}>
-                    {t("auth.signUp")}
-                  </Text>
+                  <Text style={styles.submitButtonText}>{t("auth.signUp")}</Text>
                 )}
               </Pressable>
             </View>
@@ -156,9 +147,7 @@ export default function EmailSignupScreen() {
                       <Text
                         key={i}
                         style={styles.legalLink}
-                        onPress={() =>
-                          Linking.openURL("https://timer.swim-hub.app/terms")
-                        }
+                        onPress={() => Linking.openURL("https://timer.swim-hub.app/terms")}
                       >
                         {terms}
                       </Text>
@@ -169,9 +158,7 @@ export default function EmailSignupScreen() {
                       <Text
                         key={i}
                         style={styles.legalLink}
-                        onPress={() =>
-                          Linking.openURL("https://timer.swim-hub.app/privacy")
-                        }
+                        onPress={() => Linking.openURL("https://timer.swim-hub.app/privacy")}
                       >
                         {privacy}
                       </Text>

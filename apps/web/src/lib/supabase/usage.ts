@@ -5,17 +5,12 @@ import type { UserPlan } from "@swimhub-timer/core";
 const APP = "swimhub_timer" as const;
 
 function getTodayJST(): string {
-  return new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
-  )
+  return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }))
     .toISOString()
     .split("T")[0];
 }
 
-export async function getTodayExportCount(
-  supabase: SupabaseClient,
-  uid: string,
-): Promise<number> {
+export async function getTodayExportCount(supabase: SupabaseClient, uid: string): Promise<number> {
   const today = getTodayJST();
   const { data } = await supabase
     .from("app_daily_usage")
@@ -38,10 +33,7 @@ export async function canUserExport(
   return count < 1;
 }
 
-export async function incrementExportCount(
-  supabase: SupabaseClient,
-  uid: string,
-): Promise<void> {
+export async function incrementExportCount(supabase: SupabaseClient, uid: string): Promise<void> {
   const today = getTodayJST();
   const { data: existing } = await supabase
     .from("app_daily_usage")

@@ -5,12 +5,7 @@ import { useEditorStore } from "@/stores/editor-store";
 import { detectStartSignal } from "@/lib/audio/signal-detector";
 
 export function useStartSignalDetection() {
-  const {
-    audioBuffer,
-    setDetectedSignalTime,
-    setIsDetecting,
-    isDetecting,
-  } = useEditorStore();
+  const { audioBuffer, setDetectedSignalTime, setIsDetecting, isDetecting } = useEditorStore();
 
   const detect = useCallback(async () => {
     if (!audioBuffer) return;
@@ -32,11 +27,7 @@ export function useStartSignalDetection() {
     } finally {
       setIsDetecting(false);
     }
-  }, [
-    audioBuffer,
-    setDetectedSignalTime,
-    setIsDetecting,
-  ]);
+  }, [audioBuffer, setDetectedSignalTime, setIsDetecting]);
 
   return { detect, isDetecting };
 }

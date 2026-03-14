@@ -13,10 +13,7 @@ export default function AppLayout() {
         contentStyle: { backgroundColor: "#EFF6FF" },
       }}
     >
-      <Stack.Screen
-        name="index"
-        options={{ title: t("common.appName"), headerShown: false }}
-      />
+      <Stack.Screen name="index" options={{ title: t("common.appName"), headerShown: false }} />
       <Stack.Screen
         name="editor"
         options={{
@@ -24,10 +21,7 @@ export default function AppLayout() {
           headerBackTitle: t("common.back"),
         }}
       />
-      <Stack.Screen
-        name="export"
-        options={{ title: t("common.export"), presentation: "modal" }}
-      />
+      <Stack.Screen name="export" options={{ title: t("common.export"), presentation: "modal" }} />
       <Stack.Screen
         name="account"
         options={{

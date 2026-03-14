@@ -10,8 +10,7 @@ const SIZE_MAX = 80;
 
 export function StopwatchDesigner() {
   const { t } = useTranslation();
-  const { stopwatchConfig, updateStopwatchConfig, setStopwatchConfig } =
-    useEditorStore();
+  const { stopwatchConfig, updateStopwatchConfig, setStopwatchConfig } = useEditorStore();
 
   const trackWidth = useRef(0);
 
@@ -22,7 +21,7 @@ export function StopwatchDesigner() {
       const size = Math.round(SIZE_MIN + ratio * (SIZE_MAX - SIZE_MIN));
       updateStopwatchConfig({ fontSize: size });
     },
-    [updateStopwatchConfig]
+    [updateStopwatchConfig],
   );
 
   const isActivePreset = (presetId: string) => {
@@ -64,21 +63,15 @@ export function StopwatchDesigner() {
                     {
                       color: preset.config.textColor,
                       fontFamily:
-                        preset.config.fontFamily === "monospace"
-                          ? "monospace"
-                          : undefined,
+                        preset.config.fontFamily === "monospace" ? "monospace" : undefined,
                     },
                   ]}
                 >
                   0:00.00
                 </Text>
               </View>
-              <Text
-                style={[
-                  styles.presetName,
-                  active && styles.presetNameActive,
-                ]}
-              >
+              <Text style={[styles.presetName, active && styles.presetNameActive]}>
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- i18n dynamic key */}
                 {t(`design.preset.${preset.id}` as any)}
               </Text>
             </Pressable>

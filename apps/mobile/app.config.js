@@ -6,15 +6,18 @@
  * EAS Build: EAS 環境変数から直接読み込み
  */
 
-const baseConfig = require('./app.json')
+const baseConfig = require("./app.json");
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-if (process.env.NODE_ENV === 'development') {
-  console.log('app.config.js - 環境変数の確認:')
-  console.log('EXPO_PUBLIC_SUPABASE_URL:', supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : '未設定')
-  console.log('EXPO_PUBLIC_SUPABASE_ANON_KEY:', supabaseAnonKey ? '設定済み' : '未設定')
+if (process.env.NODE_ENV === "development") {
+  console.log("app.config.js - 環境変数の確認:");
+  console.log(
+    "EXPO_PUBLIC_SUPABASE_URL:",
+    supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : "未設定",
+  );
+  console.log("EXPO_PUBLIC_SUPABASE_ANON_KEY:", supabaseAnonKey ? "設定済み" : "未設定");
 }
 
 module.exports = {
@@ -23,9 +26,9 @@ module.exports = {
     ...baseConfig.expo.extra,
     supabaseUrl: supabaseUrl,
     supabaseAnonKey: supabaseAnonKey,
-    environment: process.env.EXPO_PUBLIC_ENVIRONMENT || 'development',
+    environment: process.env.EXPO_PUBLIC_ENVIRONMENT || "development",
     eas: {
-      projectId: baseConfig.expo.extra?.eas?.projectId || '',
+      projectId: baseConfig.expo.extra?.eas?.projectId || "",
     },
   },
-}
+};

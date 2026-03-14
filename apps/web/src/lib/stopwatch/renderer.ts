@@ -23,12 +23,7 @@ function measureTextTabular(ctx: CanvasRenderingContext2D, text: string): number
   return total;
 }
 
-function fillTextTabular(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  x: number,
-  y: number
-): void {
+function fillTextTabular(ctx: CanvasRenderingContext2D, text: string, x: number, y: number): void {
   const dw = getDigitWidth(ctx);
   let cx = x;
   for (const ch of text) {
@@ -48,7 +43,7 @@ function calculatePosition(
   boxWidth: number,
   boxHeight: number,
   canvasWidth: number,
-  canvasHeight: number
+  canvasHeight: number,
 ): { x: number; y: number } {
   const px = config.position.x * canvasWidth;
   const py = config.position.y * canvasHeight;
@@ -84,7 +79,7 @@ function calculatePosition(
 export function renderStopwatch(
   ctx: CanvasRenderingContext2D,
   config: StopwatchConfig,
-  elapsedSeconds: number
+  elapsedSeconds: number,
 ): void {
   const timeText = formatTime(elapsedSeconds);
 
@@ -102,7 +97,7 @@ export function renderStopwatch(
     boxWidth,
     boxHeight,
     ctx.canvas.width,
-    ctx.canvas.height
+    ctx.canvas.height,
   );
 
   // Background
@@ -113,12 +108,7 @@ export function renderStopwatch(
   ctx.lineTo(x + boxWidth - r, y);
   ctx.quadraticCurveTo(x + boxWidth, y, x + boxWidth, y + r);
   ctx.lineTo(x + boxWidth, y + boxHeight - r);
-  ctx.quadraticCurveTo(
-    x + boxWidth,
-    y + boxHeight,
-    x + boxWidth - r,
-    y + boxHeight
-  );
+  ctx.quadraticCurveTo(x + boxWidth, y + boxHeight, x + boxWidth - r, y + boxHeight);
   ctx.lineTo(x + r, y + boxHeight);
   ctx.quadraticCurveTo(x, y + boxHeight, x, y + boxHeight - r);
   ctx.lineTo(x, y + r);
@@ -144,7 +134,7 @@ export function renderSplitDisplay(
   ctx: CanvasRenderingContext2D,
   config: StopwatchConfig,
   elapsedSeconds: number,
-  latestSplit: SplitTime
+  latestSplit: SplitTime,
 ): void {
   const splitText = formatSplitText(latestSplit);
   const splitFontSize = Math.round(config.fontSize * 0.55);
@@ -164,8 +154,7 @@ export function renderSplitDisplay(
   }
 
   const boxWidth = contentWidth + splitPadding * 2;
-  const boxHeight = splitFontSize + splitPadding * 2
-    + (hasMemo ? memoGap + memoFontSize : 0);
+  const boxHeight = splitFontSize + splitPadding * 2 + (hasMemo ? memoGap + memoFontSize : 0);
 
   // Get stopwatch bounds to position below/above it
   const swBounds = getStopwatchBounds(ctx, config, elapsedSeconds);
@@ -214,11 +203,7 @@ export function renderSplitDisplay(
   if (hasMemo) {
     ctx.font = `${memoFontSize}px ${config.fontFamily}`;
     ctx.globalAlpha = 0.75;
-    ctx.fillText(
-      latestSplit.memo,
-      x + splitPadding,
-      y + splitPadding + splitFontSize + memoGap
-    );
+    ctx.fillText(latestSplit.memo, x + splitPadding, y + splitPadding + splitFontSize + memoGap);
     ctx.globalAlpha = 1.0;
   }
 }
@@ -250,7 +235,7 @@ export function renderWatermark(ctx: CanvasRenderingContext2D): void {
   const iconSize = fontSize;
 
   ctx.save();
-  ctx.globalAlpha = 0.30;
+  ctx.globalAlpha = 0.3;
   ctx.font = `600 ${fontSize}px sans-serif`;
   ctx.textBaseline = "bottom";
   ctx.fillStyle = "white";
@@ -274,7 +259,7 @@ export function renderWatermark(ctx: CanvasRenderingContext2D): void {
 export function getStopwatchBounds(
   ctx: CanvasRenderingContext2D,
   config: StopwatchConfig,
-  elapsedSeconds: number
+  elapsedSeconds: number,
 ): { x: number; y: number; width: number; height: number } {
   const timeText = formatTime(elapsedSeconds);
   ctx.font = `bold ${config.fontSize}px ${config.fontFamily}`;
@@ -285,7 +270,7 @@ export function getStopwatchBounds(
     boxWidth,
     boxHeight,
     ctx.canvas.width,
-    ctx.canvas.height
+    ctx.canvas.height,
   );
   return { x, y, width: boxWidth, height: boxHeight };
 }

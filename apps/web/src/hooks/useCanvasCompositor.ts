@@ -6,7 +6,7 @@ import { renderStopwatch, renderSplitDisplay, renderWatermark } from "@/lib/stop
 
 export function useCanvasCompositor(
   canvasRef: React.RefObject<HTMLCanvasElement | null>,
-  videoRef: React.RefObject<HTMLVideoElement | null>
+  videoRef: React.RefObject<HTMLVideoElement | null>,
 ) {
   const animationRef = useRef<number>(0);
   const { stopwatchConfig, startTime, splitTimes, isFinished, finishTime } = useEditorStore();
@@ -27,10 +27,7 @@ export function useCanvasCompositor(
       if (!ctx) return;
 
       // Match canvas size to video dimensions
-      if (
-        canvas.width !== video.videoWidth ||
-        canvas.height !== video.videoHeight
-      ) {
+      if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
         canvas.width = video.videoWidth || 640;
         canvas.height = video.videoHeight || 360;
       }
@@ -39,10 +36,7 @@ export function useCanvasCompositor(
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Compute elapsed from video position, but cap at finishTime if finished
-      let elapsed =
-        startTime !== null
-          ? Math.max(0, video.currentTime - startTime)
-          : 0;
+      let elapsed = startTime !== null ? Math.max(0, video.currentTime - startTime) : 0;
       if (isFinished && finishTime !== null && elapsed > finishTime) {
         elapsed = finishTime;
       }

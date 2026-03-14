@@ -20,13 +20,10 @@ export async function extractAudioBuffer(file: File): Promise<AudioBuffer> {
  */
 export function generateWaveform(
   audioBuffer: AudioBuffer,
-  targetSamples: number = 2000
+  targetSamples: number = 2000,
 ): Float32Array {
   const channelData = audioBuffer.getChannelData(0);
-  const samplesPerBucket = Math.max(
-    1,
-    Math.floor(channelData.length / targetSamples)
-  );
+  const samplesPerBucket = Math.max(1, Math.floor(channelData.length / targetSamples));
   const outputLength = Math.ceil(channelData.length / samplesPerBucket);
   const waveform = new Float32Array(outputLength);
 
@@ -49,7 +46,7 @@ export function generateWaveform(
  */
 export async function analyzeAudio(
   file: File,
-  targetSamples?: number
+  targetSamples?: number,
 ): Promise<AudioAnalysisResult & { audioBuffer: AudioBuffer }> {
   const audioBuffer = await extractAudioBuffer(file);
   const waveformData = generateWaveform(audioBuffer, targetSamples);

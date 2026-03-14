@@ -4,10 +4,7 @@ import { useCallback, useState } from "react";
 import { useEditorStore } from "@/stores/editor-store";
 import { exportVideoWithStopwatch } from "@/lib/video/export-pipeline";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  canGuestUseToday,
-  markGuestUsedToday,
-} from "@/lib/guest-daily-limit";
+import { canGuestUseToday, markGuestUsedToday } from "@/lib/guest-daily-limit";
 
 export function useVideoExport(showWatermark = true) {
   const {
@@ -84,14 +81,12 @@ export function useVideoExport(showWatermark = true) {
         videoMetadata?.height ?? 0,
         exportSettings,
         (percent) => setExportProgress(percent),
-        showWatermark
+        showWatermark,
       );
       setOutputBlob(blob);
       await recordExportUsage();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Export failed"
-      );
+      setError(err instanceof Error ? err.message : "Export failed");
     } finally {
       setIsExporting(false);
     }
