@@ -2,17 +2,21 @@ import { useState } from "react";
 import { View, Text, TouchableOpacity, Alert, ActivityIndicator, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Constants from "expo-constants";
+import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../contexts/AuthProvider";
 import { supabase } from "../../lib/supabase";
+import { restorePurchases } from "../../lib/revenucat";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 
 const WEB_API_URL = "https://timer.swim-hub.app";
 
 export default function AccountScreen() {
   const { t } = useTranslation();
-  const { user, plan, signOut } = useAuth();
+  const router = useRouter();
+  const { user, plan, subscription, signOut, refreshSubscription } = useAuth();
   const [deleting, setDeleting] = useState(false);
+  const [restoring, setRestoring] = useState(false);
 
   const handleSignOut = () => {
     Alert.alert(t("auth.logout"), t("auth.logoutConfirm"), [
@@ -71,6 +75,40 @@ export default function AccountScreen() {
     ]);
   };
 
+  // リストア購入処理
+  const handleRestore = async () => {
+    setRestoring(true);
+    try {
+      const customerInfo = await restorePurchases();
+      if (customerInfo) {
+        await refreshSubscription();
+        Alert.alert(t("paywall.restoreSuccess"), t("paywall.restoreSuccessMessage"));
+      } else {
+        Alert.alert(t("paywall.restoreEmpty"), t("paywall.restoreEmptyMessage"));
+      }
+    } catch {
+      Alert.alert(t("common.error"), t("paywall.restoreFailed"));
+    } finally {
+      setRestoring(false);
+    }
+  };
+
+  // トライアル残日数を計算
+  const trialDaysRemaining = (() => {
+    if (!subscription?.trialEnd) return null;
+    const end = new Date(subscription.trialEnd);
+    const now = new Date();
+    const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    return diff > 0 ? diff : null;
+  })();
+
+  // 次回更新日のフォーマット
+  const renewalDateFormatted = (() => {
+    if (!subscription?.premiumExpiresAt) return null;
+    const date = new Date(subscription.premiumExpiresAt);
+    return date.toLocaleDateString();
+  })();
+
   const appVersion = Constants.expoConfig?.version || "1.0.0";
 
   return (
@@ -104,6 +142,75 @@ export default function AccountScreen() {
                 </Text>
               </View>
             </View>
+          </View>
+        </View>
+
+        {/* サブスクリプション詳細 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t("account.subscriptionSection")}</Text>
+          <View style={styles.infoCard}>
+            {plan === "premium" ? (
+              <>
+                {/* トライアル中 */}
+                {subscription?.status === "trialing" && trialDaysRemaining && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>{t("account.trialRemaining")}</Text>
+                    <Text style={styles.trialText}>
+                      {t("account.trialDays", { days: trialDaysRemaining })}
+                    </Text>
+                  </View>
+                )}
+
+                {/* 次回更新日 */}
+                {renewalDateFormatted && (
+                  <>
+                    {subscription?.status === "trialing" && trialDaysRemaining && (
+                      <View style={styles.divider} />
+                    )}
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>
+                        {subscription?.cancelAtPeriodEnd
+                          ? t("account.expiresAt")
+                          : t("account.renewsAt")}
+                      </Text>
+                      <Text style={styles.infoValue}>{renewalDateFormatted}</Text>
+                    </View>
+                  </>
+                )}
+
+                {/* 解約状態の表示 */}
+                {subscription?.cancelAtPeriodEnd && (
+                  <>
+                    <View style={styles.divider} />
+                    <Text style={styles.canceledNote}>{t("account.canceledNote")}</Text>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <Text style={styles.upgradePrompt}>{t("account.upgradePrompt")}</Text>
+                <TouchableOpacity
+                  style={styles.upgradeButton}
+                  onPress={() => router.push("/(app)/paywall")}
+                >
+                  <Text style={styles.upgradeButtonText}>{t("account.upgradeToPremium")}</Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {/* リストア購入ボタン */}
+            <View style={styles.divider} />
+            <TouchableOpacity
+              style={styles.restoreRow}
+              onPress={handleRestore}
+              disabled={restoring}
+            >
+              {restoring ? (
+                <ActivityIndicator color={colors.primary} size="small" />
+              ) : (
+                <Text style={styles.restoreText}>{t("paywall.restore")}</Text>
+              )}
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -208,6 +315,41 @@ const styles = StyleSheet.create({
   },
   premiumBadgeText: {
     color: "#92400E",
+  },
+  trialText: {
+    fontSize: fontSize.md,
+    color: colors.primary,
+    fontWeight: "600",
+  },
+  canceledNote: {
+    fontSize: fontSize.sm,
+    color: colors.destructive,
+    textAlign: "center",
+  },
+  upgradePrompt: {
+    fontSize: fontSize.md,
+    color: colors.textSecondary,
+    marginBottom: spacing.md,
+  },
+  upgradeButton: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.lg,
+    padding: 14,
+    alignItems: "center",
+  },
+  upgradeButtonText: {
+    color: colors.white,
+    fontSize: fontSize.md,
+    fontWeight: "700",
+  },
+  restoreRow: {
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+  restoreText: {
+    color: colors.primary,
+    fontSize: fontSize.md,
+    fontWeight: "500",
   },
   signOutButton: {
     backgroundColor: colors.surface,

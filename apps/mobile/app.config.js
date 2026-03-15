@@ -10,6 +10,7 @@ const baseConfig = require("./app.json");
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+const revenuecatIosApiKey = process.env.EXPO_PUBLIC_REVENUCAT_IOS_API_KEY;
 
 if (process.env.NODE_ENV === "development") {
   console.log("app.config.js - 環境変数の確認:");
@@ -18,6 +19,7 @@ if (process.env.NODE_ENV === "development") {
     supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : "未設定",
   );
   console.log("EXPO_PUBLIC_SUPABASE_ANON_KEY:", supabaseAnonKey ? "設定済み" : "未設定");
+  console.log("EXPO_PUBLIC_REVENUCAT_IOS_API_KEY:", revenuecatIosApiKey ? "設定済み" : "未設定");
 }
 
 module.exports = {
@@ -26,6 +28,7 @@ module.exports = {
     ...baseConfig.expo.extra,
     supabaseUrl: supabaseUrl,
     supabaseAnonKey: supabaseAnonKey,
+    revenuecatIosApiKey: revenuecatIosApiKey,
     environment: process.env.EXPO_PUBLIC_ENVIRONMENT || "development",
     eas: {
       projectId: baseConfig.expo.extra?.eas?.projectId || "",

@@ -29,6 +29,14 @@ export default function AppLayout() {
           headerBackTitle: t("common.back"),
         }}
       />
+      <Stack.Screen
+        name="paywall"
+        options={{
+          title: t("paywall.title"),
+          presentation: "modal",
+          headerBackTitle: t("common.back"),
+        }}
+      />
     </Stack>
   );
 }
