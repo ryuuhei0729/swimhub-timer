@@ -62,6 +62,7 @@ interface EditorState {
   recordSplit: (elapsedSeconds: number) => void;
   removeSplit: (index: number) => void;
   finishRecording: (elapsedSeconds: number, memo?: string) => void;
+  revertFinish: () => void;
   resetSplits: () => void;
   reset: () => void;
 }
@@ -176,6 +177,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       isFinished: true,
       finishTime: elapsedSeconds,
       finishMemo: (memo ?? "").trim(),
+    });
+  },
+
+  revertFinish: () => {
+    set({
+      isFinished: false,
+      finishTime: null,
+      finishMemo: "",
     });
   },
 

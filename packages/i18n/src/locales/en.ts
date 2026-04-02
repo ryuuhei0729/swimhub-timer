@@ -166,6 +166,8 @@ const en: TranslationShape = {
       withApple: "Sign in with Apple",
       withGoogle: "Sign in with Google",
       withEmail: "Sign in with Email",
+      noAccount: "Don't have an account? ",
+      signup: "Sign Up",
     },
     emailLogin: "Sign in with Email",
     emailSignup: "Sign up with Email",
@@ -234,6 +236,13 @@ const en: TranslationShape = {
         "Captcha verification is required. Please complete the captcha and try again.",
       networkError:
         "A network error occurred. Please check your internet connection and try again.",
+      providerNotEnabled: "This authentication provider is not enabled",
+      oauthError: "An error occurred during OAuth authentication",
+      invalidToken: "Authentication token is invalid",
+      tokenExpired: "Authentication token has expired",
+      invalidRefreshToken: "Refresh token is invalid",
+      sessionExpired: "Session has expired. Please sign in again",
+      fallback: "An authentication error occurred. Please try again",
     },
   },
 

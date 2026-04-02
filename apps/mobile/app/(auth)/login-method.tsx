@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -24,6 +24,7 @@ export default function LoginMethodScreen() {
     loading: appleLoading,
     error: appleError,
     clearError: clearAppleError,
+    isAvailable: isAppleAvailable,
   } = useAppleAuth();
   const [error, setError] = useState<string | null>(null);
 
@@ -47,13 +48,24 @@ export default function LoginMethodScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right", "bottom"]}>
       <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
+        <Pressable
+          style={styles.backButton}
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel={t("common.back")}
+        >
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </Pressable>
       </View>
 
       <View style={styles.content}>
         <View style={styles.titleContainer}>
+          <Image
+            source={require("../../assets/icon.png")}
+            style={styles.appIcon}
+            accessibilityRole="image"
+            accessibilityLabel="SwimHub Timer"
+          />
           <Text style={styles.title}>{t("auth.loginMethod.title")}</Text>
           <Text style={styles.subtitle}>{t("auth.loginMethod.subtitle")}</Text>
         </View>
@@ -65,12 +77,14 @@ export default function LoginMethodScreen() {
         )}
 
         <View style={styles.buttonGroup}>
-          <AppleLoginButton
-            onPress={handleAppleLogin}
-            loading={appleLoading}
-            disabled={isLoading}
-            label={t("auth.loginMethod.withApple")}
-          />
+          {isAppleAvailable && (
+            <AppleLoginButton
+              onPress={handleAppleLogin}
+              loading={appleLoading}
+              disabled={isLoading}
+              label={t("auth.loginMethod.withApple")}
+            />
+          )}
 
           <GoogleLoginButton
             onPress={handleGoogleLogin}
@@ -87,6 +101,8 @@ export default function LoginMethodScreen() {
             ]}
             onPress={() => router.push("/(auth)/email-login")}
             disabled={isLoading}
+            accessibilityRole="button"
+            accessibilityLabel={t("auth.loginMethod.withEmail")}
           >
             <View style={styles.buttonContent}>
               <Ionicons name="mail-outline" size={20} color="#FFFFFF" />
@@ -94,6 +110,17 @@ export default function LoginMethodScreen() {
             </View>
           </Pressable>
         </View>
+
+        <Pressable
+          style={styles.signupLink}
+          onPress={() => router.push("/(auth)/email-signup")}
+          accessibilityRole="button"
+          accessibilityLabel={t("auth.loginMethod.signup")}
+        >
+          <Text style={styles.signupLinkText}>
+            {t("auth.loginMethod.noAccount")}<Text style={styles.signupLinkBold}>{t("auth.loginMethod.signup")}</Text>
+          </Text>
+        </Pressable>
       </View>
     </SafeAreaView>
   );
@@ -105,14 +132,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
+    padding: 8,
   },
   content: {
     flex: 1,
@@ -122,6 +148,10 @@ const styles = StyleSheet.create({
   titleContainer: {
     alignItems: "center",
     marginBottom: spacing.xl,
+  },
+  appIcon: {
+    width: 180,
+    height: 180,
   },
   title: {
     fontSize: 28,
@@ -174,5 +204,17 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.5,
+  },
+  signupLink: {
+    marginTop: 24,
+    alignItems: "center",
+  },
+  signupLinkText: {
+    fontSize: fontSize.sm,
+    color: colors.muted,
+  },
+  signupLinkBold: {
+    color: colors.primary,
+    fontWeight: "600",
   },
 });

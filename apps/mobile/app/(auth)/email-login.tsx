@@ -49,7 +49,12 @@ export default function EmailLoginScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
+        <Pressable
+          style={styles.backButton}
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel={t("common.back")}
+        >
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </Pressable>
       </View>
@@ -85,6 +90,7 @@ export default function EmailLoginScreen() {
                   keyboardType="email-address"
                   textContentType="emailAddress"
                   editable={!loading}
+                  accessibilityLabel={t("auth.email")}
                 />
               </View>
 
@@ -101,6 +107,7 @@ export default function EmailLoginScreen() {
                   autoComplete="password"
                   textContentType="password"
                   editable={!loading}
+                  accessibilityLabel={t("auth.passwordPlaceholder")}
                 />
               </View>
 
@@ -112,6 +119,9 @@ export default function EmailLoginScreen() {
                 ]}
                 onPress={handleSubmit}
                 disabled={loading || !email || !password}
+                accessibilityRole="button"
+                accessibilityLabel={t("auth.signIn")}
+                accessibilityState={{ busy: loading }}
               >
                 {loading ? (
                   <ActivityIndicator color="#FFFFFF" />
@@ -136,14 +146,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
+    padding: 8,
   },
   scrollContent: {
     flexGrow: 1,

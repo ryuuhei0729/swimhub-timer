@@ -30,7 +30,7 @@ export function SplitsPanel({ onFinish }: SplitsPanelProps) {
     recordSplit,
     finishRecording,
     removeSplit,
-    resetSplits,
+    revertFinish,
     seekVideo,
   } = useEditorStore();
 
@@ -51,8 +51,8 @@ export function SplitsPanel({ onFinish }: SplitsPanelProps) {
   };
 
   const handleEdit = () => {
-    // Revert isFinished to go back to editing mode
-    resetSplits();
+    // Revert isFinished to go back to editing mode, keeping split times
+    revertFinish();
   };
 
   const adjustVideo = (delta: number) => {

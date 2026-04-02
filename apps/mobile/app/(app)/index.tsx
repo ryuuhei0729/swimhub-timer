@@ -11,7 +11,7 @@ import { colors, spacing, radius, fontSize } from "../../lib/theme";
 export default function ImportScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { setVideoUri, setVideoMetadata } = useEditorStore();
+  const { setVideoUri, setVideoMetadata, reset } = useEditorStore();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
@@ -30,6 +30,7 @@ export default function ImportScreen() {
       }
 
       const asset = result.assets[0];
+      reset();
       setVideoUri(asset.uri);
       setVideoMetadata({
         width: asset.width ?? 0,
@@ -103,7 +104,7 @@ export default function ImportScreen() {
 
       <View style={styles.steps}>
         {steps.map((label, i) => (
-          <View key={label} style={styles.stepRow}>
+          <View key={label} style={styles.stepItem}>
             <View style={[styles.stepDot, i === 0 && styles.stepDotActive]}>
               <Text style={[styles.stepNumber, i === 0 && styles.stepNumberActive]}>{i + 1}</Text>
             </View>
@@ -241,13 +242,14 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   steps: {
-    marginTop: 40,
-    gap: spacing.lg,
-  },
-  stepRow: {
     flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 40,
+    gap: spacing.xl,
+  },
+  stepItem: {
     alignItems: "center",
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   stepDot: {
     width: 28,

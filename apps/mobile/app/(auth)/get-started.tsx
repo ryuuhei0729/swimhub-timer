@@ -24,6 +24,7 @@ export default function GetStartedScreen() {
     loading: appleLoading,
     error: appleError,
     clearError: clearAppleError,
+    isAvailable: isAppleAvailable,
   } = useAppleAuth();
   const [error, setError] = useState<string | null>(null);
 
@@ -47,7 +48,12 @@ export default function GetStartedScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right", "bottom"]}>
       <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
+        <Pressable
+          style={styles.backButton}
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel={t("common.back")}
+        >
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </Pressable>
       </View>
@@ -65,12 +71,14 @@ export default function GetStartedScreen() {
         )}
 
         <View style={styles.buttonGroup}>
-          <AppleLoginButton
-            onPress={handleAppleSignup}
-            loading={appleLoading}
-            disabled={isLoading}
-            label={t("auth.getStarted.withApple")}
-          />
+          {isAppleAvailable && (
+            <AppleLoginButton
+              onPress={handleAppleSignup}
+              loading={appleLoading}
+              disabled={isLoading}
+              label={t("auth.getStarted.withApple")}
+            />
+          )}
 
           <GoogleLoginButton
             onPress={handleGoogleSignup}
@@ -92,6 +100,8 @@ export default function GetStartedScreen() {
               router.push("/(auth)/email-signup");
             }}
             disabled={isLoading}
+            accessibilityRole="button"
+            accessibilityLabel={t("auth.getStarted.withEmail")}
           >
             <View style={styles.buttonContent}>
               <Ionicons name="mail-outline" size={20} color="#FFFFFF" />

@@ -55,7 +55,12 @@ export default function EmailSignupScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
+        <Pressable
+          style={styles.backButton}
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel={t("common.back")}
+        >
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </Pressable>
       </View>
@@ -97,6 +102,7 @@ export default function EmailSignupScreen() {
                   keyboardType="email-address"
                   textContentType="emailAddress"
                   editable={!loading}
+                  accessibilityLabel={t("auth.email")}
                 />
               </View>
 
@@ -113,6 +119,7 @@ export default function EmailSignupScreen() {
                   autoComplete="password"
                   textContentType="newPassword"
                   editable={!loading}
+                  accessibilityLabel={t("auth.passwordPlaceholder")}
                 />
               </View>
 
@@ -124,6 +131,9 @@ export default function EmailSignupScreen() {
                 ]}
                 onPress={handleSubmit}
                 disabled={loading || !email || !password}
+                accessibilityRole="button"
+                accessibilityLabel={t("auth.signUp")}
+                accessibilityState={{ busy: loading }}
               >
                 {loading ? (
                   <ActivityIndicator color="#FFFFFF" />

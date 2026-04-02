@@ -5,11 +5,9 @@ import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../contexts/AuthProvider";
-import { supabase } from "../../lib/supabase";
 import { restorePurchases } from "../../lib/revenucat";
+import { deleteAccount, ApiError } from "../../lib/api-client";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
-
-const WEB_API_URL = "https://timer.swim-hub.app";
 
 export default function AccountScreen() {
   const { t } = useTranslation();
@@ -28,6 +26,8 @@ export default function AccountScreen() {
           const { error } = await signOut();
           if (error) {
             Alert.alert(t("common.error"), t("auth.errors.logoutFailed"));
+          } else {
+            router.replace("/(app)");
           }
         },
       },
@@ -55,29 +55,17 @@ export default function AccountScreen() {
                   onPress: async () => {
                     setDeleting(true);
                     try {
-                      const session = await supabase?.auth.getSession();
-                      const accessToken = session?.data.session?.access_token;
-                      if (!accessToken) {
-                        throw new Error("No session");
-                      }
-
-                      const response = await fetch(`${WEB_API_URL}/api/user/delete`, {
-                        method: "DELETE",
-                        headers: {
-                          Authorization: `Bearer ${accessToken}`,
-                          "Content-Type": "application/json",
-                        },
-                      });
-
-                      if (!response.ok) {
-                        const body = await response.json().catch(() => ({}));
-                        throw new Error(body.error || t("auth.errors.deleteAccountFailed"));
-                      }
+                      await deleteAccount();
 
                       await signOut();
+                      router.replace("/(app)");
                     } catch (err) {
                       const message =
-                        err instanceof Error ? err.message : t("auth.errors.deleteAccountFailed");
+                        err instanceof ApiError
+                          ? err.message
+                          : err instanceof Error
+                            ? err.message
+                            : t("auth.errors.deleteAccountFailed");
                       Alert.alert(t("common.error"), message);
                     } finally {
                       setDeleting(false);
@@ -209,6 +197,8 @@ export default function AccountScreen() {
                 <TouchableOpacity
                   style={styles.upgradeButton}
                   onPress={() => router.push("/(app)/paywall")}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("account.upgradeToPremium")}
                 >
                   <Text style={styles.upgradeButtonText}>{t("account.upgradeToPremium")}</Text>
                 </TouchableOpacity>
@@ -221,6 +211,9 @@ export default function AccountScreen() {
               style={styles.restoreRow}
               onPress={handleRestore}
               disabled={restoring}
+              accessibilityRole="button"
+              accessibilityLabel={t("paywall.restore")}
+              accessibilityState={{ busy: restoring }}
             >
               {restoring ? (
                 <ActivityIndicator color={colors.primary} size="small" />
@@ -233,7 +226,12 @@ export default function AccountScreen() {
 
         {/* Sign out */}
         <View style={styles.section}>
-          <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+          <TouchableOpacity
+            style={styles.signOutButton}
+            onPress={handleSignOut}
+            accessibilityRole="button"
+            accessibilityLabel={t("auth.logout")}
+          >
             <Text style={styles.signOutButtonText}>{t("auth.logout")}</Text>
           </TouchableOpacity>
         </View>
@@ -244,6 +242,9 @@ export default function AccountScreen() {
             style={styles.deleteButton}
             onPress={handleDeleteAccount}
             disabled={deleting}
+            accessibilityRole="button"
+            accessibilityLabel={t("auth.deleteAccount")}
+            accessibilityState={{ busy: deleting }}
           >
             {deleting ? (
               <ActivityIndicator color={colors.destructive} />

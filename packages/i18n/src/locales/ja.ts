@@ -163,6 +163,8 @@ const ja = {
       withApple: "Appleでログイン",
       withGoogle: "Googleでログイン",
       withEmail: "メールアドレスでログイン",
+      noAccount: "アカウントをお持ちでない方は",
+      signup: "新規登録",
     },
     emailLogin: "メールでログイン",
     emailSignup: "メールで新規登録",
@@ -233,6 +235,13 @@ const ja = {
       captchaRequired: "Captcha認証が必要です。Captchaを完了してから再度お試しください。",
       networkError:
         "ネットワークエラーが発生しました。インターネット接続を確認してから再度お試しください。",
+      providerNotEnabled: "この認証プロバイダーは有効化されていません",
+      oauthError: "OAuth認証でエラーが発生しました",
+      invalidToken: "認証トークンが無効です",
+      tokenExpired: "認証トークンの有効期限が切れました",
+      invalidRefreshToken: "リフレッシュトークンが無効です",
+      sessionExpired: "セッションの有効期限が切れました。再度ログインしてください",
+      fallback: "認証エラーが発生しました。再度お試しください",
     },
   },
 

@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "../lib/supabase";
+import { localizeAuthError } from "../utils/authErrorLocalizer";
 
 export function useEmailAuth() {
   const { t } = useTranslation();
@@ -18,11 +19,7 @@ export function useEmailAuth() {
         setError(null);
         const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
         if (authError) {
-          if (authError.message.includes("Invalid login credentials")) {
-            setError(t("auth.errors.invalidCredentials"));
-          } else {
-            setError(t("auth.errors.generic"));
-          }
+          setError(localizeAuthError(authError.message, t));
         }
       } catch {
         setError(t("auth.errors.generic"));
@@ -47,11 +44,7 @@ export function useEmailAuth() {
           password,
         });
         if (authError) {
-          if (authError.message.includes("already registered")) {
-            setError(t("auth.errors.alreadyRegistered"));
-          } else {
-            setError(t("auth.errors.generic"));
-          }
+          setError(localizeAuthError(authError.message, t));
           return false;
         }
         return true;

@@ -1,7 +1,9 @@
 import { useState, useCallback } from "react";
 import * as WebBrowser from "expo-web-browser";
+import { useTranslation } from "react-i18next";
 import { getRedirectUri, extractTokensFromUrl } from "../lib/google-auth";
 import { supabase } from "../lib/supabase";
+import { localizeAuthError } from "../utils/authErrorLocalizer";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -18,16 +20,15 @@ export interface UseGoogleAuthReturn {
 }
 
 export const useGoogleAuth = (): UseGoogleAuthReturn => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const signInWithGoogle = useCallback(async (): Promise<GoogleAuthResult> => {
     if (!supabase) {
-      setError("Supabaseクライアントが初期化されていません");
-      return {
-        success: false,
-        error: new Error("Supabaseクライアントが初期化されていません"),
-      };
+      const msg = t("auth.errors.notInitialized");
+      setError(msg);
+      return { success: false, error: new Error(msg) };
     }
 
     setLoading(true);
@@ -46,11 +47,13 @@ export const useGoogleAuth = (): UseGoogleAuthReturn => {
       });
 
       if (oauthError || !data.url) {
-        const errorMessage = oauthError?.message ?? "OAuth URLの生成に失敗しました";
+        const errorMessage = oauthError
+          ? localizeAuthError(oauthError.message, t)
+          : t("auth.errors.oauthError");
         setError(errorMessage);
         return {
           success: false,
-          error: oauthError || new Error("OAuth URLの生成に失敗しました"),
+          error: oauthError || new Error(errorMessage),
         };
       }
 
@@ -60,7 +63,8 @@ export const useGoogleAuth = (): UseGoogleAuthReturn => {
         const tokens = extractTokensFromUrl(result.url);
 
         if (tokens.error) {
-          setError(tokens.error);
+          const localizedError = localizeAuthError(tokens.error, t);
+          setError(localizedError);
           return { success: false, error: new Error(tokens.error) };
         }
 
@@ -71,33 +75,31 @@ export const useGoogleAuth = (): UseGoogleAuthReturn => {
           });
 
           if (sessionError) {
-            setError(sessionError.message);
+            setError(localizeAuthError(sessionError.message, t));
             return { success: false, error: sessionError };
           }
 
           return { success: true };
         }
 
-        setError("認証トークンが取得できませんでした");
-        return {
-          success: false,
-          error: new Error("認証トークンが取得できませんでした"),
-        };
+        const msg = t("auth.errors.invalidToken");
+        setError(msg);
+        return { success: false, error: new Error(msg) };
       }
 
       if (result.type === "cancel" || result.type === "dismiss") {
-        setError("認証がキャンセルされました");
-        return {
-          success: false,
-          error: new Error("認証がキャンセルされました"),
-        };
+        const msg = t("auth.errors.cancelled");
+        setError(msg);
+        return { success: false, error: new Error(msg) };
       }
 
-      setError("認証に失敗しました");
-      return { success: false, error: new Error("認証に失敗しました") };
+      const msg = t("auth.errors.generic");
+      setError(msg);
+      return { success: false, error: new Error(msg) };
     } catch (err) {
-      const rawMessage = err instanceof Error ? err.message : "不明なエラーが発生しました";
-      setError(rawMessage);
+      const rawMessage = err instanceof Error ? err.message : "";
+      const localizedMessage = localizeAuthError(rawMessage, t);
+      setError(localizedMessage);
       return {
         success: false,
         error: err instanceof Error ? err : new Error(rawMessage),
@@ -105,7 +107,7 @@ export const useGoogleAuth = (): UseGoogleAuthReturn => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const clearError = useCallback(() => {
     setError(null);

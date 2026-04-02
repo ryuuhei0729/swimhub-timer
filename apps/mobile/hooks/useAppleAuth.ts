@@ -2,7 +2,9 @@ import { useState, useCallback } from "react";
 import * as AppleAuthentication from "expo-apple-authentication";
 import * as Crypto from "expo-crypto";
 import { Platform } from "react-native";
+import { useTranslation } from "react-i18next";
 import { supabase } from "../lib/supabase";
+import { localizeAuthError } from "../utils/authErrorLocalizer";
 
 export interface AppleAuthResult {
   success: boolean;
@@ -27,6 +29,7 @@ export interface UseAppleAuthReturn {
 }
 
 export const useAppleAuth = (): UseAppleAuthReturn => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,19 +37,15 @@ export const useAppleAuth = (): UseAppleAuthReturn => {
 
   const signInWithApple = useCallback(async (): Promise<AppleAuthResult> => {
     if (!isAvailable) {
-      setError("Apple認証はiOSでのみ利用可能です");
-      return {
-        success: false,
-        error: new Error("Apple認証はiOSでのみ利用可能です"),
-      };
+      const msg = t("auth.errors.providerNotEnabled");
+      setError(msg);
+      return { success: false, error: new Error(msg) };
     }
 
     if (!supabase) {
-      setError("Supabaseクライアントが初期化されていません");
-      return {
-        success: false,
-        error: new Error("Supabaseクライアントが初期化されていません"),
-      };
+      const msg = t("auth.errors.notInitialized");
+      setError(msg);
+      return { success: false, error: new Error(msg) };
     }
 
     setLoading(true);
@@ -55,17 +54,15 @@ export const useAppleAuth = (): UseAppleAuthReturn => {
     const APPLE_AUTH_TIMEOUT_MS = 60000;
     const timeoutId = setTimeout(() => {
       setLoading(false);
-      setError("認証がタイムアウトしました。もう一度お試しください。");
+      setError(t("auth.errors.timeout"));
     }, APPLE_AUTH_TIMEOUT_MS);
 
     try {
       const isAppleAuthAvailable = await AppleAuthentication.isAvailableAsync();
       if (!isAppleAuthAvailable) {
-        setError("このデバイスではApple認証を利用できません");
-        return {
-          success: false,
-          error: new Error("このデバイスではApple認証を利用できません"),
-        };
+        const msg = t("auth.errors.providerNotEnabled");
+        setError(msg);
+        return { success: false, error: new Error(msg) };
       }
 
       // nonce生成（リプレイ攻撃防止）
@@ -87,11 +84,9 @@ export const useAppleAuth = (): UseAppleAuthReturn => {
       });
 
       if (!credential.identityToken) {
-        setError("Apple認証トークンが取得できませんでした");
-        return {
-          success: false,
-          error: new Error("Apple認証トークンが取得できませんでした"),
-        };
+        const msg = t("auth.errors.invalidToken");
+        setError(msg);
+        return { success: false, error: new Error(msg) };
       }
 
       const fullName = credential.fullName;
@@ -106,7 +101,7 @@ export const useAppleAuth = (): UseAppleAuthReturn => {
       });
 
       if (signInError) {
-        setError(signInError.message);
+        setError(localizeAuthError(signInError.message, t));
         return { success: false, error: signInError };
       }
 
@@ -125,21 +120,19 @@ export const useAppleAuth = (): UseAppleAuthReturn => {
         (err.code === "ERR_REQUEST_UNKNOWN" &&
           err.message?.toLowerCase().includes("authorization attempt failed"))
       ) {
-        setError("認証がキャンセルされました");
-        return {
-          success: false,
-          error: new Error("認証がキャンセルされました"),
-        };
+        const msg = t("auth.errors.cancelled");
+        setError(msg);
+        return { success: false, error: new Error(msg) };
       }
 
-      const rawMessage = err.message || "不明なエラーが発生しました";
-      setError(rawMessage);
+      const localizedMessage = localizeAuthError(err.message || "", t);
+      setError(localizedMessage);
       return { success: false, error: err };
     } finally {
       clearTimeout(timeoutId);
       setLoading(false);
     }
-  }, [isAvailable]);
+  }, [isAvailable, t]);
 
   const clearError = useCallback(() => {
     setError(null);
