@@ -1,5 +1,5 @@
 import "../lib/i18n";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -7,9 +7,10 @@ import { AuthProvider, useAuth } from "../contexts/AuthProvider";
 import { colors } from "../lib/theme";
 
 function AuthGate() {
-  const { isAuthenticated, loading } = useAuth();
+  const { user, isAuthenticated, loading, continueAsGuest } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const autoGuestDone = useRef(false);
 
   useEffect(() => {
     if (loading) return;
@@ -17,11 +18,17 @@ function AuthGate() {
     const inAuthGroup = segments[0] === "(auth)";
 
     if (!isAuthenticated && !inAuthGroup) {
-      router.replace("/(auth)/welcome");
-    } else if (isAuthenticated && inAuthGroup) {
+      // 未認証・非authグループ → 自動ゲストモード
+      if (!autoGuestDone.current) {
+        autoGuestDone.current = true;
+        continueAsGuest();
+      }
+    } else if (!!user && inAuthGroup) {
+      // ログイン済みユーザーのみauthグループからリダイレクト
+      // ゲストモードではログイン画面にアクセスできるようにする
       router.replace("/(app)");
     }
-  }, [isAuthenticated, loading, segments, router]);
+  }, [user, isAuthenticated, loading, segments, router, continueAsGuest]);
 
   if (loading) {
     return (

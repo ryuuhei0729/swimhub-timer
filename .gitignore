@@ -2,6 +2,7 @@
 
 # turbo
 .turbo/
+package-lock.json
 
 # dependencies
 node_modules

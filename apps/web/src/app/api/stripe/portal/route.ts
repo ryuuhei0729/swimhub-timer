@@ -15,18 +15,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
     }
 
-    // 2. Stripe Customer を検索
+    // 2. Stripe Customer を取得（DB キャッシュ優先）
     const stripe = getStripe();
 
-    const existingCustomers = await stripe.customers.search({
-      query: `metadata["supabase_user_id"]:"${user.id}"`,
-    });
+    const { data: subData } = await supabase
+      .from("user_subscriptions")
+      .select("stripe_customer_id")
+      .eq("id", user.id)
+      .single();
 
-    if (existingCustomers.data.length === 0) {
-      return NextResponse.json({ error: "Stripe の顧客情報が見つかりません" }, { status: 404 });
+    let customerId: string | null = subData?.stripe_customer_id ?? null;
+
+    if (!customerId) {
+      const existingCustomers = await stripe.customers.search({
+        query: `metadata["supabase_user_id"]:"${user.id}"`,
+      });
+
+      if (existingCustomers.data.length === 0) {
+        return NextResponse.json({ error: "Stripe の顧客情報が見つかりません" }, { status: 404 });
+      }
+
+      customerId = existingCustomers.data[0].id;
+
+      await supabase
+        .from("user_subscriptions")
+        .update({ stripe_customer_id: customerId })
+        .eq("id", user.id);
     }
-
-    const customerId = existingCustomers.data[0].id;
 
     // 3. Customer Portal Session 作成
     const origin = new URL(request.url).origin;

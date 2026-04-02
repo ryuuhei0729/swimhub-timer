@@ -1,12 +1,19 @@
 import type { UserPlan, SubscriptionStatus } from "../types/auth";
 import type { ExportResolution } from "../types/video";
 
-export function isActivePremium(plan: UserPlan, status: SubscriptionStatus | null): boolean {
-  return plan === "premium" && (status === "active" || status === "trialing");
+export function isActivePremium(
+  plan: UserPlan,
+  status: SubscriptionStatus | null,
+  premiumExpiresAt?: string | null,
+): boolean {
+  if (plan !== "premium") return false;
+  if (status !== "active" && status !== "trialing") return false;
+  if (premiumExpiresAt && new Date(premiumExpiresAt) <= new Date()) return false;
+  return true;
 }
 
 export function getAvailableResolutions(plan: UserPlan): ExportResolution[] {
-  return plan === "guest" ? ["720"] : ["720", "1080", "original"];
+  return plan === "premium" ? ["720", "1080", "original"] : ["720"];
 }
 
 /** Maximum number of split times a user can record. `Infinity` means unlimited. */

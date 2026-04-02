@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -19,33 +19,52 @@ import { colors, spacing, radius, fontSize } from "../../lib/theme";
 export default function PaywallScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { plan, refreshSubscription } = useAuth();
+  const { plan, subscription, refreshSubscription } = useAuth();
 
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [selectedPkg, setSelectedPkg] = useState<PurchasesPackage | null>(null);
   const [loadingOfferings, setLoadingOfferings] = useState(true);
+  const [offeringsError, setOfferingsError] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
 
+  // トライアル済みかどうか（subscription に trialEnd があれば既にトライアル経験あり）
+  const hasTrialed = subscription?.trialEnd !== null && subscription?.trialEnd !== undefined;
+  // 現在トライアル中かどうか
+  const isTrialing = subscription?.status === "trialing";
+  // トライアル残日数
+  const trialDaysRemaining = (() => {
+    if (!isTrialing || !subscription?.trialEnd) return 0;
+    const end = new Date(subscription.trialEnd).getTime();
+    const now = Date.now();
+    return Math.max(0, Math.ceil((end - now) / (1000 * 60 * 60 * 24)));
+  })();
+
   // オファリング取得
-  useEffect(() => {
-    (async () => {
-      try {
-        const offerings = await getOfferings();
-        const current = offerings?.current;
-        if (current?.availablePackages) {
-          setPackages(current.availablePackages);
-          // デフォルトで年額を選択（なければ最初のパッケージ）
-          const annual = current.annual;
-          setSelectedPkg(annual ?? current.availablePackages[0] ?? null);
-        }
-      } catch {
-        // オファリング取得失敗
-      } finally {
-        setLoadingOfferings(false);
+  const fetchOfferings = useCallback(async () => {
+    setLoadingOfferings(true);
+    setOfferingsError(false);
+    try {
+      const offerings = await getOfferings();
+      const current = offerings?.current;
+      if (current?.availablePackages) {
+        setPackages(current.availablePackages);
+        // デフォルトで年額を選択（なければ最初のパッケージ）
+        const annual = current.annual;
+        setSelectedPkg(annual ?? current.availablePackages[0] ?? null);
+      } else {
+        setOfferingsError(true);
       }
-    })();
+    } catch {
+      setOfferingsError(true);
+    } finally {
+      setLoadingOfferings(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchOfferings();
+  }, [fetchOfferings]);
 
   // 月額パッケージと年額パッケージを特定
   const monthlyPkg = packages.find(
@@ -126,6 +145,15 @@ export default function PaywallScreen() {
           <Text style={styles.subtitle}>{t("paywall.subtitle")}</Text>
         </View>
 
+        {/* トライアル中の表示 */}
+        {isTrialing && (
+          <View style={styles.trialBanner}>
+            <Text style={styles.trialBannerText}>
+              {t("paywall.trialRemaining", { days: trialDaysRemaining })}
+            </Text>
+          </View>
+        )}
+
         {/* Premium のメリット */}
         <View style={styles.benefitsCard}>
           <Text style={styles.benefitsTitle}>{t("paywall.benefitsTitle")}</Text>
@@ -145,7 +173,16 @@ export default function PaywallScreen() {
         {loadingOfferings ? (
           <ActivityIndicator style={styles.loader} color={colors.primary} />
         ) : packages.length === 0 ? (
-          <Text style={styles.noPackagesText}>{t("paywall.noPackages")}</Text>
+          <View style={styles.noPackagesContainer}>
+            <Text style={styles.noPackagesText}>
+              {offeringsError
+                ? t("paywall.offeringsError")
+                : t("paywall.noPackages")}
+            </Text>
+            <TouchableOpacity style={styles.retryButton} onPress={fetchOfferings}>
+              <Text style={styles.retryButtonText}>{t("common.retry")}</Text>
+            </TouchableOpacity>
+          </View>
         ) : (
           <View style={styles.packagesContainer}>
             {/* 年額プラン */}
@@ -224,9 +261,15 @@ export default function PaywallScreen() {
             {purchasing ? (
               <ActivityIndicator color={colors.white} />
             ) : (
-              <Text style={styles.purchaseButtonText}>{t("paywall.subscribe")}</Text>
+              <Text style={styles.purchaseButtonText}>
+                {!hasTrialed ? t("paywall.startTrial") : t("paywall.subscribe")}
+              </Text>
             )}
           </TouchableOpacity>
+        )}
+
+        {!hasTrialed && (
+          <Text style={styles.trialNote}>{t("paywall.trialNote")}</Text>
         )}
 
         {/* リストアボタン */}
@@ -321,11 +364,27 @@ const styles = StyleSheet.create({
   loader: {
     marginVertical: spacing.xl,
   },
+  noPackagesContainer: {
+    alignItems: "center",
+    paddingVertical: spacing.xl,
+    gap: spacing.md,
+  },
   noPackagesText: {
     textAlign: "center",
     color: colors.muted,
     fontSize: fontSize.md,
-    marginVertical: spacing.xl,
+  },
+  retryButton: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  retryButtonText: {
+    color: colors.primary,
+    fontSize: fontSize.md,
+    fontWeight: "600",
   },
   packagesContainer: {
     marginBottom: spacing.lg,
@@ -372,6 +431,27 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.muted,
     marginTop: 2,
+  },
+  trialBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#ECFDF5",
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  trialBannerText: {
+    fontSize: fontSize.md,
+    color: colors.success,
+    fontWeight: "600",
+  },
+  trialNote: {
+    fontSize: fontSize.xs,
+    color: colors.muted,
+    textAlign: "center",
+    lineHeight: 18,
+    marginBottom: spacing.md,
   },
   purchaseButton: {
     backgroundColor: colors.primary,

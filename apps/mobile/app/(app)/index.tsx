@@ -56,8 +56,14 @@ export default function ImportScreen() {
         <Image source={require("../../assets/icon.png")} style={styles.appIcon} />
         <View style={styles.headerRow}>
           <Text style={styles.title}>{t("common.appName")}</Text>
-          <Pressable style={styles.accountButton} onPress={() => router.push("/account")}>
-            <Ionicons name="person-circle-outline" size={28} color={colors.muted} />
+          <Pressable style={styles.accountButton} onPress={() => {
+          if (user) {
+            router.push("/account");
+          } else {
+            router.push("/(auth)/login-method");
+          }
+        }}>
+            <Ionicons name={user ? "person-circle-outline" : "log-in-outline"} size={28} color={colors.muted} />
           </Pressable>
         </View>
         <Text style={styles.subtitle}>{t("import.subtitle")}</Text>

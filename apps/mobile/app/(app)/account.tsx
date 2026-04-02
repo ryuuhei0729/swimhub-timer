@@ -35,44 +35,61 @@ export default function AccountScreen() {
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert(t("auth.deleteAccount"), t("auth.deleteAccountConfirm"), [
-      { text: t("common.cancel"), style: "cancel" },
-      {
-        text: t("auth.deleteAccount"),
-        style: "destructive",
-        onPress: async () => {
-          setDeleting(true);
-          try {
-            const session = await supabase?.auth.getSession();
-            const accessToken = session?.data.session?.access_token;
-            if (!accessToken) {
-              throw new Error("No session");
-            }
+    Alert.alert(
+      t("auth.deleteAccount"),
+      t("auth.deleteAccountStep1"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("auth.deleteAccountNext"),
+          style: "destructive",
+          onPress: () => {
+            Alert.alert(
+              t("auth.deleteAccountFinal"),
+              t("auth.deleteAccountStep2"),
+              [
+                { text: t("common.cancel"), style: "cancel" },
+                {
+                  text: t("auth.deleteAccount"),
+                  style: "destructive",
+                  onPress: async () => {
+                    setDeleting(true);
+                    try {
+                      const session = await supabase?.auth.getSession();
+                      const accessToken = session?.data.session?.access_token;
+                      if (!accessToken) {
+                        throw new Error("No session");
+                      }
 
-            const response = await fetch(`${WEB_API_URL}/api/user/delete`, {
-              method: "DELETE",
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "Content-Type": "application/json",
-              },
-            });
+                      const response = await fetch(`${WEB_API_URL}/api/user/delete`, {
+                        method: "DELETE",
+                        headers: {
+                          Authorization: `Bearer ${accessToken}`,
+                          "Content-Type": "application/json",
+                        },
+                      });
 
-            if (!response.ok) {
-              const body = await response.json().catch(() => ({}));
-              throw new Error(body.error || t("auth.errors.deleteAccountFailed"));
-            }
+                      if (!response.ok) {
+                        const body = await response.json().catch(() => ({}));
+                        throw new Error(body.error || t("auth.errors.deleteAccountFailed"));
+                      }
 
-            await signOut();
-          } catch (err) {
-            const message =
-              err instanceof Error ? err.message : t("auth.errors.deleteAccountFailed");
-            Alert.alert(t("common.error"), message);
-          } finally {
-            setDeleting(false);
-          }
+                      await signOut();
+                    } catch (err) {
+                      const message =
+                        err instanceof Error ? err.message : t("auth.errors.deleteAccountFailed");
+                      Alert.alert(t("common.error"), message);
+                    } finally {
+                      setDeleting(false);
+                    }
+                  },
+                },
+              ],
+            );
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   // リストア購入処理
