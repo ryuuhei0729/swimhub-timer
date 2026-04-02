@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { View, StyleSheet, ScrollView, Pressable, Text } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,6 +15,7 @@ export default function EditorScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const startTime = useEditorStore((s) => s.startTime);
+  const isFinished = useEditorStore((s) => s.isFinished);
   const [activeTab, setActiveTab] = useState("signal");
 
   const TABS = [
@@ -41,6 +42,21 @@ export default function EditorScreen() {
     },
   ];
 
+  const handleSignalConfirm = useCallback(() => {
+    setActiveTab("design");
+  }, []);
+
+  const handleDesignConfirm = useCallback(() => {
+    setActiveTab("splits");
+  }, []);
+
+  // Bottom bar button logic:
+  // - design tab + startTime set: "このデザインで確定" → go to splits
+  // - splits tab + isFinished: "書き出し" → go to export
+  // - splits tab + startTime set + !isFinished: show Finish (handled inside SplitsPanel)
+  const showDesignConfirm = activeTab === "design" && startTime !== null;
+  const showExport = activeTab === "splits" && isFinished;
+
   return (
     <View style={styles.container}>
       {/* Video Preview (top half) */}
@@ -57,13 +73,23 @@ export default function EditorScreen() {
         contentContainerStyle={styles.tabContentInner}
         keyboardShouldPersistTaps="handled"
       >
-        {activeTab === "signal" && <SignalDetector />}
+        {activeTab === "signal" && <SignalDetector onConfirm={handleSignalConfirm} />}
         {activeTab === "design" && <StopwatchDesigner />}
         {activeTab === "splits" && <SplitsPanel />}
       </ScrollView>
 
-      {/* Export button */}
-      {startTime !== null && (
+      {/* Bottom action bar */}
+      {showDesignConfirm && (
+        <View style={styles.exportBar}>
+          <Pressable
+            style={({ pressed }) => [styles.exportBtn, pressed && styles.exportBtnPressed]}
+            onPress={handleDesignConfirm}
+          >
+            <Text style={styles.exportBtnText}>{t("editor.confirmDesign")}</Text>
+          </Pressable>
+        </View>
+      )}
+      {showExport && (
         <View style={styles.exportBar}>
           <Pressable
             style={({ pressed }) => [styles.exportBtn, pressed && styles.exportBtnPressed]}

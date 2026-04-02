@@ -54,42 +54,52 @@ export default function ImportScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Image source={require("../../assets/icon.png")} style={styles.appIcon} />
-        <View style={styles.headerRow}>
-          <Text style={styles.title}>{t("common.appName")}</Text>
-          <Pressable style={styles.accountButton} onPress={() => {
-          if (user) {
-            router.push("/account");
-          } else {
-            router.push("/(auth)/login-method");
-          }
-        }}>
-            <Ionicons name={user ? "person-circle-outline" : "log-in-outline"} size={28} color={colors.muted} />
-          </Pressable>
-        </View>
+        <Text style={styles.title}>{t("common.appName")}</Text>
         <Text style={styles.subtitle}>{t("import.subtitle")}</Text>
+
+        {/* Auth action bar */}
+        {user ? (
+          <Pressable
+            style={styles.accountChip}
+            onPress={() => router.push("/account")}
+          >
+            <Ionicons name="person-circle" size={18} color={colors.primary} />
+            <Text style={styles.accountChipText}>{t("auth.account")}</Text>
+          </Pressable>
+        ) : (
+          <View style={styles.guestBar}>
+            <Text style={styles.guestLabel}>{t("auth.guestMode")}</Text>
+            <Pressable
+              style={styles.loginChip}
+              onPress={() => router.push("/(auth)/login-method")}
+            >
+              <Text style={styles.loginChipText}>{t("auth.login")}</Text>
+              <Ionicons name="arrow-forward" size={14} color={colors.white} />
+            </Pressable>
+          </View>
+        )}
       </View>
 
-      <View style={styles.card}>
+      <Pressable
+        style={({ pressed }) => [
+          styles.card,
+          pressed && styles.cardPressed,
+          loading && styles.cardDisabled,
+        ]}
+        onPress={pickVideo}
+        disabled={loading}
+      >
         <View style={styles.iconCircle}>
           <Ionicons name="videocam-outline" size={26} color={colors.muted} />
         </View>
-        <Text style={styles.cardTitle}>{t("import.selectVideo")}</Text>
         <Text style={styles.cardDescription}>{t("import.selectVideoDesc")}</Text>
 
-        <Pressable
-          style={({ pressed }) => [
-            styles.button,
-            pressed && styles.buttonPressed,
-            loading && styles.buttonDisabled,
-          ]}
-          onPress={pickVideo}
-          disabled={loading}
-        >
+        <View style={styles.button}>
           <Text style={styles.buttonText}>
             {loading ? t("import.loading") : t("import.selectVideo")}
           </Text>
-        </Pressable>
-      </View>
+        </View>
+      </Pressable>
 
       <View style={styles.steps}>
         {steps.map((label, i) => (
@@ -123,23 +133,53 @@ const styles = StyleSheet.create({
     height: 180,
     marginBottom: spacing.md,
   },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    position: "relative",
-  },
   title: {
     fontSize: fontSize.xxl,
     fontWeight: "800",
     color: colors.text,
     letterSpacing: -0.5,
   },
-  accountButton: {
-    position: "absolute",
-    right: 0,
-    padding: 4,
+  accountChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#EFF6FF",
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    marginTop: spacing.lg,
+    borderWidth: 1,
+    borderColor: "#BFDBFE",
+  },
+  accountChipText: {
+    fontSize: fontSize.sm,
+    fontWeight: "600",
+    color: colors.primary,
+  },
+  guestBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: spacing.lg,
+  },
+  guestLabel: {
+    fontSize: fontSize.xs,
+    color: colors.muted,
+    fontWeight: "500",
+  },
+  loginChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: colors.primary,
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+  },
+  loginChipText: {
+    fontSize: fontSize.sm,
+    fontWeight: "600",
+    color: colors.white,
   },
   subtitle: {
     fontSize: fontSize.sm,
@@ -168,10 +208,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  cardTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: "700",
-    color: colors.text,
+  cardPressed: {
+    opacity: 0.85,
+  },
+  cardDisabled: {
+    opacity: 0.5,
   },
   cardDescription: {
     fontSize: fontSize.sm,

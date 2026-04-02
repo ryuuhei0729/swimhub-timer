@@ -88,13 +88,15 @@ const en: TranslationShape = {
     title: "Splits",
     record: "Record",
     finish: "Finish",
+    edit: "Edit",
     finalTime: "Final Time",
     distancePlaceholder: "Distance (m)",
     memoPlaceholder: "Memo (optional)",
     emptyHint: "Pause the video, enter distance,\nand tap Record to log a split",
     lap: "lap",
     count: "{{count}}",
-    limitReached: "Split limit ({{max}}) reached. Upgrade to Premium for unlimited splits.",
+    limitReached: "Split limit ({{max}}) reached.",
+    upgradeToPremium: "Upgrade to Premium for unlimited splits →",
   },
 
   exportScreen: {
@@ -136,10 +138,11 @@ const en: TranslationShape = {
   },
 
   editor: {
-    title: "Editor",
-    tabSignal: "Signal",
+    title: "Detect & Design",
+    tabSignal: "Start Detection",
     tabDesign: "Design",
     tabSplits: "Splits",
+    confirmDesign: "Confirm Design",
   },
 
   auth: {
@@ -185,6 +188,7 @@ const en: TranslationShape = {
     planPremium: "Premium",
     premiumOnly: "Premium only",
     continueAsGuest: "Continue as Guest",
+    guestMode: "Guest mode",
     deleteAccount: "Delete Account",
     deleteAccountConfirm:
       "Deleting your account will permanently remove all your data. This action cannot be undone.",
@@ -346,9 +350,9 @@ const en: TranslationShape = {
     title: "Upgrade to Premium",
     subtitle: "Unlock all features",
     benefitsTitle: "Premium Benefits",
-    benefit1: "Ad-free experience",
-    benefit2: "Unlimited exports",
-    benefit3: "Access to all features",
+    benefit1: "Unlimited exports",
+    benefit2: "High-quality export (1080p & Original)",
+    benefit3: "Ad-free experience",
     annual: "Annual Plan",
     monthly: "Monthly Plan",
     year: "year",

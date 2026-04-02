@@ -1,13 +1,19 @@
-import { View, Text, TextInput, StyleSheet, Pressable, FlatList } from "react-native";
+import { View, Text, TextInput, StyleSheet, Pressable, FlatList, Keyboard } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useTranslation } from "react-i18next";
+import { useRouter } from "expo-router";
 import { useEditorStore } from "../../stores/editor-store";
 import { useAuth } from "../../contexts/AuthProvider";
 import { formatTime, getMaxSplitCount } from "@swimhub-timer/shared";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 
-export function SplitsPanel() {
+interface SplitsPanelProps {
+  onFinish?: () => void;
+}
+
+export function SplitsPanel({ onFinish }: SplitsPanelProps) {
   const { t } = useTranslation();
+  const router = useRouter();
   const { plan } = useAuth();
   const maxSplits = getMaxSplitCount(plan);
   const {
@@ -33,6 +39,7 @@ export function SplitsPanel() {
 
   const handleRecord = () => {
     if (splitLimitReached) return;
+    Keyboard.dismiss();
     recordSplit(elapsed);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
@@ -40,6 +47,12 @@ export function SplitsPanel() {
   const handleFinish = () => {
     finishRecording(elapsed, currentMemoInput);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    onFinish?.();
+  };
+
+  const handleEdit = () => {
+    // Revert isFinished to go back to editing mode
+    resetSplits();
   };
 
   const adjustVideo = (delta: number) => {
@@ -49,16 +62,6 @@ export function SplitsPanel() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.sectionTitle}>{t("splits.title")}</Text>
-        {(splitTimes.length > 0 || isFinished) && (
-          <Pressable onPress={resetSplits}>
-            <Text style={styles.resetText}>{t("common.reset")}</Text>
-          </Pressable>
-        )}
-      </View>
-
       {/* Recording controls */}
       {startTime !== null && !isFinished && (
         <View style={styles.recordingCard}>
@@ -79,7 +82,7 @@ export function SplitsPanel() {
             ))}
           </View>
 
-          {/* Distance + Record */}
+          {/* Distance + Record + Memo (single row) */}
           <View style={styles.inputRow}>
             <TextInput
               style={styles.distanceInput}
@@ -99,25 +102,29 @@ export function SplitsPanel() {
             >
               <Text style={styles.recordBtnText}>{t("splits.record")}</Text>
             </Pressable>
+            <TextInput
+              style={styles.memoInput}
+              placeholder={t("splits.memoPlaceholder")}
+              placeholderTextColor={colors.muted}
+              value={currentMemoInput}
+              onChangeText={setCurrentMemoInput}
+            />
           </View>
 
           {/* Split limit message */}
           {splitLimitReached && (
-            <View style={styles.limitBanner}>
+            <Pressable
+              style={styles.limitBanner}
+              onPress={() => router.push("/(app)/paywall")}
+            >
               <Text style={styles.limitBannerText}>
                 {t("splits.limitReached", { max: maxSplits })}
               </Text>
-            </View>
+              <Text style={styles.limitBannerLink}>
+                {t("splits.upgradeToPremium")}
+              </Text>
+            </Pressable>
           )}
-
-          {/* Memo */}
-          <TextInput
-            style={styles.memoInput}
-            placeholder={t("splits.memoPlaceholder")}
-            placeholderTextColor={colors.muted}
-            value={currentMemoInput}
-            onChangeText={setCurrentMemoInput}
-          />
 
           {/* Finish */}
           <Pressable style={styles.finishBtn} onPress={handleFinish}>
@@ -137,8 +144,8 @@ export function SplitsPanel() {
             <Text style={styles.finishTimeText}>{formatTime(finishTime)}</Text>
             {finishMemo ? <Text style={styles.finishMemoText}>{finishMemo}</Text> : null}
           </Pressable>
-          <Pressable style={styles.resetBtn} onPress={resetSplits}>
-            <Text style={styles.resetBtnText}>{t("common.reset")}</Text>
+          <Pressable style={styles.editBtn} onPress={handleEdit}>
+            <Text style={styles.editBtnText}>{t("splits.edit")}</Text>
           </Pressable>
         </>
       )}
@@ -165,6 +172,9 @@ export function SplitsPanel() {
                   {t("splits.lap")}: {formatTime(item.lapTime)}
                 </Text>
               )}
+              {item.memo ? (
+                <Text style={styles.splitMemo} numberOfLines={1}>{item.memo}</Text>
+              ) : null}
               {!isFinished && (
                 <Pressable style={styles.deleteBtn} onPress={() => removeSplit(index)}>
                   <Text style={styles.deleteBtnText}>×</Text>
@@ -182,20 +192,6 @@ const styles = StyleSheet.create({
   container: {
     gap: spacing.lg,
     padding: spacing.lg,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  sectionTitle: {
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  resetText: {
-    fontSize: fontSize.xs,
-    color: colors.muted,
   },
   recordingCard: {
     backgroundColor: colors.surface,
@@ -236,12 +232,13 @@ const styles = StyleSheet.create({
   },
   inputRow: {
     flexDirection: "row",
-    gap: spacing.sm,
+    gap: spacing.xs,
+    alignItems: "center",
   },
   distanceInput: {
-    flex: 1,
+    width: 72,
     height: 36,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.sm,
     fontSize: fontSize.sm,
     fontFamily: "monospace",
     color: colors.text,
@@ -249,10 +246,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.sm,
+    textAlign: "center",
   },
   recordBtn: {
     height: 36,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     backgroundColor: colors.primaryMuted,
     borderWidth: 1,
     borderColor: colors.primaryBorder,
@@ -269,8 +267,9 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   memoInput: {
+    flex: 1,
     height: 36,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.sm,
     fontSize: fontSize.sm,
     color: colors.text,
     backgroundColor: colors.surface,
@@ -314,6 +313,19 @@ const styles = StyleSheet.create({
     color: colors.muted,
     marginTop: spacing.xs,
   },
+  editBtn: {
+    height: 40,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  editBtnText: {
+    fontSize: fontSize.sm,
+    fontWeight: "600",
+    color: colors.muted,
+  },
   emptyText: {
     fontSize: fontSize.sm,
     color: colors.muted,
@@ -345,7 +357,6 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   splitTime: {
-    flex: 1,
     fontSize: fontSize.sm,
     fontFamily: "monospace",
     fontWeight: "600",
@@ -358,6 +369,12 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontVariant: ["tabular-nums"],
   },
+  splitMemo: {
+    flex: 1,
+    fontSize: fontSize.xs,
+    color: colors.muted,
+    textAlign: "right",
+  },
   deleteBtn: {
     width: 24,
     height: 24,
@@ -367,19 +384,6 @@ const styles = StyleSheet.create({
   },
   deleteBtnText: {
     fontSize: 16,
-    color: colors.muted,
-  },
-  resetBtn: {
-    height: 40,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  resetBtnText: {
-    fontSize: fontSize.sm,
-    fontWeight: "600",
     color: colors.muted,
   },
   limitBanner: {
@@ -393,5 +397,13 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xs,
     color: "#92400E",
     lineHeight: 16,
+  },
+  limitBannerLink: {
+    fontSize: fontSize.xs,
+    color: "#D97706",
+    fontWeight: "600",
+    lineHeight: 16,
+    marginTop: spacing.xs,
+    textDecorationLine: "underline",
   },
 });

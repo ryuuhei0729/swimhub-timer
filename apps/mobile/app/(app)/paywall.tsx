@@ -9,26 +9,29 @@ import {
   StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import type { PurchasesPackage } from "react-native-purchases";
 import { useAuth } from "../../contexts/AuthProvider";
 import { getOfferings, purchasePackage, restorePurchases } from "../../lib/revenucat";
-import { colors, spacing, radius, fontSize } from "../../lib/theme";
+
+type BillingPeriod = "monthly" | "annual";
 
 export default function PaywallScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { plan, subscription, refreshSubscription } = useAuth();
 
-  const [packages, setPackages] = useState<PurchasesPackage[]>([]);
-  const [selectedPkg, setSelectedPkg] = useState<PurchasesPackage | null>(null);
   const [loadingOfferings, setLoadingOfferings] = useState(true);
-  const [offeringsError, setOfferingsError] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState<BillingPeriod>("annual");
+  const [monthlyPackage, setMonthlyPackage] = useState<PurchasesPackage | null>(null);
+  const [annualPackage, setAnnualPackage] = useState<PurchasesPackage | null>(null);
+  const [offeringsError, setOfferingsError] = useState(false);
 
-  // トライアル済みかどうか（subscription に trialEnd があれば既にトライアル経験あり）
+  // トライアル済みかどうか
   const hasTrialed = subscription?.trialEnd !== null && subscription?.trialEnd !== undefined;
   // 現在トライアル中かどうか
   const isTrialing = subscription?.status === "trialing";
@@ -40,18 +43,16 @@ export default function PaywallScreen() {
     return Math.max(0, Math.ceil((end - now) / (1000 * 60 * 60 * 24)));
   })();
 
-  // オファリング取得
+  // オファリングを取得
   const fetchOfferings = useCallback(async () => {
     setLoadingOfferings(true);
     setOfferingsError(false);
     try {
       const offerings = await getOfferings();
       const current = offerings?.current;
-      if (current?.availablePackages) {
-        setPackages(current.availablePackages);
-        // デフォルトで年額を選択（なければ最初のパッケージ）
-        const annual = current.annual;
-        setSelectedPkg(annual ?? current.availablePackages[0] ?? null);
+      if (current) {
+        setMonthlyPackage(current.monthly ?? null);
+        setAnnualPackage(current.annual ?? null);
       } else {
         setOfferingsError(true);
       }
@@ -66,30 +67,26 @@ export default function PaywallScreen() {
     fetchOfferings();
   }, [fetchOfferings]);
 
-  // 月額パッケージと年額パッケージを特定
-  const monthlyPkg = packages.find(
-    (p) => p.packageType === "MONTHLY" || p.identifier === "$rc_monthly",
-  );
-  const annualPkg = packages.find(
-    (p) => p.packageType === "ANNUAL" || p.identifier === "$rc_annual",
-  );
-
-  // 年額の割引率を計算
-  const savingsPercent = (() => {
-    if (!monthlyPkg || !annualPkg) return null;
-    const monthlyAnnualCost = monthlyPkg.product.price * 12;
-    const annualCost = annualPkg.product.price;
-    if (monthlyAnnualCost <= 0) return null;
-    return Math.round(((monthlyAnnualCost - annualCost) / monthlyAnnualCost) * 100);
+  // 年額プランの割引率を計算
+  const annualSavingsPercent = (() => {
+    if (!monthlyPackage || !annualPackage) return 0;
+    const monthlyAnnualized = monthlyPackage.product.price * 12;
+    const annualPrice = annualPackage.product.price;
+    if (monthlyAnnualized <= 0) return 0;
+    return Math.round(((monthlyAnnualized - annualPrice) / monthlyAnnualized) * 100);
   })();
+
+  const hasPackages = monthlyPackage !== null || annualPackage !== null;
 
   // 購入処理
   const handlePurchase = async () => {
-    if (!selectedPkg) return;
+    const pkg = selectedPeriod === "monthly" ? monthlyPackage : annualPackage;
+    if (!pkg) return;
+
     setPurchasing(true);
     try {
-      const customerInfo = await purchasePackage(selectedPkg);
-      if (customerInfo) {
+      const info = await purchasePackage(pkg);
+      if (info) {
         await refreshSubscription();
         Alert.alert(t("paywall.purchaseSuccess"), t("paywall.purchaseSuccessMessage"), [
           { text: "OK", onPress: () => router.back() },
@@ -106,15 +103,11 @@ export default function PaywallScreen() {
   const handleRestore = async () => {
     setRestoring(true);
     try {
-      const customerInfo = await restorePurchases();
-      if (customerInfo) {
-        await refreshSubscription();
-        Alert.alert(t("paywall.restoreSuccess"), t("paywall.restoreSuccessMessage"), [
-          { text: "OK", onPress: () => router.back() },
-        ]);
-      } else {
-        Alert.alert(t("paywall.restoreEmpty"), t("paywall.restoreEmptyMessage"));
-      }
+      await restorePurchases();
+      await refreshSubscription();
+      Alert.alert(t("paywall.restoreSuccess"), t("paywall.restoreSuccessMessage"), [
+        { text: "OK", onPress: () => router.back() },
+      ]);
     } catch {
       Alert.alert(t("common.error"), t("paywall.restoreFailed"));
     } finally {
@@ -122,15 +115,25 @@ export default function PaywallScreen() {
     }
   };
 
-  // すでに Premium なら案内を表示
+  if (loadingOfferings) {
+    return (
+      <SafeAreaView style={styles.container} edges={["bottom"]}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#2563EB" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // すでに Premium
   if (plan === "premium") {
     return (
       <SafeAreaView style={styles.container} edges={["bottom"]}>
-        <View style={styles.centeredContent}>
+        <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+          <Feather name="x" size={24} color="#374151" />
+        </TouchableOpacity>
+        <View style={styles.loadingContainer}>
           <Text style={styles.alreadyPremiumText}>{t("paywall.alreadyPremium")}</Text>
-          <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
-            <Text style={styles.closeButtonText}>{t("common.close")}</Text>
-          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -138,9 +141,15 @@ export default function PaywallScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      {/* 閉じるボタン */}
+      <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+        <Feather name="x" size={24} color="#374151" />
+      </TouchableOpacity>
+
+      <ScrollView contentContainerStyle={styles.content}>
         {/* ヘッダー */}
         <View style={styles.header}>
+          <Feather name="zap" size={40} color="#F59E0B" />
           <Text style={styles.title}>{t("paywall.title")}</Text>
           <Text style={styles.subtitle}>{t("paywall.subtitle")}</Text>
         </View>
@@ -148,32 +157,31 @@ export default function PaywallScreen() {
         {/* トライアル中の表示 */}
         {isTrialing && (
           <View style={styles.trialBanner}>
+            <Feather name="clock" size={16} color="#059669" />
             <Text style={styles.trialBannerText}>
               {t("paywall.trialRemaining", { days: trialDaysRemaining })}
             </Text>
           </View>
         )}
 
-        {/* Premium のメリット */}
-        <View style={styles.benefitsCard}>
-          <Text style={styles.benefitsTitle}>{t("paywall.benefitsTitle")}</Text>
+        {/* 特典一覧 */}
+        <View style={styles.benefitsContainer}>
           {[
             t("paywall.benefit1"),
             t("paywall.benefit2"),
             t("paywall.benefit3"),
           ].map((benefit, i) => (
             <View key={i} style={styles.benefitRow}>
-              <Text style={styles.benefitCheck}>✓</Text>
+              <Feather name="check-circle" size={18} color="#059669" />
               <Text style={styles.benefitText}>{benefit}</Text>
             </View>
           ))}
         </View>
 
         {/* プラン選択 */}
-        {loadingOfferings ? (
-          <ActivityIndicator style={styles.loader} color={colors.primary} />
-        ) : packages.length === 0 ? (
+        {!loadingOfferings && !hasPackages && (
           <View style={styles.noPackagesContainer}>
+            <Feather name="alert-circle" size={24} color="#9CA3AF" />
             <Text style={styles.noPackagesText}>
               {offeringsError
                 ? t("paywall.offeringsError")
@@ -183,83 +191,81 @@ export default function PaywallScreen() {
               <Text style={styles.retryButtonText}>{t("common.retry")}</Text>
             </TouchableOpacity>
           </View>
-        ) : (
-          <View style={styles.packagesContainer}>
-            {/* 年額プラン */}
-            {annualPkg && (
-              <TouchableOpacity
-                style={[
-                  styles.packageCard,
-                  selectedPkg?.identifier === annualPkg.identifier && styles.packageCardSelected,
-                ]}
-                onPress={() => setSelectedPkg(annualPkg)}
-              >
-                <View style={styles.packageHeader}>
-                  <Text style={styles.packageTitle}>{t("paywall.annual")}</Text>
-                  {savingsPercent && savingsPercent > 0 && (
-                    <View style={styles.savingsBadge}>
-                      <Text style={styles.savingsText}>
-                        {t("paywall.savePercent", { percent: savingsPercent })}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-                <Text style={styles.packagePrice}>{annualPkg.product.priceString} / {t("paywall.year")}</Text>
-                <Text style={styles.packageSubprice}>
-                  {t("paywall.perMonth", {
-                    price: (annualPkg.product.price / 12).toFixed(0),
-                    currency: annualPkg.product.currencyCode,
-                  })}
-                </Text>
-              </TouchableOpacity>
-            )}
-
-            {/* 月額プラン */}
-            {monthlyPkg && (
-              <TouchableOpacity
-                style={[
-                  styles.packageCard,
-                  selectedPkg?.identifier === monthlyPkg.identifier && styles.packageCardSelected,
-                ]}
-                onPress={() => setSelectedPkg(monthlyPkg)}
-              >
-                <Text style={styles.packageTitle}>{t("paywall.monthly")}</Text>
-                <Text style={styles.packagePrice}>{monthlyPkg.product.priceString} / {t("paywall.month")}</Text>
-              </TouchableOpacity>
-            )}
-
-            {/* その他のパッケージ（月額・年額以外） */}
-            {packages
-              .filter(
-                (p) =>
-                  p.identifier !== monthlyPkg?.identifier &&
-                  p.identifier !== annualPkg?.identifier,
-              )
-              .map((pkg) => (
-                <TouchableOpacity
-                  key={pkg.identifier}
-                  style={[
-                    styles.packageCard,
-                    selectedPkg?.identifier === pkg.identifier && styles.packageCardSelected,
-                  ]}
-                  onPress={() => setSelectedPkg(pkg)}
-                >
-                  <Text style={styles.packageTitle}>{pkg.product.title}</Text>
-                  <Text style={styles.packagePrice}>{pkg.product.priceString}</Text>
-                </TouchableOpacity>
-              ))}
-          </View>
         )}
+        <View style={styles.plansContainer}>
+          {/* 年額プラン */}
+          {annualPackage && (
+            <TouchableOpacity
+              style={[
+                styles.planCard,
+                selectedPeriod === "annual" && styles.planCardSelected,
+              ]}
+              onPress={() => setSelectedPeriod("annual")}
+              activeOpacity={0.7}
+            >
+              <View style={styles.planHeader}>
+                <View style={styles.planRadio}>
+                  {selectedPeriod === "annual" && <View style={styles.planRadioInner} />}
+                </View>
+                <View style={styles.planInfo}>
+                  <View style={styles.planTitleRow}>
+                    <Text style={styles.planTitle}>{t("paywall.annual")}</Text>
+                    {annualSavingsPercent > 0 && (
+                      <View style={styles.savingsBadge}>
+                        <Text style={styles.savingsBadgeText}>
+                          {t("paywall.savePercent", { percent: annualSavingsPercent })}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.planPrice}>
+                    {annualPackage.product.priceString} / {t("paywall.year")}
+                  </Text>
+                  <Text style={styles.planSubprice}>
+                    {t("paywall.perMonth", {
+                      price: (annualPackage.product.price / 12).toFixed(0),
+                      currency: annualPackage.product.currencyCode,
+                    })}
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          )}
+
+          {/* 月額プラン */}
+          {monthlyPackage && (
+            <TouchableOpacity
+              style={[
+                styles.planCard,
+                selectedPeriod === "monthly" && styles.planCardSelected,
+              ]}
+              onPress={() => setSelectedPeriod("monthly")}
+              activeOpacity={0.7}
+            >
+              <View style={styles.planHeader}>
+                <View style={styles.planRadio}>
+                  {selectedPeriod === "monthly" && <View style={styles.planRadioInner} />}
+                </View>
+                <View style={styles.planInfo}>
+                  <Text style={styles.planTitle}>{t("paywall.monthly")}</Text>
+                  <Text style={styles.planPrice}>
+                    {monthlyPackage.product.priceString} / {t("paywall.month")}
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          )}
+        </View>
 
         {/* 購入ボタン */}
-        {selectedPkg && (
+        {hasPackages && (
           <TouchableOpacity
-            style={[styles.purchaseButton, purchasing && styles.buttonDisabled]}
+            style={[styles.purchaseButton, purchasing && styles.purchaseButtonDisabled]}
             onPress={handlePurchase}
             disabled={purchasing}
           >
             {purchasing ? (
-              <ActivityIndicator color={colors.white} />
+              <ActivityIndicator color="#ffffff" />
             ) : (
               <Text style={styles.purchaseButtonText}>
                 {!hasTrialed ? t("paywall.startTrial") : t("paywall.subscribe")}
@@ -279,15 +285,10 @@ export default function PaywallScreen() {
           disabled={restoring}
         >
           {restoring ? (
-            <ActivityIndicator color={colors.primary} />
+            <ActivityIndicator color="#2563EB" size="small" />
           ) : (
             <Text style={styles.restoreButtonText}>{t("paywall.restore")}</Text>
           )}
-        </TouchableOpacity>
-
-        {/* 閉じるボタン */}
-        <TouchableOpacity style={styles.dismissButton} onPress={() => router.back()}>
-          <Text style={styles.dismissButtonText}>{t("common.close")}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -297,204 +298,207 @@ export default function PaywallScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: "#F9FAFB",
   },
-  scrollContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxl,
-  },
-  centeredContent: {
+  loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: spacing.lg,
   },
   alreadyPremiumText: {
-    fontSize: fontSize.lg,
+    fontSize: 18,
     fontWeight: "600",
-    color: colors.text,
-    marginBottom: spacing.xl,
+    color: "#111827",
+  },
+  closeButton: {
+    position: "absolute",
+    top: 56,
+    right: 16,
+    zIndex: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#F3F4F6",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  content: {
+    padding: 24,
+    paddingTop: 60,
   },
   header: {
     alignItems: "center",
-    marginBottom: spacing.xl,
-    paddingTop: spacing.lg,
+    marginBottom: 24,
   },
   title: {
-    fontSize: fontSize.xxl,
-    fontWeight: "700",
-    color: colors.text,
-    marginBottom: spacing.sm,
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#111827",
+    marginTop: 12,
   },
   subtitle: {
-    fontSize: fontSize.md,
-    color: colors.muted,
+    fontSize: 15,
+    color: "#6B7280",
+    marginTop: 8,
     textAlign: "center",
-  },
-  benefitsCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  benefitsTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: "600",
-    color: colors.text,
-    marginBottom: spacing.md,
-  },
-  benefitRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: spacing.sm,
-  },
-  benefitCheck: {
-    fontSize: fontSize.md,
-    color: colors.success,
-    fontWeight: "700",
-    marginRight: spacing.sm,
-  },
-  benefitText: {
-    fontSize: fontSize.md,
-    color: colors.textSecondary,
-    flex: 1,
-  },
-  loader: {
-    marginVertical: spacing.xl,
-  },
-  noPackagesContainer: {
-    alignItems: "center",
-    paddingVertical: spacing.xl,
-    gap: spacing.md,
-  },
-  noPackagesText: {
-    textAlign: "center",
-    color: colors.muted,
-    fontSize: fontSize.md,
-  },
-  retryButton: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  retryButtonText: {
-    color: colors.primary,
-    fontSize: fontSize.md,
-    fontWeight: "600",
-  },
-  packagesContainer: {
-    marginBottom: spacing.lg,
-    gap: spacing.md,
-  },
-  packageCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    borderWidth: 2,
-    borderColor: colors.border,
-  },
-  packageCardSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryMuted,
-  },
-  packageHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  packageTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  savingsBadge: {
-    backgroundColor: colors.success,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  savingsText: {
-    fontSize: fontSize.xs,
-    fontWeight: "700",
-    color: colors.white,
-  },
-  packagePrice: {
-    fontSize: fontSize.md,
-    color: colors.textSecondary,
-    marginTop: 4,
-  },
-  packageSubprice: {
-    fontSize: fontSize.sm,
-    color: colors.muted,
-    marginTop: 2,
   },
   trialBanner: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#ECFDF5",
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 16,
+    gap: 6,
   },
   trialBannerText: {
-    fontSize: fontSize.md,
-    color: colors.success,
+    fontSize: 14,
+    color: "#059669",
     fontWeight: "600",
   },
-  trialNote: {
-    fontSize: fontSize.xs,
-    color: colors.muted,
-    textAlign: "center",
-    lineHeight: 18,
-    marginBottom: spacing.md,
+  benefitsContainer: {
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    gap: 12,
+  },
+  benefitRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  benefitText: {
+    fontSize: 15,
+    color: "#374151",
+    fontWeight: "500",
+  },
+  plansContainer: {
+    gap: 12,
+    marginBottom: 24,
+  },
+  planCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 2,
+    borderColor: "#E5E7EB",
+  },
+  planCardSelected: {
+    borderColor: "#2563EB",
+    backgroundColor: "#EFF6FF",
+  },
+  planHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  planRadio: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: "#D1D5DB",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  planRadioInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#2563EB",
+  },
+  planInfo: {
+    flex: 1,
+  },
+  planTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  planTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#111827",
+  },
+  savingsBadge: {
+    backgroundColor: "#FEF3C7",
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  savingsBadgeText: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#92400E",
+  },
+  planPrice: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#111827",
+    marginTop: 2,
+  },
+  planSubprice: {
+    fontSize: 13,
+    color: "#6B7280",
+    marginTop: 2,
   },
   purchaseButton: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.lg,
-    padding: 16,
+    backgroundColor: "#2563EB",
+    height: 52,
+    borderRadius: 12,
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: spacing.md,
+    marginBottom: 8,
   },
-  buttonDisabled: {
+  purchaseButtonDisabled: {
     opacity: 0.6,
   },
   purchaseButtonText: {
-    color: colors.white,
-    fontSize: fontSize.lg,
-    fontWeight: "700",
+    color: "#ffffff",
+    fontSize: 17,
+    fontWeight: "bold",
+  },
+  trialNote: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    textAlign: "center",
+    lineHeight: 18,
+    marginBottom: 16,
   },
   restoreButton: {
+    height: 44,
+    justifyContent: "center",
     alignItems: "center",
-    padding: spacing.md,
-    marginBottom: spacing.sm,
   },
   restoreButtonText: {
-    color: colors.primary,
-    fontSize: fontSize.md,
-    fontWeight: "500",
+    color: "#2563EB",
+    fontSize: 14,
+    fontWeight: "600",
   },
-  dismissButton: {
+  noPackagesContainer: {
     alignItems: "center",
-    padding: spacing.md,
+    paddingVertical: 32,
+    gap: 12,
   },
-  dismissButtonText: {
-    color: colors.muted,
-    fontSize: fontSize.md,
+  noPackagesText: {
+    fontSize: 14,
+    color: "#6B7280",
+    textAlign: "center",
   },
-  closeButton: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.lg,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
+  retryButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#2563EB",
   },
-  closeButtonText: {
-    color: colors.white,
-    fontSize: fontSize.md,
+  retryButtonText: {
+    color: "#2563EB",
+    fontSize: 14,
     fontWeight: "600",
   },
 });

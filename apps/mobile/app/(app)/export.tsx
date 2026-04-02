@@ -357,9 +357,9 @@ export default function ExportScreen() {
   }, [outputPath]);
 
   const handleDone = useCallback(async () => {
-    await cleanupExportFiles();
+    await cleanupExportFiles(outputPath ?? undefined);
     router.back();
-  }, [router]);
+  }, [router, outputPath]);
 
   const progressPercent = Math.round(progress * 100);
 
@@ -368,12 +368,6 @@ export default function ExportScreen() {
       {/* Summary */}
       <View style={styles.summaryCard}>
         <Text style={styles.summaryTitle}>{t("exportScreen.settings")}</Text>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>{t("exportScreen.video")}</Text>
-          <Text style={styles.summaryValue} numberOfLines={1}>
-            {videoMetadata?.name ?? "-"}
-          </Text>
-        </View>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>{t("exportScreen.startTime")}</Text>
           <Text style={styles.summaryValue}>
@@ -402,11 +396,12 @@ export default function ExportScreen() {
                   isLocked && styles.resBtnLocked,
                 ]}
                 onPress={() => {
-                  if (!isLocked) {
+                  if (isLocked) {
+                    router.push("/(app)/paywall");
+                  } else {
                     setExportSettings({ resolution: r.key });
                   }
                 }}
-                disabled={isLocked}
               >
                 <Text
                   style={[

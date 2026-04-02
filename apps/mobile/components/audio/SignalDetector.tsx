@@ -9,7 +9,11 @@ import { detectStartSignal } from "../../lib/audio/signal-detector";
 import { WaveformDisplay } from "./WaveformDisplay";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 
-export function SignalDetector() {
+interface SignalDetectorProps {
+  onConfirm?: () => void;
+}
+
+export function SignalDetector({ onConfirm }: SignalDetectorProps) {
   const { t } = useTranslation();
   const {
     videoUri,
@@ -101,6 +105,7 @@ export function SignalDetector() {
   const confirmStart = () => {
     if (detectedSignalTime !== null) {
       setStartTime(detectedSignalTime);
+      onConfirm?.();
     }
   };
 
@@ -120,8 +125,6 @@ export function SignalDetector() {
           </View>
         </View>
       </Modal>
-
-      <Text style={styles.sectionTitle}>{t("signal.title")}</Text>
 
       {/* Waveform (always visible once extracted) */}
       {waveformData && audioData && (
@@ -205,11 +208,6 @@ const styles = StyleSheet.create({
   container: {
     gap: spacing.lg,
     padding: spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    color: colors.text,
   },
   autoDetectBtn: {
     flexDirection: "row",

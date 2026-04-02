@@ -36,8 +36,6 @@ export function StopwatchDesigner() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>{t("design.title")}</Text>
-
       {/* Presets */}
       <View style={styles.presetGrid}>
         {STOPWATCH_PRESETS.map((preset) => {
@@ -147,11 +145,6 @@ const styles = StyleSheet.create({
   container: {
     gap: spacing.lg,
     padding: spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    color: colors.text,
   },
   presetGrid: {
     flexDirection: "row",

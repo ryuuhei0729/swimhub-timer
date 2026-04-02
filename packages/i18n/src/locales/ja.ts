@@ -86,14 +86,15 @@ const ja = {
     title: "スプリット",
     record: "Record",
     finish: "Finish",
+    edit: "編集する",
     finalTime: "Final Time",
     distancePlaceholder: "距離 (m)",
     memoPlaceholder: "メモ（任意）",
     emptyHint: "動画を一時停止し、距離を入力して\nRecordボタンでスプリットを記録",
     lap: "lap",
     count: "{{count}}件",
-    limitReached:
-      "スプリットの上限（{{max}}件）に達しました。Premiumプランで無制限に記録できます。",
+    limitReached: "スプリットの上限（{{max}}件）に達しました。",
+    upgradeToPremium: "Premiumプランで無制限に記録できます →",
   },
 
   exportScreen: {
@@ -134,10 +135,11 @@ const ja = {
   },
 
   editor: {
-    title: "エディター",
-    tabSignal: "信号",
+    title: "検出・デザイン",
+    tabSignal: "スタート検出",
     tabDesign: "デザイン",
     tabSplits: "スプリット",
+    confirmDesign: "このデザインで確定",
   },
 
   auth: {
@@ -183,6 +185,7 @@ const ja = {
     planPremium: "Premium",
     premiumOnly: "Premiumプランのみ",
     continueAsGuest: "ゲストとして続ける",
+    guestMode: "ゲスト利用中",
     deleteAccount: "アカウントを削除",
     deleteAccountConfirm:
       "アカウントを削除すると、すべてのデータが完全に削除されます。この操作は取り消せません。",
@@ -344,9 +347,9 @@ const ja = {
     title: "Premium にアップグレード",
     subtitle: "すべての機能をアンロックしましょう",
     benefitsTitle: "Premium のメリット",
-    benefit1: "広告非表示",
-    benefit2: "エクスポート無制限",
-    benefit3: "すべての機能にアクセス",
+    benefit1: "エクスポート回数無制限",
+    benefit2: "高画質エクスポート（1080p・オリジナル）",
+    benefit3: "広告非表示",
     annual: "年額プラン",
     monthly: "月額プラン",
     year: "年",

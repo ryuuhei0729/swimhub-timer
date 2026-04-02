@@ -249,7 +249,10 @@ export async function exportVideoWithStopwatch(
   showWatermark = true,
 ): Promise<string> {
   const { Paths, File } = require("expo-file-system") as typeof import("expo-file-system");
-  const outputFile = new File(Paths.cache, "export_output.mp4");
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  const outputFile = new File(Paths.cache, `swimhub-timer_${timestamp}.mp4`);
   const outputPath = outputFile.uri;
 
   // Scale font/padding when exporting at different resolution
@@ -343,11 +346,13 @@ export async function saveToPhotoLibrary(filePath: string): Promise<void> {
 /**
  * Clean up temporary export files.
  */
-export async function cleanupExportFiles(): Promise<void> {
+export async function cleanupExportFiles(outputPath?: string): Promise<void> {
   try {
-    const { Paths, File } = require("expo-file-system") as typeof import("expo-file-system");
-    const outputFile = new File(Paths.cache, "export_output.mp4");
-    outputFile.delete();
+    if (outputPath) {
+      const { File } = require("expo-file-system") as typeof import("expo-file-system");
+      const file = new File(outputPath);
+      file.delete();
+    }
   } catch {
     // Ignore cleanup errors
   }

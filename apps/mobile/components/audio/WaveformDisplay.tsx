@@ -10,7 +10,7 @@ interface Props {
   onSeek?: (time: number) => void;
 }
 
-const BAR_HEIGHT = 60;
+const BAR_HEIGHT = 90;
 
 export function WaveformDisplay({
   waveformData,
