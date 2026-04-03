@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TouchableOpacity, Alert, ActivityIndicator, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, Alert, ActivityIndicator, StyleSheet, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
@@ -255,6 +255,31 @@ export default function AccountScreen() {
           <Text style={styles.deleteWarning}>{t("auth.deleteAccountWarning")}</Text>
         </View>
 
+        {/* サブスクリプション管理 */}
+        <TouchableOpacity
+          style={styles.manageSubButton}
+          onPress={() => Linking.openURL("https://apps.apple.com/account/subscriptions")}
+        >
+          <Text style={styles.manageSubText}>{t("account.manageSubscription")}</Text>
+        </TouchableOpacity>
+
+        {/* 利用規約・プライバシーポリシー */}
+        <View style={styles.legalLinks}>
+          <Text
+            style={styles.legalLink}
+            onPress={() => Linking.openURL("https://timer.swim-hub.app/terms")}
+          >
+            {t("account.termsLink")}
+          </Text>
+          <Text style={styles.legalDivider}> | </Text>
+          <Text
+            style={styles.legalLink}
+            onPress={() => Linking.openURL("https://timer.swim-hub.app/privacy")}
+          >
+            {t("account.privacyLink")}
+          </Text>
+        </View>
+
         {/* App info */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
@@ -400,6 +425,31 @@ const styles = StyleSheet.create({
     color: colors.muted,
     textAlign: "center",
     marginTop: spacing.sm,
+  },
+  manageSubButton: {
+    alignItems: "center",
+    paddingVertical: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  manageSubText: {
+    color: colors.primary,
+    fontSize: fontSize.sm,
+    fontWeight: "500",
+  },
+  legalLinks: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: spacing.xl,
+  },
+  legalLink: {
+    fontSize: fontSize.xs,
+    color: colors.primary,
+    fontWeight: "500",
+  },
+  legalDivider: {
+    fontSize: fontSize.xs,
+    color: colors.muted,
   },
   footer: {
     alignItems: "center",

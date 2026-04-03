@@ -381,6 +381,9 @@ const ja = {
     restoreEmptyMessage: "復元可能な購入が見つかりませんでした。",
     restoreFailed: "購入の復元に失敗しました。もう一度お試しください。",
     alreadyPremium: "すでに Premium プランです",
+    cancelNote: "サブスクリプションはいつでもキャンセルできます。\nApp Store の設定から管理できます。",
+    termsLink: "利用規約",
+    privacyLink: "プライバシーポリシー",
   },
 
   account: {
@@ -392,6 +395,9 @@ const ja = {
     canceledNote: "解約済み — 期間終了後に Free プランに戻ります",
     upgradePrompt: "Premium にアップグレードして、すべての機能をアンロックしましょう。",
     upgradeToPremium: "Premium にアップグレード",
+    manageSubscription: "サブスクリプションを管理",
+    termsLink: "利用規約",
+    privacyLink: "プライバシーポリシー",
   },
 
   subscription: {

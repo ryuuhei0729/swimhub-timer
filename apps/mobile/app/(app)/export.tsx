@@ -60,7 +60,8 @@ export default function ExportScreen() {
 
   // --- Derived ---
   const exportComplete = outputPath !== null;
-  const canProceed = exportComplete && (adRewardEarned || adUnavailable);
+  const isPremium = plan === "premium";
+  const canProceed = exportComplete && (isPremium || adRewardEarned || adUnavailable);
   const duration = videoMetadata?.duration ?? 0;
   const availableResolutions = getAvailableResolutions(plan);
   const showWatermark = shouldShowWatermark(plan);
@@ -87,8 +88,13 @@ export default function ExportScreen() {
     }
   }, [availableResolutions, exportSettings.resolution, setExportSettings]);
 
-  // Preload ad on mount
+  // Preload ad on mount (premium users skip ads)
   useEffect(() => {
+    if (isPremium) {
+      setAdUnavailable(true);
+      return;
+    }
+
     const controller = createRewardedAdController();
     if (!controller) {
       setAdUnavailable(true);
@@ -109,7 +115,7 @@ export default function ExportScreen() {
       unsubscribe();
       controller.dispose();
     };
-  }, []);
+  }, [isPremium]);
 
   // If ad loads AFTER export was triggered, show it automatically
   useEffect(() => {
@@ -232,14 +238,16 @@ export default function ExportScreen() {
     setError(null);
     exportTriggeredRef.current = true;
 
-    // --- Show ad (fire-and-forget, runs in parallel with encoding) ---
-    const controller = adControllerRef.current;
-    if (controller) {
-      const currentState = controller.getState();
-      if (currentState === "loaded") {
-        controller.show().catch(() => setAdUnavailable(true));
-      } else if (currentState !== "loading") {
-        setAdUnavailable(true);
+    // --- Show ad (fire-and-forget, runs in parallel with encoding; premium skips) ---
+    if (!isPremium) {
+      const controller = adControllerRef.current;
+      if (controller) {
+        const currentState = controller.getState();
+        if (currentState === "loaded") {
+          controller.show().catch(() => setAdUnavailable(true));
+        } else if (currentState !== "loading") {
+          setAdUnavailable(true);
+        }
       }
     }
 

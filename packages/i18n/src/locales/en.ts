@@ -384,6 +384,9 @@ const en: TranslationShape = {
     restoreEmptyMessage: "No restorable purchases were found.",
     restoreFailed: "Failed to restore purchases. Please try again.",
     alreadyPremium: "You are already on the Premium plan",
+    cancelNote: "You can cancel your subscription anytime.\nManage it in your App Store settings.",
+    termsLink: "Terms of Use",
+    privacyLink: "Privacy Policy",
   },
 
   account: {
@@ -395,6 +398,9 @@ const en: TranslationShape = {
     canceledNote: "Canceled — will revert to Free at end of period",
     upgradePrompt: "Upgrade to Premium to unlock all features.",
     upgradeToPremium: "Upgrade to Premium",
+    manageSubscription: "Manage Subscription",
+    termsLink: "Terms of Use",
+    privacyLink: "Privacy Policy",
   },
 
   subscription: {
