@@ -65,7 +65,9 @@ export default function ImportScreen() {
             onPress={() => router.push("/account")}
           >
             <Ionicons name="person-circle" size={18} color={colors.primary} />
-            <Text style={styles.accountChipText}>{t("auth.account")}</Text>
+            <Text style={styles.accountChipText} numberOfLines={1}>
+              {user?.user_metadata?.name || user?.email || t("auth.account")}
+            </Text>
           </Pressable>
         ) : (
           <View style={styles.guestBar}>
@@ -156,6 +158,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     fontWeight: "600",
     color: colors.primary,
+    flexShrink: 1,
   },
   guestBar: {
     flexDirection: "row",
