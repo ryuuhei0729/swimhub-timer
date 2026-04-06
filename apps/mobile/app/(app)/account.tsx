@@ -8,6 +8,7 @@ import { useAuth } from "../../contexts/AuthProvider";
 import { restorePurchases } from "../../lib/revenucat";
 import { deleteAccount, ApiError } from "../../lib/api-client";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
+import { PlanFeatureList } from "../../components/plan/PlanFeatureList";
 
 export default function AccountScreen() {
   const { t } = useTranslation();
@@ -193,6 +194,7 @@ export default function AccountScreen() {
               </>
             ) : (
               <>
+                <PlanFeatureList currentPlan={plan} />
                 <Text style={styles.upgradePrompt}>{t("account.upgradePrompt")}</Text>
                 <TouchableOpacity
                   style={styles.upgradeButton}

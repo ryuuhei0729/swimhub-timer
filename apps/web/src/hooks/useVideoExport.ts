@@ -24,36 +24,21 @@ export function useVideoExport(showWatermark = true) {
   const [limitReached, setLimitReached] = useState(false);
 
   const checkExportAllowed = useCallback(async (): Promise<boolean> => {
-    if (plan === "premium") return true;
+    if (plan === "premium" || plan === "free") return true;
 
     if (plan === "guest") {
       return canGuestUseToday("timer");
     }
 
-    // free plan: server-side check
-    try {
-      const res = await fetch("/api/export/check");
-      if (!res.ok) return true;
-      const data = await res.json();
-      return data.canExport;
-    } catch {
-      return true;
-    }
+    return true;
   }, [plan]);
 
   const recordExportUsage = useCallback(async () => {
-    if (plan === "premium") return;
+    if (plan === "premium" || plan === "free") return;
 
     if (plan === "guest") {
       markGuestUsedToday("timer");
       return;
-    }
-
-    // free plan: server-side record
-    try {
-      await fetch("/api/export/record", { method: "POST" });
-    } catch {
-      // best-effort
     }
   }, [plan]);
 

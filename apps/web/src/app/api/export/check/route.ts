@@ -27,7 +27,7 @@ export async function GET() {
     return NextResponse.json({
       canExport,
       todayCount,
-      dailyLimit: plan === "premium" ? null : 1,
+      dailyLimit: plan === "premium" || plan === "free" ? null : 1,
     });
   } catch (error) {
     console.error("Export check error:", error);

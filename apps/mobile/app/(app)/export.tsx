@@ -23,7 +23,8 @@ import {
   markGuestUsedToday,
   getGuestTodayCount,
 } from "../../lib/guest-daily-limit";
-import { supabase } from "../../lib/supabase";
+import { GuestExportIndicator } from "../../components/plan/GuestExportIndicator";
+
 
 export default function ExportScreen() {
   const { t } = useTranslation();
@@ -56,7 +57,6 @@ export default function ExportScreen() {
 
   // --- Export limit state ---
   const [limitReached, setLimitReached] = useState(false);
-  const [fetchedRemaining, setFetchedRemaining] = useState<number | null>(null);
 
   // --- Derived ---
   const exportComplete = outputPath !== null;
@@ -67,13 +67,13 @@ export default function ExportScreen() {
   const showWatermark = shouldShowWatermark(plan);
 
   const remainingExports = useMemo(() => {
-    if (plan === "premium") return null;
+    if (plan === "premium" || plan === "free") return null;
     if (plan === "guest") {
       const used = getGuestTodayCount("timer");
       return Math.max(0, 1 - used);
     }
-    return fetchedRemaining;
-  }, [plan, fetchedRemaining]);
+    return null;
+  }, [plan]);
 
   const ALL_RESOLUTIONS: { key: ExportResolution; label: string }[] = [
     { key: "original", label: t("exportScreen.original") },
@@ -132,42 +132,11 @@ export default function ExportScreen() {
     }
   }, [adState, adUnavailable]);
 
-  // Fetch remaining export count for Free users from Supabase
+  // Free plan has unlimited exports — no need to fetch remaining count
+
+  // Set limitReached based on remaining exports (guest only; free/premium unlimited)
   useEffect(() => {
-    if (plan !== "free" || !supabase) return;
-
-    (async () => {
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }))
-          .toISOString()
-          .split("T")[0];
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase client lacks app_daily_usage table types
-        const { data } = (await (supabase as any)
-          .from("app_daily_usage")
-          .select("usage_count")
-          .eq("user_id", user.id)
-          .eq("app", "swimhub_timer")
-          .eq("usage_date", today)
-          .single()) as { data: { usage_count: number } | null };
-
-        const count = data?.usage_count ?? 0;
-        setFetchedRemaining(Math.max(0, 1 - count));
-      } catch {
-        // On error, allow export (fail open)
-        setFetchedRemaining(1);
-      }
-    })();
-  }, [plan]);
-
-  // Set limitReached based on remaining exports
-  useEffect(() => {
-    if (plan === "premium") {
+    if (plan === "premium" || plan === "free") {
       setLimitReached(false);
       return;
     }
@@ -175,11 +144,7 @@ export default function ExportScreen() {
       setLimitReached(!canGuestUseToday("timer"));
       return;
     }
-    // Free plan
-    if (fetchedRemaining !== null) {
-      setLimitReached(fetchedRemaining <= 0);
-    }
-  }, [plan, fetchedRemaining]);
+  }, [plan]);
 
   const handleExport = useCallback(async () => {
     if (!videoUri || startTime === null) {
@@ -193,37 +158,8 @@ export default function ExportScreen() {
         setLimitReached(true);
         return;
       }
-    } else if (plan === "free") {
-      if (supabase) {
-        try {
-          const {
-            data: { user },
-          } = await supabase.auth.getUser();
-          if (user) {
-            const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }))
-              .toISOString()
-              .split("T")[0];
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase client lacks app_daily_usage table types
-            const { data } = (await (supabase as any)
-              .from("app_daily_usage")
-              .select("usage_count")
-              .eq("user_id", user.id)
-              .eq("app", "swimhub_timer")
-              .eq("usage_date", today)
-              .single()) as { data: { usage_count: number } | null };
-
-            if ((data?.usage_count ?? 0) >= 1) {
-              setLimitReached(true);
-              setFetchedRemaining(0);
-              return;
-            }
-          }
-        } catch {
-          // On error, allow export (fail open)
-        }
-      }
     }
+    // Free plan: unlimited exports, no limit check needed
 
     // Runtime guard: ensure selected resolution is still available
     let resolvedSettings = exportSettings;
@@ -273,51 +209,9 @@ export default function ExportScreen() {
       setOutputPath(path);
       setProgress(1);
 
-      // Record usage after successful export
+      // Record usage after successful export (guest only)
       if (plan === "guest") {
         markGuestUsedToday("timer");
-      } else if (plan === "free" && supabase) {
-        try {
-          const {
-            data: { user },
-          } = await supabase.auth.getUser();
-          if (user) {
-            const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }))
-              .toISOString()
-              .split("T")[0];
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase client lacks app_daily_usage table types
-            const db = supabase as any;
-            const { data: existing } = (await db
-              .from("app_daily_usage")
-              .select("id, usage_count")
-              .eq("user_id", user.id)
-              .eq("app", "swimhub_timer")
-              .eq("usage_date", today)
-              .single()) as { data: { id: string; usage_count: number } | null };
-
-            if (existing) {
-              await db
-                .from("app_daily_usage")
-                .update({
-                  usage_count: existing.usage_count + 1,
-                  last_used_at: new Date().toISOString(),
-                })
-                .eq("id", existing.id);
-            } else {
-              await db.from("app_daily_usage").insert({
-                user_id: user.id,
-                app: "swimhub_timer",
-                usage_date: today,
-                usage_count: 1,
-                last_used_at: new Date().toISOString(),
-              });
-            }
-            setFetchedRemaining(0);
-          }
-        } catch {
-          // Usage recording failed, non-blocking
-        }
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : t("exportScreen.errorDuringExport"));
@@ -427,24 +321,13 @@ export default function ExportScreen() {
         </View>
       </View>
 
-      {/* Remaining exports status */}
-      {plan !== "premium" && remainingExports !== null && !exportComplete && !limitReached && (
-        <View style={styles.remainingCard}>
-          <Text style={styles.remainingText}>
-            {t("exportScreen.remainingCount", { remaining: remainingExports })}
-          </Text>
-        </View>
-      )}
-
-      {/* Limit reached message */}
-      {limitReached && !exportComplete && (
-        <View style={styles.limitCard}>
-          <Text style={styles.limitText}>
-            {plan === "guest"
-              ? t("exportScreen.dailyLimitGuest")
-              : t("exportScreen.dailyLimitFree")}
-          </Text>
-        </View>
+      {/* Tier indicator (guest remaining / free upsell / premium: nothing) */}
+      {!exportComplete && (
+        <GuestExportIndicator
+          plan={plan}
+          remaining={remainingExports}
+          onActionPress={() => router.push("/(auth)/get-started")}
+        />
       )}
 
       {/* Progress / waiting for ad / done / export button */}
@@ -593,24 +476,6 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
     marginTop: 2,
     overflow: "hidden",
-  },
-  remainingCard: {
-    alignItems: "center",
-  },
-  remainingText: {
-    fontSize: fontSize.xs,
-    color: colors.muted,
-  },
-  limitCard: {
-    backgroundColor: "rgba(245, 158, 11, 0.05)",
-    borderWidth: 1,
-    borderColor: "rgba(245, 158, 11, 0.2)",
-    borderRadius: radius.md,
-    padding: spacing.md,
-  },
-  limitText: {
-    fontSize: fontSize.sm,
-    color: "#F59E0B",
   },
   progressSection: {
     gap: spacing.md,

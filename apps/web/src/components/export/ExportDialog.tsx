@@ -36,27 +36,13 @@ export function ExportDialog() {
   } = useVideoExport(showWatermark);
 
   const [exportTriggered, setExportTriggered] = useState(false);
-  const [fetchedRemaining, setFetchedRemaining] = useState<number | null>(null);
-
   const remainingExports = useMemo(() => {
-    if (plan === "premium") return null;
+    if (plan === "premium" || plan === "free") return null;
     if (plan === "guest") {
       const used = getGuestTodayCount("timer");
       return Math.max(0, 1 - used);
     }
-    return fetchedRemaining;
-  }, [plan, fetchedRemaining]);
-
-  useEffect(() => {
-    if (plan !== "free") return;
-    fetch("/api/export/check")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.dailyLimit !== null) {
-          setFetchedRemaining(Math.max(0, data.dailyLimit - data.todayCount));
-        }
-      })
-      .catch(() => {});
+    return null;
   }, [plan]);
 
   const exportComplete = outputBlob !== null;

@@ -28,6 +28,7 @@ export async function canUserExport(
   plan: UserPlan,
 ): Promise<boolean> {
   if (plan === "premium") return true;
+  if (plan === "free") return true;
   if (plan === "guest") return true;
   const count = await getTodayExportCount(supabase, uid);
   return count < 1;

@@ -16,6 +16,7 @@ import { useTranslation } from "react-i18next";
 import type { PurchasesPackage } from "react-native-purchases";
 import { useAuth } from "../../contexts/AuthProvider";
 import { getOfferings, purchasePackage, restorePurchases } from "../../lib/revenucat";
+import { PlanComparisonTable } from "../../components/plan/PlanComparisonTable";
 
 type BillingPeriod = "monthly" | "annual";
 
@@ -165,19 +166,8 @@ export default function PaywallScreen() {
           </View>
         )}
 
-        {/* 特典一覧 */}
-        <View style={styles.benefitsContainer}>
-          {[
-            t("paywall.benefit1"),
-            t("paywall.benefit2"),
-            t("paywall.benefit3"),
-          ].map((benefit, i) => (
-            <View key={i} style={styles.benefitRow}>
-              <Feather name="check-circle" size={18} color="#059669" />
-              <Text style={styles.benefitText}>{benefit}</Text>
-            </View>
-          ))}
-        </View>
+        {/* プラン比較テーブル */}
+        <PlanComparisonTable currentPlan={plan} />
 
         {/* プラン選択 */}
         {!loadingOfferings && !hasPackages && (
@@ -376,25 +366,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#059669",
     fontWeight: "600",
-  },
-  benefitsContainer: {
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    gap: 12,
-  },
-  benefitRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  benefitText: {
-    fontSize: 15,
-    color: "#374151",
-    fontWeight: "500",
   },
   plansContainer: {
     gap: 12,
