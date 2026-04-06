@@ -35,7 +35,7 @@
     "expo-web-browser": "~15.0.10",
     "ffmpeg-kit-react-native": "github:jdarshan5/ffmpeg-kit-react-native#rn-binaries",
     "i18next": "^24.0.0",
-    "react": "19.1.0",
+    "react": "19.1.5",
     "react-i18next": "^15.0.0",
     "react-native": "0.81.5",
     "react-native-gesture-handler": "~2.28.0",
