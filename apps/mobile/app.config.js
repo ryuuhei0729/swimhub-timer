@@ -49,6 +49,7 @@ module.exports = {
     ],
   },
   plugins: [
+    "./plugins/fix-fmt-consteval",
     "expo-router",
     "expo-video",
     [
