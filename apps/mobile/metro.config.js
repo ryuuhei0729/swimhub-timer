@@ -6,12 +6,16 @@ const monorepoRoot = path.resolve(projectRoot, "../..");
 
 const config = getDefaultConfig(projectRoot);
 
-// Watch the monorepo root for changes to shared packages
-config.watchFolders = [monorepoRoot];
+// Watch the monorepo root for changes to shared packages (デフォルトを保持)
+config.watchFolders = [...(config.watchFolders || []), monorepoRoot];
 
-// Disable hierarchical (walking up directory tree) module lookup.
-// Forces Metro to ONLY use nodeModulesPaths below, in order.
-config.resolver.disableHierarchicalLookup = true;
+// react の重複を解決: 全てのパッケージが同じ react インスタンスを使うようにする
+// apps/mobile の node_modules には react が存在しないため、monorepoRoot の node_modules を参照する
+config.resolver.extraNodeModules = {
+  ...config.resolver.extraNodeModules,
+  react: path.resolve(monorepoRoot, "node_modules/react"),
+  "react-native": path.resolve(monorepoRoot, "node_modules/react-native"),
+};
 
 // Resolve modules: local first, then monorepo root
 config.resolver.nodeModulesPaths = [
