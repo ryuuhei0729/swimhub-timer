@@ -69,7 +69,7 @@ module.exports = {
         },
       },
     ],
-    "./plugins/ios/withFmtFix",
+    "./plugins/withFmtFix",
     [
       "react-native-google-mobile-ads",
       {
