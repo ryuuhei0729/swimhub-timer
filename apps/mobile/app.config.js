@@ -14,7 +14,7 @@ module.exports = {
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.swimhubtimer.app",
-    buildNumber: "38",
+    buildNumber: "39",
     usesAppleSignIn: true,
     infoPlist: {
       NSPhotoLibraryUsageDescription:
