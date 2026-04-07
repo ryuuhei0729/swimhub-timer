@@ -26,12 +26,23 @@ export function UserMenu() {
 
   if (!user) {
     return (
-      <Link
-        href={`/${locale}/login`}
-        className="rounded-lg px-3 py-2 text-sm font-medium text-primary hover:bg-muted transition-colors duration-200"
-      >
-        {t("auth.login")}
-      </Link>
+      <div className="flex flex-col items-center gap-1">
+        <Link
+          href={`/${locale}/login`}
+          className="rounded-lg px-3 py-2 text-sm font-medium text-primary hover:bg-muted transition-colors duration-200"
+        >
+          {t("auth.login")}
+        </Link>
+        <p className="text-[10px] leading-tight text-muted-foreground text-center max-w-[200px]">
+          {t("auth.guestLimitHint")}
+        </p>
+        <Link
+          href={`/${locale}/login`}
+          className="text-[10px] font-medium text-primary hover:underline"
+        >
+          {t("auth.guestRegisterHint")}
+        </Link>
+      </div>
     );
   }
 

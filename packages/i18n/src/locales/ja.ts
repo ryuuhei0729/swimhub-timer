@@ -188,6 +188,9 @@ const ja = {
     premiumOnly: "Premiumプランのみ",
     continueAsGuest: "ゲストとして続ける",
     guestMode: "ゲスト利用中",
+    guestLimitHint:
+      "ゲスト利用の場合は1日のエクスポート回数は1回まで（日本時間の0時にリセット）",
+    guestRegisterHint: "会員登録するとエクスポート無制限に！",
     deleteAccount: "アカウントを削除",
     deleteAccountConfirm:
       "アカウントを削除すると、すべてのデータが完全に削除されます。この操作は取り消せません。",
@@ -405,8 +408,9 @@ const ja = {
     register: "アカウント登録する →",
     registerLabel: "アカウントを登録して制限なしで使う",
     limitReached: "今日のエクスポート回数に達しました",
-    upsellText: "Premiumで高画質・透かしなし →",
+    upsellText: "Premiumで高画質・動画内ロゴなし →",
     upsellLabel: "Premiumプランにアップグレード",
+    logoOverlay: "動画内ロゴ",
   },
 
   planComparison: {
@@ -417,7 +421,7 @@ const ja = {
     featureExport: "エクスポート",
     featureResolution: "解像度",
     featureSplits: "スプリット",
-    featureWatermark: "透かし",
+    featureWatermark: "動画内ロゴ",
     featureAds: "広告",
     valueExportGuest: "1回/日",
     valueExportFree: "無制限",
@@ -450,7 +454,7 @@ const ja = {
     splitsGuestValue: "1回",
     splitsFreeValue: "無制限",
     splitsPremiumValue: "無制限",
-    watermark: "透かし",
+    watermark: "動画内ロゴ",
     watermarkGuestValue: "あり",
     watermarkFreeValue: "あり",
     watermarkPremiumValue: "なし",

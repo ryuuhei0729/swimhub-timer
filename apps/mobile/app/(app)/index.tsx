@@ -79,6 +79,8 @@ export default function ImportScreen() {
               <Text style={styles.loginChipText}>{t("auth.login")}</Text>
               <Ionicons name="arrow-forward" size={14} color={colors.white} />
             </Pressable>
+            <Text style={styles.guestHint}>{t("auth.guestLimitHint")}</Text>
+            <Text style={styles.guestHintSub}>{t("auth.guestRegisterHint")}</Text>
           </View>
         )}
       </View>
@@ -161,14 +163,25 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   guestBar: {
-    flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: spacing.sm,
     marginTop: spacing.lg,
   },
   guestLabel: {
     fontSize: fontSize.xs,
     color: colors.muted,
+    fontWeight: "500",
+  },
+  guestHint: {
+    fontSize: 12,
+    color: colors.muted,
+    marginTop: spacing.xs,
+    textAlign: "center",
+    paddingHorizontal: spacing.md,
+  },
+  guestHintSub: {
+    fontSize: 12,
+    color: colors.primary,
     fontWeight: "500",
   },
   loginChip: {

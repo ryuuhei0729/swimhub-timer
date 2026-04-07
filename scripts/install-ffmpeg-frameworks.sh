@@ -22,6 +22,7 @@ if [ -f "$MARKER" ]; then
 fi
 
 echo "[ffmpeg-kit] Downloading xcframeworks..."
+rm -f /tmp/ffmpeg-kit-*.zip
 TMPZIP=$(mktemp /tmp/ffmpeg-kit-XXXXXX.zip)
 curl -L -o "$TMPZIP" "$ZIP_URL"
 

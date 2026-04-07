@@ -191,6 +191,9 @@ const en: TranslationShape = {
     premiumOnly: "Premium only",
     continueAsGuest: "Continue as Guest",
     guestMode: "Guest mode",
+    guestLimitHint:
+      "Guest users can export up to 1 time per day (resets at midnight JST)",
+    guestRegisterHint: "Sign up for unlimited exports!",
     deleteAccount: "Delete Account",
     deleteAccountConfirm:
       "Deleting your account will permanently remove all your data. This action cannot be undone.",
@@ -408,8 +411,9 @@ const en: TranslationShape = {
     register: "Create account →",
     registerLabel: "Create an account to use without limits",
     limitReached: "You've reached today's export limit",
-    upsellText: "Premium: high quality & no watermark →",
+    upsellText: "Premium: high quality & no logo overlay →",
     upsellLabel: "Upgrade to Premium plan",
+    logoOverlay: "Logo overlay",
   },
 
   planComparison: {
@@ -420,7 +424,7 @@ const en: TranslationShape = {
     featureExport: "Export",
     featureResolution: "Resolution",
     featureSplits: "Splits",
-    featureWatermark: "Watermark",
+    featureWatermark: "Logo Overlay",
     featureAds: "Ads",
     valueExportGuest: "1/day",
     valueExportFree: "Unlimited",
@@ -453,7 +457,7 @@ const en: TranslationShape = {
     splitsGuestValue: "1",
     splitsFreeValue: "Unlimited",
     splitsPremiumValue: "Unlimited",
-    watermark: "Watermark",
+    watermark: "Logo Overlay",
     watermarkGuestValue: "Yes",
     watermarkFreeValue: "Yes",
     watermarkPremiumValue: "None",
