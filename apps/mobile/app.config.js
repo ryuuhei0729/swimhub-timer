@@ -1,10 +1,3 @@
-/**
- * Expo設定ファイル（動的）
- *
- * SDK 49+ では EXPO_PUBLIC_* は Metro がインライン展開するため、
- * extra への環境変数マッピングは不要。extra は EAS projectId 等の
- * ビルドメタデータのみを保持する。
- */
 module.exports = {
   name: "SH Timer",
   slug: "swimhub-timer",
@@ -21,7 +14,7 @@ module.exports = {
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.swimhubtimer.app",
-    buildNumber: "37",
+    buildNumber: "38",
     usesAppleSignIn: true,
     infoPlist: {
       NSPhotoLibraryUsageDescription:
@@ -37,7 +30,7 @@ module.exports = {
       backgroundColor: "#EFF6FF",
     },
     package: "com.swimhubtimer.app",
-    versionCode: 31,
+    versionCode: 32,
     permissions: [
       "android.permission.RECORD_AUDIO",
       "android.permission.READ_EXTERNAL_STORAGE",
@@ -49,7 +42,6 @@ module.exports = {
     ],
   },
   plugins: [
-    "./plugins/fix-fmt-consteval",
     "expo-router",
     "expo-video",
     [
@@ -73,7 +65,6 @@ module.exports = {
       {
         ios: {
           useFrameworks: "static",
-          buildReactNativeFromSource: true,
         },
       },
     ],
