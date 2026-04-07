@@ -1,14 +1,20 @@
 "use client";
 
 import { useCallback, useState, useRef } from "react";
+import Link from "next/link";
 import { Upload, Waves, Zap } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useParams } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 import { useVideoFile } from "@/hooks/useVideoFile";
 import { SwimHubTimerIcon } from "@/components/icons/SwimHubTimerIcon";
 
 export function VideoImporter() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const { handleFile } = useVideoFile();
+  const params = useParams();
+  const locale = (params.locale as string) || "ja";
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -68,6 +74,21 @@ export function VideoImporter() {
           {t("import.subtitle")}
         </p>
       </div>
+
+      {/* Guest hint */}
+      {!user && (
+        <div className="text-center space-y-1">
+          <p className="text-xs text-muted-foreground">
+            {t("auth.guestLimitHint")}
+          </p>
+          <Link
+            href={`/${locale}/login`}
+            className="text-xs font-medium text-primary hover:underline"
+          >
+            {t("auth.guestRegisterHint")}
+          </Link>
+        </div>
+      )}
 
       {/* Drop zone */}
       <div
