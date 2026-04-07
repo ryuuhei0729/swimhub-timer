@@ -65,9 +65,11 @@ module.exports = {
       {
         ios: {
           useFrameworks: "static",
+          buildReactNativeFromSource: true,
         },
       },
     ],
+    "./plugins/ios/withFmtFix",
     [
       "react-native-google-mobile-ads",
       {
