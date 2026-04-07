@@ -58,6 +58,7 @@ export interface TimerWebAuthContextValue {
   subscriptionStatus: SubscriptionStatus | null;
   subscription: SubscriptionInfo | null;
   signInWithGoogle: () => Promise<void>;
+  signInWithApple: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<boolean>;
   signOut: () => Promise<void>;

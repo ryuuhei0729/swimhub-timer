@@ -2,7 +2,7 @@
 
 import { useCallback, useState, useRef } from "react";
 import Link from "next/link";
-import { Upload, Waves, Zap } from "lucide-react";
+import { Upload } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
@@ -57,12 +57,6 @@ export function VideoImporter() {
     },
     [processFile],
   );
-
-  const steps = [
-    { icon: Upload, label: t("import.stepImport"), desc: t("import.stepImportDesc") },
-    { icon: Waves, label: t("import.stepDetect"), desc: t("import.stepDetectDesc") },
-    { icon: Zap, label: t("import.stepExport"), desc: t("import.stepExportDesc") },
-  ];
 
   return (
     <div className="flex flex-col items-center gap-10 w-full max-w-xl mx-auto px-4">
@@ -137,33 +131,6 @@ export function VideoImporter() {
       </div>
 
       {error && <p className="text-sm text-destructive text-center">{error}</p>}
-
-      {/* Steps */}
-      <div className="flex items-center gap-3 sm:gap-5">
-        {steps.map((s, i) => (
-          <div key={s.label} className="flex items-center gap-3 sm:gap-5">
-            <div className="flex flex-col items-center gap-2">
-              <div
-                className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-colors ${
-                  i === 0
-                    ? "border-primary/30 bg-primary/10 text-primary"
-                    : "border-border bg-surface text-muted-foreground"
-                }`}
-              >
-                <s.icon className="w-4 h-4" />
-              </div>
-              <div className="text-center">
-                <p
-                  className={`text-[11px] font-medium ${i === 0 ? "text-primary" : "text-muted-foreground"}`}
-                >
-                  {s.label}
-                </p>
-              </div>
-            </div>
-            {i < steps.length - 1 && <div className="w-8 sm:w-12 h-px bg-border -mt-5" />}
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

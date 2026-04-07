@@ -204,6 +204,7 @@ const ja = {
     errors: {
       cancelled: "認証がキャンセルされました",
       generic: "認証に失敗しました。もう一度お試しください。",
+      appleLoginFailed: "Appleログインに失敗しました。もう一度お試しください。",
       timeout: "認証がタイムアウトしました。もう一度お試しください。",
       notInitialized: "認証サービスが初期化されていません",
       logoutFailed: "ログアウトに失敗しました",

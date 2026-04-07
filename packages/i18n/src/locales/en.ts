@@ -207,6 +207,7 @@ const en: TranslationShape = {
     errors: {
       cancelled: "Authentication was cancelled",
       generic: "Authentication failed. Please try again.",
+      appleLoginFailed: "Apple login failed. Please try again.",
       timeout: "Authentication timed out. Please try again.",
       notInitialized: "Authentication service is not initialized",
       logoutFailed: "Failed to log out",

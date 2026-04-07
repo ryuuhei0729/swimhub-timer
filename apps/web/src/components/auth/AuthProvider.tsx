@@ -90,6 +90,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
   }, []);
 
+  const signInWithApple = useCallback(async () => {
+    const supabase = getSupabaseBrowserClient()!;
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "apple",
+      options: {
+        redirectTo: `${window.location.origin}/api/auth/callback`,
+      },
+    });
+    if (error) throw error;
+  }, []);
+
   const signInWithEmail = useCallback(async (email: string, password: string) => {
     const supabase = getSupabaseBrowserClient()!;
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -131,6 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         subscriptionStatus,
         subscription,
         signInWithGoogle,
+        signInWithApple,
         signInWithEmail,
         signUpWithEmail,
         signOut,

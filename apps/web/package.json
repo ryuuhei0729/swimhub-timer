@@ -9,8 +9,8 @@
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "vitest run --config vitest.config.mts",
+    "test:watch": "vitest --config vitest.config.mts"
   },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",
