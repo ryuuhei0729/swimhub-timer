@@ -7,7 +7,6 @@ import Purchases, {
   type PurchasesPackage,
   type CustomerInfo,
   type PurchasesOfferings,
-  LOG_LEVEL,
 } from "react-native-purchases";
 
 const REVENUCAT_IOS_API_KEY = process.env.EXPO_PUBLIC_REVENUCAT_IOS_API_KEY ?? "";
@@ -26,21 +25,18 @@ export async function initRevenueCat(): Promise<void> {
     return;
   }
 
-  Purchases.setLogLevel(LOG_LEVEL.DEBUG);
   Purchases.configure({ apiKey: REVENUCAT_IOS_API_KEY });
 }
 
 /**
  * Supabase user.id で RevenueCat にログインする
  */
-export async function loginRevenueCat(userId: string): Promise<CustomerInfo | null> {
-  if (!isIOS || !REVENUCAT_IOS_API_KEY) return null;
+export async function loginRevenueCat(userId: string): Promise<void> {
+  if (!isIOS || !REVENUCAT_IOS_API_KEY) return;
   try {
-    const { customerInfo } = await Purchases.logIn(userId);
-    return customerInfo;
+    await Purchases.logIn(userId);
   } catch (error) {
     console.error("[RevenueCat] ログイン失敗:", error);
-    return null;
   }
 }
 

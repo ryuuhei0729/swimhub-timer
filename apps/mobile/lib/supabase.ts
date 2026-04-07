@@ -36,6 +36,18 @@ function createMmkvStorage() {
 
 const mmkvStorage = createMmkvStorage();
 
+export function clearMmkvCaches(): void {
+  try {
+    const { createMMKV } = require("react-native-mmkv");
+    const settingsStorage = createMMKV({ id: "swimhub-timer-settings" });
+    settingsStorage.clearAll();
+    const authStorage = createMMKV({ id: "supabase-auth" });
+    authStorage.clearAll();
+  } catch {
+    // Expo Go fallback: no MMKV available
+  }
+}
+
 let supabase: ReturnType<typeof createClient> | null = null;
 
 if (supabaseUrl && supabaseAnonKey) {

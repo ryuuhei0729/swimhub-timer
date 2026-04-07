@@ -70,8 +70,8 @@ export interface TimerWebAuthContextValue {
 
 export interface TimerMobileAuthContextType extends BaseAuthState {
   isAuthenticated: boolean;
-  plan: UserPlan;
   subscription: SubscriptionInfo | null;
+  guestMode: boolean;
   signOut: () => Promise<{ error: Error | null }>;
   continueAsGuest: () => void;
   refreshSubscription: () => Promise<void>;

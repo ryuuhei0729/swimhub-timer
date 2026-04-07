@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
-import type { UserPlan, SubscriptionInfo } from "@swimhub-timer/shared";
+import { supabase, clearMmkvCaches } from "../lib/supabase";
+import type { SubscriptionInfo } from "@swimhub-timer/shared";
 import type { TimerMobileAuthContextType } from "@swimhub-timer/shared/types/auth";
 import { useAuthState } from "@swimhub-timer/shared/hooks";
 import {
@@ -16,7 +16,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, session, loading } = useAuthState(supabase);
-  const [plan, setPlan] = useState<UserPlan>("guest");
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [guestMode, setGuestMode] = useState(false);
 
@@ -25,47 +24,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initRevenueCat();
   }, []);
 
-  const fetchSubscription = React.useCallback(async (userId: string) => {
-    if (!supabase) return;
+  // Supabase の user_subscriptions テーブルからサブスクリプション情報を直接取得する
+  // API 経由だと Bearer token の有効期限切れで 401 になる問題があったため、
+  // Supabase クライアントを直接使う（token refresh が内蔵されている）
+  const fetchSubscription = React.useCallback(async (userId: string): Promise<SubscriptionInfo | null> => {
+    if (!supabase) return null;
     try {
-      const { data } = await supabase
+      const { data, error } = (await supabase
         .from("user_subscriptions")
         .select("plan, status, cancel_at_period_end, premium_expires_at, trial_end")
         .eq("id", userId)
-        .single<{
+        .single()) as {
+        data: {
           plan: string;
           status: string | null;
-          cancel_at_period_end: boolean;
+          cancel_at_period_end: boolean | null;
           premium_expires_at: string | null;
           trial_end: string | null;
-        }>();
-
-      if (data) {
-        const info: SubscriptionInfo = {
-          plan: data.plan === "premium" ? "premium" : "free",
-          status: (data.status as SubscriptionInfo["status"]) ?? null,
-          cancelAtPeriodEnd: data.cancel_at_period_end ?? false,
-          premiumExpiresAt: data.premium_expires_at ?? null,
-          trialEnd: data.trial_end ?? null,
-        };
-        setSubscription(info);
-        setPlan(info.plan);
-      } else {
-        setSubscription(null);
-        setPlan("free");
-      }
+        } | null;
+        error: unknown;
+      };
+      if (error || !data) return null;
+      return {
+        plan: data.plan as "free" | "premium",
+        status: (data.status as SubscriptionInfo["status"]) ?? null,
+        cancelAtPeriodEnd: data.cancel_at_period_end ?? false,
+        premiumExpiresAt: data.premium_expires_at ?? null,
+        trialEnd: data.trial_end ?? null,
+      };
     } catch {
-      setSubscription(null);
-      setPlan("free");
+      return null;
     }
   }, []);
 
   // サブスクリプション情報を再取得する公開メソッド
   const refreshSubscription = React.useCallback(async () => {
-    if (user) {
-      await fetchSubscription(user.id);
+    if (user?.id) {
+      const sub = await fetchSubscription(user.id);
+      if (sub !== null) setSubscription(sub);
     }
-  }, [user, fetchSubscription]);
+  }, [user?.id, fetchSubscription]);
 
   const signOut = React.useCallback(async () => {
     if (!supabase) {
@@ -74,68 +72,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
     }
     try {
-      // RevenueCat からログアウト
       await logoutRevenueCat();
 
       const { error } = await supabase.auth.signOut();
       if (error) {
-        // Network failure: fall back to local-only sign out
         await supabase.auth.signOut({ scope: "local" });
       }
-      setPlan("guest");
-      setSubscription(null);
-      setGuestMode(false);
-
-      // Clear all MMKV caches
-      try {
-        const { createMMKV } = require("react-native-mmkv");
-        const settingsStorage = createMMKV({ id: "swimhub-timer-settings" });
-        settingsStorage.clearAll();
-        const authStorage = createMMKV({ id: "supabase-auth" });
-        authStorage.clearAll();
-      } catch {
-        // Expo Go fallback: no MMKV available
-      }
-
-      return { error: null };
-    } catch (error) {
-      // Network failure in try block: fall back to local-only sign out
+    } catch {
       try {
         await supabase.auth.signOut({ scope: "local" });
-        setPlan("guest");
-        setSubscription(null);
-
-        try {
-          const { createMMKV } = require("react-native-mmkv");
-          const settingsStorage = createMMKV({ id: "swimhub-timer-settings" });
-          settingsStorage.clearAll();
-          const authStorage = createMMKV({ id: "supabase-auth" });
-          authStorage.clearAll();
-        } catch {
-          // Expo Go fallback: no MMKV available
-        }
-
-        return { error: null };
       } catch (localError) {
         console.error("Sign out error:", localError);
         return { error: localError as Error };
       }
+    } finally {
+      setSubscription(null);
+      setGuestMode(false);
+      clearMmkvCaches();
+
+      try {
+        const { useEditorStore } = await import("../stores/editor-store");
+        useEditorStore.getState().reset();
+      } catch {
+        // ストアがまだ読み込まれていない場合は無視
+      }
     }
+    return { error: null };
   }, []);
 
   const continueAsGuest = React.useCallback(() => {
-    setPlan("guest");
     setGuestMode(true);
   }, []);
 
-  // user が変わったらプランを取得 & RevenueCat にログイン
+  // user が変わったらサブスクリプションを取得 & RevenueCat にログイン
   useEffect(() => {
     if (user) {
       setGuestMode(false);
-      fetchSubscription(user.id);
+      fetchSubscription(user.id).then((sub) => {
+        if (sub !== null) setSubscription(sub);
+      });
       loginRevenueCat(user.id);
     } else {
-      setPlan("guest");
       setSubscription(null);
     }
   }, [user, fetchSubscription]);
@@ -144,8 +121,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const unsubscribe = addCustomerInfoUpdateListener(() => {
       // RevenueCat 側で購入/更新が発生したら Supabase から再取得
-      if (user) {
-        fetchSubscription(user.id);
+      if (user?.id) {
+        fetchSubscription(user.id).then((sub) => {
+          if (sub !== null) setSubscription(sub);
+        });
       }
     });
     return unsubscribe;
@@ -155,9 +134,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     session,
     loading,
-    isAuthenticated: !!user || guestMode,
-    plan,
+    isAuthenticated: !!user,
     subscription,
+    guestMode,
     signOut,
     continueAsGuest,
     refreshSubscription,

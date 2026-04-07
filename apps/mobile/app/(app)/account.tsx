@@ -13,7 +13,8 @@ import { PlanFeatureList } from "../../components/plan/PlanFeatureList";
 export default function AccountScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { user, plan, subscription, signOut, refreshSubscription } = useAuth();
+  const { user, subscription, signOut, refreshSubscription } = useAuth();
+  const plan = subscription?.plan ?? "free";
   const [deleting, setDeleting] = useState(false);
   const [restoring, setRestoring] = useState(false);
 

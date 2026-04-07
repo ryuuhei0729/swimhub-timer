@@ -14,8 +14,9 @@ interface SplitsPanelProps {
 export function SplitsPanel({ onFinish }: SplitsPanelProps) {
   const { t } = useTranslation();
   const router = useRouter();
-  const { plan } = useAuth();
-  const maxSplits = getMaxSplitCount(plan);
+  const { subscription, guestMode } = useAuth();
+  const effectivePlan = guestMode ? "guest" : (subscription?.plan ?? "free");
+  const maxSplits = getMaxSplitCount(effectivePlan);
   const {
     splitTimes,
     isFinished,

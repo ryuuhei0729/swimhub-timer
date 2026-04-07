@@ -7,7 +7,7 @@ import { AuthProvider, useAuth } from "../contexts/AuthProvider";
 import { colors } from "../lib/theme";
 
 function AuthGate() {
-  const { user, isAuthenticated, loading, continueAsGuest } = useAuth();
+  const { user, isAuthenticated, guestMode, loading, continueAsGuest } = useAuth();
   const segments = useSegments();
   const router = useRouter();
   const autoGuestDone = useRef(false);
@@ -17,18 +17,17 @@ function AuthGate() {
 
     const inAuthGroup = segments[0] === "(auth)";
 
-    if (!isAuthenticated && !inAuthGroup) {
-      // 未認証・非authグループ → 自動ゲストモード
+    if (!isAuthenticated && !guestMode && !inAuthGroup) {
+      // 未認証・非ゲスト・非authグループ → 自動ゲストモード
       if (!autoGuestDone.current) {
         autoGuestDone.current = true;
         continueAsGuest();
       }
     } else if (!!user && inAuthGroup) {
       // ログイン済みユーザーのみauthグループからリダイレクト
-      // ゲストモードではログイン画面にアクセスできるようにする
       router.replace("/(app)");
     }
-  }, [user, isAuthenticated, loading, segments, router, continueAsGuest]);
+  }, [user, isAuthenticated, guestMode, loading, segments, router, continueAsGuest]);
 
   if (loading) {
     return (

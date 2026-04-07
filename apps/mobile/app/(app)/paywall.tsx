@@ -15,6 +15,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import type { PurchasesPackage } from "react-native-purchases";
 import { useAuth } from "../../contexts/AuthProvider";
+import { checkIsPremium } from "@swimhub-timer/shared";
 import { getOfferings, purchasePackage, restorePurchases } from "../../lib/revenucat";
 import { PlanComparisonTable } from "../../components/plan/PlanComparisonTable";
 
@@ -23,7 +24,8 @@ type BillingPeriod = "monthly" | "annual";
 export default function PaywallScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { plan, subscription, refreshSubscription } = useAuth();
+  const { subscription, refreshSubscription } = useAuth();
+  const isPremiumActive = checkIsPremium(subscription);
 
   const [loadingOfferings, setLoadingOfferings] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
@@ -94,8 +96,9 @@ export default function PaywallScreen() {
           { text: "OK", onPress: () => router.back() },
         ]);
       }
-    } catch {
+    } catch (err) {
       Alert.alert(t("common.error"), t("paywall.purchaseFailed"));
+      console.error("購入エラー:", err);
     } finally {
       setPurchasing(false);
     }
@@ -110,8 +113,9 @@ export default function PaywallScreen() {
       Alert.alert(t("paywall.restoreSuccess"), t("paywall.restoreSuccessMessage"), [
         { text: "OK", onPress: () => router.back() },
       ]);
-    } catch {
+    } catch (err) {
       Alert.alert(t("common.error"), t("paywall.restoreFailed"));
+      console.error("リストアエラー:", err);
     } finally {
       setRestoring(false);
     }
@@ -128,7 +132,7 @@ export default function PaywallScreen() {
   }
 
   // すでに Premium
-  if (plan === "premium") {
+  if (isPremiumActive) {
     return (
       <SafeAreaView style={styles.container} edges={["bottom"]}>
         <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
@@ -167,7 +171,7 @@ export default function PaywallScreen() {
         )}
 
         {/* プラン比較テーブル */}
-        <PlanComparisonTable currentPlan={plan} />
+        <PlanComparisonTable currentPlan={subscription?.plan ?? "free"} />
 
         {/* プラン選択 */}
         {!loadingOfferings && !hasPackages && (

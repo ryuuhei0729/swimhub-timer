@@ -5,7 +5,7 @@ import type * as SharingType from "expo-sharing";
 import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../../stores/editor-store";
 import { useAuth } from "../../contexts/AuthProvider";
-import { formatTime, getAvailableResolutions, shouldShowWatermark } from "@swimhub-timer/shared";
+import { formatTime, getAvailableResolutions, shouldShowWatermark, checkIsPremium } from "@swimhub-timer/shared";
 import type { ExportResolution } from "@swimhub-timer/shared";
 import {
   exportVideoWithStopwatch,
@@ -29,7 +29,8 @@ import { GuestExportIndicator } from "../../components/plan/GuestExportIndicator
 export default function ExportScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { plan } = useAuth();
+  const { subscription, guestMode } = useAuth();
+  const effectivePlan = guestMode ? "guest" : (subscription?.plan ?? "free");
   const {
     videoUri,
     videoMetadata,
@@ -60,20 +61,20 @@ export default function ExportScreen() {
 
   // --- Derived ---
   const exportComplete = outputPath !== null;
-  const isPremium = plan === "premium";
+  const isPremium = checkIsPremium(subscription);
   const canProceed = exportComplete && (isPremium || adRewardEarned || adUnavailable);
   const duration = videoMetadata?.duration ?? 0;
-  const availableResolutions = getAvailableResolutions(plan);
-  const showWatermark = shouldShowWatermark(plan);
+  const availableResolutions = getAvailableResolutions(effectivePlan);
+  const showWatermark = shouldShowWatermark(effectivePlan);
 
   const remainingExports = useMemo(() => {
-    if (plan === "premium" || plan === "free") return null;
-    if (plan === "guest") {
+    if (effectivePlan === "premium" || effectivePlan === "free") return null;
+    if (effectivePlan === "guest") {
       const used = getGuestTodayCount("timer");
       return Math.max(0, 1 - used);
     }
     return null;
-  }, [plan]);
+  }, [effectivePlan]);
 
   const ALL_RESOLUTIONS: { key: ExportResolution; label: string }[] = [
     { key: "original", label: t("exportScreen.original") },
@@ -136,15 +137,15 @@ export default function ExportScreen() {
 
   // Set limitReached based on remaining exports (guest only; free/premium unlimited)
   useEffect(() => {
-    if (plan === "premium" || plan === "free") {
+    if (effectivePlan === "premium" || effectivePlan === "free") {
       setLimitReached(false);
       return;
     }
-    if (plan === "guest") {
+    if (effectivePlan === "guest") {
       setLimitReached(!canGuestUseToday("timer"));
       return;
     }
-  }, [plan]);
+  }, [effectivePlan]);
 
   const handleExport = useCallback(async () => {
     if (!videoUri || startTime === null) {
@@ -153,7 +154,7 @@ export default function ExportScreen() {
     }
 
     // --- Export limit check ---
-    if (plan === "guest") {
+    if (effectivePlan === "guest") {
       if (!canGuestUseToday("timer")) {
         setLimitReached(true);
         return;
@@ -210,7 +211,7 @@ export default function ExportScreen() {
       setProgress(1);
 
       // Record usage after successful export (guest only)
-      if (plan === "guest") {
+      if (effectivePlan === "guest") {
         markGuestUsedToday("timer");
       }
     } catch (e) {
@@ -231,7 +232,8 @@ export default function ExportScreen() {
     duration,
     videoMetadata?.height,
     showWatermark,
-    plan,
+    effectivePlan,
+    isPremium,
     t,
   ]);
 
@@ -324,7 +326,7 @@ export default function ExportScreen() {
       {/* Tier indicator (guest remaining / free upsell / premium: nothing) */}
       {!exportComplete && (
         <GuestExportIndicator
-          plan={plan}
+          plan={effectivePlan}
           remaining={remainingExports}
           onActionPress={() => router.push("/(auth)/get-started")}
         />

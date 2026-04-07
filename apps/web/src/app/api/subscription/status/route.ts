@@ -1,5 +1,7 @@
-import { NextResponse } from "next/server";
-import { createServerComponentClient } from "@/lib/supabase/server";
+import { type NextRequest, NextResponse } from "next/server";
+import { verifyAuth } from "@/lib/api-helpers";
+
+const DAILY_EXPORT_LIMIT = 1;
 
 /**
  * 今日の日付を JST (Asia/Tokyo) で YYYY-MM-DD 形式で返す
@@ -15,24 +17,20 @@ function getTodayJST(): string {
   return `${year}-${month}-${day}`;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // 1. 認証チェック
-    const supabase = await createServerComponentClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+    // 1. 認証チェック (Bearer token または cookie)
+    const authResult = await verifyAuth(request);
+    if ("error" in authResult) {
+      return authResult.error;
     }
+    const { uid, supabase } = authResult.result;
 
     // 2. user_subscriptions から取得
     const { data: subscription, error: subError } = (await supabase
       .from("user_subscriptions")
       .select("plan, status, cancel_at_period_end, premium_expires_at, trial_end")
-      .eq("id", user.id)
+      .eq("id", uid)
       .single()) as {
       data: {
         plan: string;
@@ -45,7 +43,6 @@ export async function GET() {
     };
 
     if (subError && subError.code !== "PGRST116") {
-      // PGRST116 = "no rows found" は正常（未登録ユーザー）
       console.error("サブスクリプション取得エラー:", subError);
       return NextResponse.json(
         { error: "サブスクリプション情報の取得に失敗しました" },
@@ -53,11 +50,24 @@ export async function GET() {
       );
     }
 
-    const plan = (subscription?.plan as "free" | "premium") ?? "free";
-    const status = subscription?.status ?? null;
-    const cancelAtPeriodEnd = subscription?.cancel_at_period_end ?? false;
-    const premiumExpiresAt = subscription?.premium_expires_at ?? null;
-    const trialEnd = subscription?.trial_end ?? null;
+    // 行が存在しない場合は free で作成
+    let sub = subscription;
+    if (!sub && subError?.code === "PGRST116") {
+      const { data: newRow } = await supabase
+        .from("user_subscriptions")
+        .insert({ id: uid })
+        .select("plan, status, cancel_at_period_end, premium_expires_at, trial_end")
+        .single();
+      if (newRow) {
+        sub = newRow as typeof subscription;
+      }
+    }
+
+    const plan = (sub?.plan as "free" | "premium") ?? "free";
+    const status = sub?.status ?? null;
+    const cancelAtPeriodEnd = sub?.cancel_at_period_end ?? false;
+    const premiumExpiresAt = sub?.premium_expires_at ?? null;
+    const trialEnd = sub?.trial_end ?? null;
 
     // 3. app_daily_usage から今日の全アプリ合計 daily_tokens_used を取得
     const todayJST = getTodayJST();
@@ -65,7 +75,7 @@ export async function GET() {
     const { data: usageData, error: usageError } = (await supabase
       .from("app_daily_usage")
       .select("daily_tokens_used")
-      .eq("user_id", user.id)
+      .eq("user_id", uid)
       .eq("usage_date", todayJST)) as {
       data: { daily_tokens_used: number }[] | null;
       error: { message?: string } | null;
@@ -90,7 +100,7 @@ export async function GET() {
         premiumExpiresAt,
         trialEnd,
         tokensUsedToday,
-        tokensRemaining: plan === "premium" ? null : 1 - tokensUsedToday,
+        tokensRemaining: plan === "premium" ? null : DAILY_EXPORT_LIMIT - tokensUsedToday,
       },
       {
         headers: {
