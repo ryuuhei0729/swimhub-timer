@@ -58,5 +58,8 @@ next-env.d.ts
 .vscode/
 .idea/
 
+# turbo
+.turbo/
+
 # AI/agents
 .agents/
