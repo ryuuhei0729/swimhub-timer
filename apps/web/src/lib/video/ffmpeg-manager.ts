@@ -26,7 +26,7 @@ class FFmpegManager {
       onProgress?.(Math.round(progress * 100));
     });
 
-    const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
+    const baseURL = "/ffmpeg";
     await this.ffmpeg.load({
       coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
       wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),

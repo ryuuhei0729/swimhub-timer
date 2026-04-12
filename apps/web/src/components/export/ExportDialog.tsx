@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useEditorStore } from "@/stores/editor-store";
 import { useVideoExport } from "@/hooks/useVideoExport";
 import { Button } from "@/components/ui/button";
