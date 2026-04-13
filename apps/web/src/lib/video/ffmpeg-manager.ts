@@ -26,13 +26,20 @@ class FFmpegManager {
       onProgress?.(Math.round(progress * 100));
     });
 
-    const baseURL =
-      process.env.NEXT_PUBLIC_FFMPEG_BASE_URL ??
-      "https://pub-22903ca2ced04f30b26d6f3838248897.r2.dev/ffmpeg";
-    await this.ffmpeg.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
-    });
+    // Use multi-threaded core when SharedArrayBuffer is available (requires COOP/COEP)
+    const mtAvailable = typeof SharedArrayBuffer !== "undefined";
+    const defaultBase = mtAvailable
+      ? "https://pub-22903ca2ced04f30b26d6f3838248897.r2.dev/ffmpeg-mt"
+      : "https://pub-22903ca2ced04f30b26d6f3838248897.r2.dev/ffmpeg";
+    const baseURL = process.env.NEXT_PUBLIC_FFMPEG_BASE_URL ?? defaultBase;
+
+    const coreURL = await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript");
+    const wasmURL = await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm");
+    const workerURL = mtAvailable
+      ? await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, "text/javascript")
+      : undefined;
+
+    await this.ffmpeg.load(workerURL ? { coreURL, wasmURL, workerURL } : { coreURL, wasmURL });
 
     this.loaded = true;
     return this.ffmpeg;

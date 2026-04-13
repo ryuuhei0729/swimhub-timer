@@ -1,6 +1,9 @@
 import type { StopwatchConfig, ExportSettings } from "@swimhub-timer/shared";
 import { ffmpegManager, fetchFile } from "./ffmpeg-manager";
 
+// Font file written to FFmpeg's virtual filesystem; must match the path used in writeFile()
+const FONT_PATH = "/tmp/stopwatch.ttf";
+
 function buildDrawtextFilter(startSignalTime: number, config: StopwatchConfig): string {
   const startT = startSignalTime.toFixed(3);
 
@@ -20,6 +23,7 @@ function buildDrawtextFilter(startSignalTime: number, config: StopwatchConfig): 
   const yExpr = buildPositionY(config);
 
   const parts = [
+    `fontfile=${FONT_PATH}`,
     `fontsize=${config.fontSize}`,
     `fontcolor=${config.textColor}`,
     `box=1`,
@@ -87,6 +91,7 @@ function watermarkFontSize(videoHeight: number): number {
 function buildWatermarkFilter(videoHeight: number): string {
   const fontSize = watermarkFontSize(videoHeight);
   const parts = [
+    `fontfile=${FONT_PATH}`,
     `fontsize=${fontSize}`,
     `fontcolor=white@0.30`,
     `x=w-tw-w*0.03`,
@@ -106,6 +111,14 @@ export async function exportVideoWithStopwatch(
   showWatermark = true,
 ): Promise<Blob> {
   const ffmpeg = await ffmpegManager.load(onProgress);
+
+  // Load font for drawtext filter (required by FFmpeg 5+ @ffmpeg/core)
+  const fontResp = await fetch("/fonts/stopwatch.ttf");
+  if (!fontResp.ok) {
+    throw new Error(`Failed to load stopwatch font: ${fontResp.status}`);
+  }
+  const fontData = new Uint8Array(await fontResp.arrayBuffer());
+  await ffmpeg.writeFile(FONT_PATH, fontData);
 
   // Write input video to virtual filesystem
   await ffmpeg.writeFile("input.mp4", await fetchFile(videoFile));
@@ -147,7 +160,7 @@ export async function exportVideoWithStopwatch(
   const filterChain = filters.join(",");
 
   // Use lower CRF for original resolution to preserve quality
-  const crf = exportSettings.resolution === "original" ? "18" : "23";
+  const crf = exportSettings.resolution === "original" ? "23" : "28";
 
   // Try to load watermark icon (only when watermark is enabled)
   let hasIcon = false;
@@ -187,7 +200,7 @@ export async function exportVideoWithStopwatch(
       "-c:v",
       "libx264",
       "-preset",
-      "medium",
+      "ultrafast",
       "-crf",
       crf,
       "-c:a",
@@ -207,7 +220,7 @@ export async function exportVideoWithStopwatch(
       "-c:v",
       "libx264",
       "-preset",
-      "medium",
+      "ultrafast",
       "-crf",
       crf,
       "-c:a",
