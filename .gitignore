@@ -74,3 +74,6 @@ next-env.d.ts
 
 # AI/agents
 .agents/
+
+# vendored binaries (downloaded via setup:ffmpeg)
+apps/web/public/ffmpeg/

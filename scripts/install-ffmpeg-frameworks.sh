@@ -1,7 +1,8 @@
 #!/bin/bash
 # Post-install setup for monorepo
 # 1. Symlink next to root node_modules so eslint-config-next can resolve it
-# 2. Download ffmpeg-kit xcframeworks for iOS builds
+# 2. Copy @ffmpeg/core WASM to public/ffmpeg for self-hosted serving
+# 3. Download ffmpeg-kit xcframeworks for iOS builds
 
 set -e
 
@@ -9,6 +10,15 @@ set -e
 if [ -d "apps/web/node_modules/next" ]; then
   echo "[postinstall] Symlinking next to root node_modules for eslint..."
   ln -sfn ../apps/web/node_modules/next node_modules/next
+fi
+
+# Copy @ffmpeg/core WASM binaries to public directory for self-hosted serving
+FFMPEG_CORE_SRC="node_modules/@ffmpeg/core/dist/umd"
+FFMPEG_CORE_DST="apps/web/public/ffmpeg"
+if [ -d "$FFMPEG_CORE_SRC" ]; then
+  mkdir -p "$FFMPEG_CORE_DST"
+  cp "$FFMPEG_CORE_SRC/ffmpeg-core.js" "$FFMPEG_CORE_SRC/ffmpeg-core.wasm" "$FFMPEG_CORE_DST/"
+  echo "[ffmpeg-core] Copied WASM binaries to $FFMPEG_CORE_DST"
 fi
 
 FFMPEG_DIR="node_modules/ffmpeg-kit-react-native/bundle-apple-framework-ios"
