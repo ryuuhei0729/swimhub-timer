@@ -72,8 +72,8 @@ next-env.d.ts
 # turbo
 .turbo/
 
+# wrangler local state
+.wrangler/
+
 # AI/agents
 .agents/
-
-# vendored binaries (downloaded via setup:ffmpeg)
-apps/web/public/ffmpeg/

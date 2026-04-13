@@ -19,8 +19,6 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // Self-hosted vendored files:
-    "public/ffmpeg/**",
   ]),
 ]);
 
