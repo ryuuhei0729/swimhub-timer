@@ -91,9 +91,8 @@ export function SwimHubFamilyFooter() {
               {t("footer.appDescription")}
             </p>
             <div className="flex items-center text-sm text-gray-500">
-              <span>Made with</span>
-              <Heart className="h-4 w-4 text-red-500 mx-1" />
-              <span>for swimmers</span>
+              <Heart className="h-4 w-4 text-red-500 mr-1" />
+              <span>{t("footer.madeWithLove")}</span>
             </div>
           </div>
 
@@ -194,18 +193,19 @@ export function SwimHubFamilyFooter() {
           <div className="flex flex-col items-center justify-between space-y-4 sm:flex-row sm:space-y-0">
             <div className="flex flex-col items-center sm:items-start space-y-1">
               <div className="text-sm text-gray-500">
-                © {currentYear} SwimHub Timer. All rights reserved.
+                {t("footer.copyright", { year: currentYear })}
               </div>
               <div className="text-xs text-gray-400"></div>
             </div>
 
             <div className="flex items-center space-x-4 text-xs text-gray-400">
               <span>
-                Last updated:{" "}
-                {new Date().toLocaleDateString("ja-JP", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
+                {t("footer.lastUpdated", {
+                  date: new Date().toLocaleDateString(locale, {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                  }),
                 })}
               </span>
             </div>

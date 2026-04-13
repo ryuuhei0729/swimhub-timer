@@ -31,7 +31,9 @@ class FFmpegManager {
     const defaultBase = mtAvailable
       ? "https://pub-22903ca2ced04f30b26d6f3838248897.r2.dev/ffmpeg-mt"
       : "https://pub-22903ca2ced04f30b26d6f3838248897.r2.dev/ffmpeg";
-    const baseURL = process.env.NEXT_PUBLIC_FFMPEG_BASE_URL ?? defaultBase;
+    // Treat empty/whitespace env var as unset so misconfigured deploys fall back safely
+    const configured = process.env.NEXT_PUBLIC_FFMPEG_BASE_URL?.trim();
+    const baseURL = configured ? configured.replace(/\/+$/, "") : defaultBase;
 
     const coreURL = await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript");
     const wasmURL = await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm");
