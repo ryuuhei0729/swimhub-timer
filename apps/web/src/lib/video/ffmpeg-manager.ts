@@ -26,11 +26,22 @@ class FFmpegManager {
       onProgress?.(Math.round(progress * 100));
     });
 
-    const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
-    await this.ffmpeg.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
-    });
+    // Use multi-threaded core when SharedArrayBuffer is available (requires COOP/COEP)
+    const mtAvailable = typeof SharedArrayBuffer !== "undefined";
+    const defaultBase = mtAvailable
+      ? "https://pub-22903ca2ced04f30b26d6f3838248897.r2.dev/ffmpeg-mt"
+      : "https://pub-22903ca2ced04f30b26d6f3838248897.r2.dev/ffmpeg";
+    // Treat empty/whitespace env var as unset so misconfigured deploys fall back safely
+    const configured = process.env.NEXT_PUBLIC_FFMPEG_BASE_URL?.trim();
+    const baseURL = configured ? configured.replace(/\/+$/, "") : defaultBase;
+
+    const coreURL = await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript");
+    const wasmURL = await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm");
+    const workerURL = mtAvailable
+      ? await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, "text/javascript")
+      : undefined;
+
+    await this.ffmpeg.load(workerURL ? { coreURL, wasmURL, workerURL } : { coreURL, wasmURL });
 
     this.loaded = true;
     return this.ffmpeg;

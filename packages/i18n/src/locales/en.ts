@@ -498,6 +498,23 @@ const en: TranslationShape = {
     settings: "Settings",
     backToHome: "Back to home",
   },
+  footer: {
+    appDescription: "A web app that overlays times on swim videos",
+    madeWithLove: "for swimmers",
+    supportInfo: "Support & Info",
+    privacyPolicy: "Privacy Policy",
+    termsOfService: "Terms of Service",
+    support: "Support",
+    contact: "Contact",
+    commercialLaw: "Commercial Transactions Act",
+    serviceList: "SwimHub Services",
+    currentlyUsing: "Current",
+    swimhubDesc: "Swim team management",
+    timerDesc: "Overlay times on video",
+    scannerDesc: "Analyze handwritten time sheets with AI",
+    copyright: "© {{year}} SwimHub Timer. All rights reserved.",
+    lastUpdated: "Last updated: {{date}}",
+  },
 } as const;
 
 export default en;

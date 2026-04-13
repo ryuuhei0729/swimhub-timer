@@ -1,66 +1,73 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useTranslation } from "react-i18next";
 import { Heart, ShieldCheck, FileText, HelpCircle, Mail, ExternalLink } from "lucide-react";
 
-const familyServices = [
-  {
-    name: "SwimHub",
-    description: "水泳チームの総合管理",
-    href: "https://swim-hub.app",
-    iconSrc: "/swimhub-icon.png",
-    current: false,
-  },
-  {
-    name: "SwimHub Timer",
-    description: "動画にタイムをオーバーレイ",
-    href: "https://timer.swim-hub.app",
-    iconSrc: "/icon.png",
-    current: true,
-  },
-  {
-    name: "SwimHub Scanner",
-    description: "手書きの記録表をAIで解析",
-    href: "https://scanner.swim-hub.app",
-    iconSrc: "/scanner-icon.png",
-    current: false,
-  },
-];
-
-const footerLinks = [
-  {
-    name: "プライバシーポリシー",
-    href: "/privacy",
-    icon: ShieldCheck,
-    external: false,
-  },
-  {
-    name: "利用規約",
-    href: "/terms",
-    icon: FileText,
-    external: false,
-  },
-  {
-    name: "サポート",
-    href: "https://swim-hub.app/support",
-    icon: HelpCircle,
-    external: true,
-  },
-  {
-    name: "お問い合わせ",
-    href: "https://swim-hub.app/contact",
-    icon: Mail,
-    external: true,
-  },
-  {
-    name: "特定商取引法に基づく表記",
-    href: "https://swim-hub.app/tokushoho",
-    icon: FileText,
-    external: true,
-  },
-];
-
 export function SwimHubFamilyFooter() {
+  const { t } = useTranslation();
+  const params = useParams();
+  const locale = (params.locale as string) || "ja";
   const currentYear = new Date().getFullYear();
+
+  const familyServices = [
+    {
+      name: "SwimHub",
+      description: t("footer.swimhubDesc"),
+      href: "https://swim-hub.app",
+      iconSrc: "/swimhub-icon.png",
+      current: false,
+    },
+    {
+      name: "SwimHub Timer",
+      description: t("footer.timerDesc"),
+      href: "https://timer.swim-hub.app",
+      iconSrc: "/icon.png",
+      current: true,
+    },
+    {
+      name: "SwimHub Scanner",
+      description: t("footer.scannerDesc"),
+      href: "https://scanner.swim-hub.app",
+      iconSrc: "/scanner-icon.png",
+      current: false,
+    },
+  ];
+
+  const footerLinks = [
+    {
+      name: t("footer.privacyPolicy"),
+      href: "/privacy",
+      icon: ShieldCheck,
+      external: false,
+    },
+    {
+      name: t("footer.termsOfService"),
+      href: "/terms",
+      icon: FileText,
+      external: false,
+    },
+    {
+      name: t("footer.support"),
+      href: "https://swim-hub.app/support",
+      icon: HelpCircle,
+      external: true,
+    },
+    {
+      name: t("footer.contact"),
+      href: "https://swim-hub.app/contact",
+      icon: Mail,
+      external: true,
+    },
+    {
+      name: t("footer.commercialLaw"),
+      href: "https://swim-hub.app/tokushoho",
+      icon: FileText,
+      external: true,
+    },
+  ];
 
   return (
     <footer className="bg-white border-t border-gray-200 mt-auto">
@@ -81,19 +88,18 @@ export function SwimHubFamilyFooter() {
               <h3 className="text-lg font-semibold text-gray-900">SwimHub Timer</h3>
             </div>
             <p className="text-sm text-gray-600 leading-relaxed">
-              水泳の動画にタイムをオーバーレイ表示できるWebアプリケーション
+              {t("footer.appDescription")}
             </p>
             <div className="flex items-center text-sm text-gray-500">
-              <span>Made with</span>
-              <Heart className="h-4 w-4 text-red-500 mx-1" />
-              <span>for swimmers</span>
+              <Heart className="h-4 w-4 text-red-500 mr-1" />
+              <span>{t("footer.madeWithLove")}</span>
             </div>
           </div>
 
           {/* 右側：法的情報とサポート */}
           <div className="space-y-4">
             <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
-              サポート・情報
+              {t("footer.supportInfo")}
             </h4>
             <div className="grid grid-cols-2 gap-2">
               {footerLinks.map((link) =>
@@ -111,7 +117,7 @@ export function SwimHubFamilyFooter() {
                 ) : (
                   <Link
                     key={link.name}
-                    href={link.href}
+                    href={`/${locale}${link.href}`}
                     className="flex items-center text-sm text-gray-600 hover:text-blue-600 transition-colors duration-200"
                   >
                     <link.icon className="h-4 w-4 mr-2" />
@@ -126,7 +132,7 @@ export function SwimHubFamilyFooter() {
         {/* SwimHub サービス一覧 */}
         <div className="mt-8 pt-6 border-t border-gray-200">
           <h4 className="text-sm font-semibold text-gray-900 tracking-wide mb-4">
-            SwimHub サービス一覧
+            {t("footer.serviceList")}
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {familyServices.map((service) =>
@@ -146,7 +152,7 @@ export function SwimHubFamilyFooter() {
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium text-blue-700">{service.name}</span>
                       <span className="text-[10px] font-medium text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded">
-                        利用中
+                        {t("footer.currentlyUsing")}
                       </span>
                     </div>
                     <p className="text-xs text-blue-600/70 truncate">{service.description}</p>
@@ -187,18 +193,19 @@ export function SwimHubFamilyFooter() {
           <div className="flex flex-col items-center justify-between space-y-4 sm:flex-row sm:space-y-0">
             <div className="flex flex-col items-center sm:items-start space-y-1">
               <div className="text-sm text-gray-500">
-                © {currentYear} SwimHub Timer. All rights reserved.
+                {t("footer.copyright", { year: currentYear })}
               </div>
               <div className="text-xs text-gray-400"></div>
             </div>
 
             <div className="flex items-center space-x-4 text-xs text-gray-400">
               <span>
-                Last updated:{" "}
-                {new Date().toLocaleDateString("ja-JP", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
+                {t("footer.lastUpdated", {
+                  date: new Date().toLocaleDateString(locale, {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                  }),
                 })}
               </span>
             </div>

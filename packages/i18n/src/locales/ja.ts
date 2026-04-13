@@ -495,6 +495,23 @@ const ja = {
     settings: "設定",
     backToHome: "ホームに戻る",
   },
+  footer: {
+    appDescription: "水泳の動画にタイムをオーバーレイ表示できるWebアプリケーション",
+    madeWithLove: "水泳を愛するすべての人へ",
+    supportInfo: "サポート・情報",
+    privacyPolicy: "プライバシーポリシー",
+    termsOfService: "利用規約",
+    support: "サポート",
+    contact: "お問い合わせ",
+    commercialLaw: "特定商取引法に基づく表記",
+    serviceList: "SwimHub サービス一覧",
+    currentlyUsing: "利用中",
+    swimhubDesc: "水泳チームの総合管理",
+    timerDesc: "動画にタイムをオーバーレイ",
+    scannerDesc: "手書きの記録表をAIで解析",
+    copyright: "© {{year}} SwimHub Timer. All rights reserved.",
+    lastUpdated: "最終更新: {{date}}",
+  },
 } as const;
 
 export default ja;
