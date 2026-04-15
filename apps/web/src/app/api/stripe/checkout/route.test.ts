@@ -126,7 +126,7 @@ describe("POST /api/stripe/checkout (timer) — UUID 検証", () => {
     ];
 
     for (const uid of validUuids) {
-      it(`UUID "${uid}" は 400 "不正なユーザーIDです" を返さない`, async () => {
+      it(`UUID "${uid}" は UUID 検証を通過し Stripe 処理に到達する`, async () => {
         mockCreateServerComponentClient.mockResolvedValue(makeMockSupabase(uid));
 
         // Stripe は失敗させてよい — UUID 検証通過後のエラーであることを確認するだけ
@@ -138,10 +138,9 @@ describe("POST /api/stripe/checkout (timer) — UUID 検証", () => {
         const req = makeRequest({ priceId: "price_test_monthly" });
         const res = await POST(req);
 
-        if (res.status === 400) {
-          const json = await res.json();
-          expect(json.error).not.toBe("不正なユーザーIDです");
-        }
+        // UUID 検証を通過し、getStripe() が実際に呼ばれたことを保証する
+        expect(mockGetStripe).toHaveBeenCalled();
+        expect(res.status).not.toBe(400);
       });
     }
   });

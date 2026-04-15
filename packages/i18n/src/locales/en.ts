@@ -97,6 +97,7 @@ const en: TranslationShape = {
     count: "{{count}}",
     limitReached: "Split limit ({{max}}) reached.",
     upgradeToPremium: "Upgrade to Premium for unlimited splits →",
+    loginToRecordMore: "Log in to record unlimited splits →",
     overlay: {
       title: "Lap / Split",
       tabByDistance: "By Distance",

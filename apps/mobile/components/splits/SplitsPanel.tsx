@@ -160,7 +160,9 @@ export function SplitsPanel({ onFinish }: SplitsPanelProps) {
                 {t("splits.limitReached", { max: maxSplits })}
               </Text>
               <Text style={styles.limitBannerLink}>
-                {t("splits.upgradeToPremium")}
+                {effectivePlan === "guest"
+                  ? t("splits.loginToRecordMore")
+                  : t("splits.upgradeToPremium")}
               </Text>
             </Pressable>
           )}

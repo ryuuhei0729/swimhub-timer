@@ -11,24 +11,31 @@ function AuthGate() {
   const segments = useSegments();
   const router = useRouter();
   const redirectDone = useRef(false);
+  const prevAuthStateRef = useRef({ user: !!user, guestMode });
 
   useEffect(() => {
     if (loading) return;
+
+    // 認証状態が変化したときだけリダイレクトフラグをリセット
+    const prevUser = prevAuthStateRef.current.user;
+    const prevGuestMode = prevAuthStateRef.current.guestMode;
+    if (prevUser !== !!user || prevGuestMode !== guestMode) {
+      redirectDone.current = false;
+      prevAuthStateRef.current = { user: !!user, guestMode };
+    }
+
+    if (redirectDone.current) return;
 
     const inAuthGroup = segments[0] === "(auth)";
 
     if (!isAuthenticated && !guestMode && !inAuthGroup) {
       // 未認証・非ゲスト・非authグループ → get-started へリダイレクト
-      if (!redirectDone.current) {
-        redirectDone.current = true;
-        router.replace("/(auth)/get-started");
-      }
+      redirectDone.current = true;
+      router.replace("/(auth)/get-started");
     } else if (!!user && inAuthGroup) {
       // ログイン済みユーザーのみauthグループからリダイレクト
+      redirectDone.current = true;
       router.replace("/(app)");
-    } else {
-      // 認証状態が変わったら次回のリダイレクトを許可
-      redirectDone.current = false;
     }
   }, [user, isAuthenticated, guestMode, loading, segments, router]);
 

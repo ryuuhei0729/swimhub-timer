@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
@@ -11,7 +11,15 @@ export default function SettingsPage() {
   const { t } = useTranslation();
   const params = useParams();
   const locale = (params.locale as string) || "ja";
+  const router = useRouter();
   const { user, loading, refreshSubscription } = useAuth();
+
+  // 未認証ユーザーをログインページへリダイレクト
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push(`/${locale}/login`);
+    }
+  }, [loading, user, router, locale]);
 
   // Checkout 完了後に subscription を再取得
   useEffect(() => {
@@ -34,19 +42,7 @@ export default function SettingsPage() {
   }
 
   if (!user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <p className="text-muted-foreground mb-4">{t("auth.errors.sessionNotFound")}</p>
-          <Link
-            href={`/${locale}/login`}
-            className="text-primary hover:underline"
-          >
-            {t("auth.login")}
-          </Link>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (

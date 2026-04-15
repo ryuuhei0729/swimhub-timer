@@ -24,7 +24,7 @@ type BillingPeriod = "monthly" | "annual";
 export default function PaywallScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { subscription, refreshSubscription, guestMode } = useAuth();
+  const { subscription, refreshSubscription, guestMode, isAuthenticated } = useAuth();
   const isPremiumActive = checkIsPremium(subscription);
 
   const [loadingOfferings, setLoadingOfferings] = useState(true);
@@ -84,8 +84,7 @@ export default function PaywallScreen() {
 
   // 購入処理
   const handlePurchase = async () => {
-    // ゲスト状態での防御的ガード
-    if (guestMode) {
+    if (guestMode || !isAuthenticated) {
       router.push("/(auth)/get-started");
       return;
     }
@@ -95,8 +94,8 @@ export default function PaywallScreen() {
 
     setPurchasing(true);
     try {
-      const info = await purchasePackage(pkg);
-      if (info) {
+      const customerInfo = await purchasePackage(pkg);
+      if (customerInfo) {
         await refreshSubscription();
         Alert.alert(t("paywall.purchaseSuccess"), t("paywall.purchaseSuccessMessage"), [
           { text: "OK", onPress: () => router.back() },
@@ -112,6 +111,10 @@ export default function PaywallScreen() {
 
   // リストア処理
   const handleRestore = async () => {
+    if (guestMode || !isAuthenticated) {
+      router.push("/(auth)/get-started");
+      return;
+    }
     setRestoring(true);
     try {
       await restorePurchases();
@@ -259,7 +262,7 @@ export default function PaywallScreen() {
         </View>
 
         {/* 購入ボタン / ゲスト時ログイン CTA */}
-        {guestMode ? (
+        {guestMode || !isAuthenticated ? (
           <TouchableOpacity
             style={styles.loginCtaButton}
             onPress={() => router.push("/(auth)/get-started")}
@@ -284,24 +287,26 @@ export default function PaywallScreen() {
           )
         )}
 
-        {!hasTrialed && (
+        {!hasTrialed && !guestMode && isAuthenticated && (
           <Text style={styles.trialNote}>{t("paywall.trialNote")}</Text>
         )}
 
         <Text style={styles.cancelNote}>{t("paywall.cancelNote")}</Text>
 
         {/* リストアボタン */}
-        <TouchableOpacity
-          style={styles.restoreButton}
-          onPress={handleRestore}
-          disabled={restoring}
-        >
-          {restoring ? (
-            <ActivityIndicator color="#2563EB" size="small" />
-          ) : (
-            <Text style={styles.restoreButtonText}>{t("paywall.restore")}</Text>
-          )}
-        </TouchableOpacity>
+        {!guestMode && isAuthenticated && (
+          <TouchableOpacity
+            style={styles.restoreButton}
+            onPress={handleRestore}
+            disabled={restoring}
+          >
+            {restoring ? (
+              <ActivityIndicator color="#2563EB" size="small" />
+            ) : (
+              <Text style={styles.restoreButtonText}>{t("paywall.restore")}</Text>
+            )}
+          </TouchableOpacity>
+        )}
 
         {/* 利用規約・プライバシーポリシー */}
         <View style={styles.legalLinks}>

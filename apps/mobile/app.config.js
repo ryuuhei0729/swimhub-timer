@@ -14,7 +14,6 @@ module.exports = {
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.swimhubtimer.app",
-    buildNumber: "41",
     usesAppleSignIn: true,
     infoPlist: {
       NSPhotoLibraryUsageDescription:
@@ -30,7 +29,6 @@ module.exports = {
       backgroundColor: "#EFF6FF",
     },
     package: "com.swimhubtimer.app",
-    versionCode: 33,
     permissions: [
       "android.permission.RECORD_AUDIO",
       "android.permission.READ_EXTERNAL_STORAGE",

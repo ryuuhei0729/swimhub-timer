@@ -95,6 +95,7 @@ const ja = {
     count: "{{count}}件",
     limitReached: "スプリットの上限（{{max}}件）に達しました。",
     upgradeToPremium: "Premiumプランで無制限に記録できます →",
+    loginToRecordMore: "ログインして無制限に記録 →",
     overlay: {
       title: "ラップ / スプリット",
       tabByDistance: "距離別 Lap",
