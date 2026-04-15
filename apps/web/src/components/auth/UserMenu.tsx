@@ -5,11 +5,14 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 export function UserMenu() {
   const { t } = useTranslation();
   const { user, plan, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const params = useParams();
   const locale = (params.locale as string) || "ja";
@@ -41,6 +44,8 @@ export function UserMenu() {
     <div className="relative z-50" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-haspopup="menu"
         className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors duration-200"
       >
         <svg
@@ -116,15 +121,9 @@ export function UserMenu() {
               {t("subscription.settings")}
             </Link>
             <button
-              onClick={async () => {
+              onClick={() => {
                 setIsOpen(false);
-                try {
-                  await signOut();
-                } catch (error) {
-                  if (process.env.NODE_ENV !== "production") {
-                    console.error("Sign out failed:", error);
-                  }
-                }
+                setIsLogoutDialogOpen(true);
               }}
               className="flex w-full items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors duration-200"
             >
@@ -146,6 +145,29 @@ export function UserMenu() {
           </div>
         </div>
       )}
+      <ConfirmDialog
+        isOpen={isLogoutDialogOpen}
+        variant="danger"
+        title={t("auth.logoutTitle")}
+        message={t("auth.logoutConfirm")}
+        confirmLabel={t("auth.logout")}
+        cancelLabel={t("common.cancel")}
+        isConfirming={isLoggingOut}
+        onConfirm={async () => {
+          setIsLoggingOut(true);
+          try {
+            await signOut();
+          } catch (error) {
+            if (process.env.NODE_ENV !== "production") {
+              console.error("Sign out failed:", error);
+            }
+          } finally {
+            setIsLoggingOut(false);
+            setIsLogoutDialogOpen(false);
+          }
+        }}
+        onCancel={() => setIsLogoutDialogOpen(false)}
+      />
     </div>
   );
 }

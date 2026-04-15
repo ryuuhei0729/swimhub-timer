@@ -13,7 +13,7 @@ import { PlanFeatureList } from "../../components/plan/PlanFeatureList";
 export default function AccountScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { user, subscription, signOut, refreshSubscription } = useAuth();
+  const { user, subscription, signOut, refreshSubscription, guestMode } = useAuth();
   const plan = subscription?.plan ?? "free";
   const [deleting, setDeleting] = useState(false);
   const [restoring, setRestoring] = useState(false);
@@ -195,16 +195,27 @@ export default function AccountScreen() {
               </>
             ) : (
               <>
-                <PlanFeatureList currentPlan={plan} />
+                <PlanFeatureList currentPlan={guestMode ? "guest" : plan} />
                 <Text style={styles.upgradePrompt}>{t("account.upgradePrompt")}</Text>
-                <TouchableOpacity
-                  style={styles.upgradeButton}
-                  onPress={() => router.push("/(app)/paywall")}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("account.upgradeToPremium")}
-                >
-                  <Text style={styles.upgradeButtonText}>{t("account.upgradeToPremium")}</Text>
-                </TouchableOpacity>
+                {guestMode ? (
+                  <TouchableOpacity
+                    style={styles.upgradeButton}
+                    onPress={() => router.push("/(auth)/get-started")}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("paywall.loginToUpgrade")}
+                  >
+                    <Text style={styles.upgradeButtonText}>{t("paywall.loginToUpgrade")}</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.upgradeButton}
+                    onPress={() => router.push("/(app)/paywall")}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("account.upgradeToPremium")}
+                  >
+                    <Text style={styles.upgradeButtonText}>{t("account.upgradeToPremium")}</Text>
+                  </TouchableOpacity>
+                )}
               </>
             )}
 

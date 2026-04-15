@@ -11,5 +11,5 @@ export function formatTime(seconds: number): string {
 
   if (m >= 10) return `${pad2(m)}:${pad2(s)}.${pad2(cs)}`;
   if (m >= 1) return `${m}:${pad2(s)}.${pad2(cs)}`;
-  return `${pad2(s)}.${pad2(cs)}`;
+  return `${s}.${pad2(cs)}`;
 }
