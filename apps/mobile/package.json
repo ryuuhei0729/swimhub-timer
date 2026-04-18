@@ -9,7 +9,9 @@
     "ios": "pnpm exec dotenvx run -f .env.local -- expo run:ios",
     "ios:dev-client": "pnpm exec dotenvx run -f .env.local -- expo start --ios --dev-client",
     "web": "expo start --web",
-    "lint": "eslint"
+    "lint": "eslint",
+    "ios:bump-build": "plutil -replace CFBundleVersion -string $(($(plutil -extract CFBundleVersion raw ios/SHTimer/Info.plist) + 1)) ios/SHTimer/Info.plist && plutil -extract CFBundleVersion raw ios/SHTimer/Info.plist",
+    "build:ios:local": "pnpm ios:bump-build && eas build --platform ios --profile production --local"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.97.0",
