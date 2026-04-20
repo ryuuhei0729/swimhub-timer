@@ -24,7 +24,7 @@ type BillingPeriod = "monthly" | "annual";
 export default function PaywallScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { subscription, refreshSubscription } = useAuth();
+  const { subscription, refreshSubscription, guestMode, isAuthenticated } = useAuth();
   const isPremiumActive = checkIsPremium(subscription);
 
   const [loadingOfferings, setLoadingOfferings] = useState(true);
@@ -84,13 +84,18 @@ export default function PaywallScreen() {
 
   // 購入処理
   const handlePurchase = async () => {
+    if (guestMode || !isAuthenticated) {
+      router.push("/(auth)/get-started");
+      return;
+    }
+
     const pkg = selectedPeriod === "monthly" ? monthlyPackage : annualPackage;
     if (!pkg) return;
 
     setPurchasing(true);
     try {
-      const info = await purchasePackage(pkg);
-      if (info) {
+      const customerInfo = await purchasePackage(pkg);
+      if (customerInfo) {
         await refreshSubscription();
         Alert.alert(t("paywall.purchaseSuccess"), t("paywall.purchaseSuccessMessage"), [
           { text: "OK", onPress: () => router.back() },
@@ -106,6 +111,10 @@ export default function PaywallScreen() {
 
   // リストア処理
   const handleRestore = async () => {
+    if (guestMode || !isAuthenticated) {
+      router.push("/(auth)/get-started");
+      return;
+    }
     setRestoring(true);
     try {
       await restorePurchases();
@@ -171,7 +180,7 @@ export default function PaywallScreen() {
         )}
 
         {/* プラン比較テーブル */}
-        <PlanComparisonTable currentPlan={subscription?.plan ?? "free"} />
+        <PlanComparisonTable currentPlan={guestMode ? "guest" : (subscription?.plan ?? "free")} />
 
         {/* プラン選択 */}
         {!loadingOfferings && !hasPackages && (
@@ -252,41 +261,52 @@ export default function PaywallScreen() {
           )}
         </View>
 
-        {/* 購入ボタン */}
-        {hasPackages && (
+        {/* 購入ボタン / ゲスト時ログイン CTA */}
+        {guestMode || !isAuthenticated ? (
           <TouchableOpacity
-            style={[styles.purchaseButton, purchasing && styles.purchaseButtonDisabled]}
-            onPress={handlePurchase}
-            disabled={purchasing}
+            style={styles.loginCtaButton}
+            onPress={() => router.push("/(auth)/get-started")}
           >
-            {purchasing ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <Text style={styles.purchaseButtonText}>
-                {!hasTrialed ? t("paywall.startTrial") : t("paywall.subscribe")}
-              </Text>
-            )}
+            <Text style={styles.loginCtaButtonText}>{t("paywall.loginToUpgrade")}</Text>
           </TouchableOpacity>
+        ) : (
+          hasPackages && (
+            <TouchableOpacity
+              style={[styles.purchaseButton, purchasing && styles.purchaseButtonDisabled]}
+              onPress={handlePurchase}
+              disabled={purchasing}
+            >
+              {purchasing ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <Text style={styles.purchaseButtonText}>
+                  {!hasTrialed ? t("paywall.startTrial") : t("paywall.subscribe")}
+                </Text>
+              )}
+            </TouchableOpacity>
+          )
         )}
 
-        {!hasTrialed && (
+        {!hasTrialed && !guestMode && isAuthenticated && (
           <Text style={styles.trialNote}>{t("paywall.trialNote")}</Text>
         )}
 
         <Text style={styles.cancelNote}>{t("paywall.cancelNote")}</Text>
 
         {/* リストアボタン */}
-        <TouchableOpacity
-          style={styles.restoreButton}
-          onPress={handleRestore}
-          disabled={restoring}
-        >
-          {restoring ? (
-            <ActivityIndicator color="#2563EB" size="small" />
-          ) : (
-            <Text style={styles.restoreButtonText}>{t("paywall.restore")}</Text>
-          )}
-        </TouchableOpacity>
+        {!guestMode && isAuthenticated && (
+          <TouchableOpacity
+            style={styles.restoreButton}
+            onPress={handleRestore}
+            disabled={restoring}
+          >
+            {restoring ? (
+              <ActivityIndicator color="#2563EB" size="small" />
+            ) : (
+              <Text style={styles.restoreButtonText}>{t("paywall.restore")}</Text>
+            )}
+          </TouchableOpacity>
+        )}
 
         {/* 利用規約・プライバシーポリシー */}
         <View style={styles.legalLinks}>
@@ -518,5 +538,18 @@ const styles = StyleSheet.create({
     color: "#2563EB",
     fontSize: 14,
     fontWeight: "600",
+  },
+  loginCtaButton: {
+    backgroundColor: "#2563EB",
+    height: 52,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  loginCtaButtonText: {
+    color: "#ffffff",
+    fontSize: 17,
+    fontWeight: "bold",
   },
 });

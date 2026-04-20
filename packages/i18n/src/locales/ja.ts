@@ -95,6 +95,16 @@ const ja = {
     count: "{{count}}件",
     limitReached: "スプリットの上限（{{max}}件）に達しました。",
     upgradeToPremium: "Premiumプランで無制限に記録できます →",
+    loginToRecordMore: "ログインして無制限に記録 →",
+    overlay: {
+      title: "ラップ / スプリット",
+      tabByDistance: "距離別 Lap",
+      tabAllLap: "All Lap",
+      showOnFinish: "完了時に表示",
+      noSplits: "スプリットタイムがありません",
+      splitTime: "SPLIT TIME",
+      lapHeader: "25M LAP",
+    },
   },
 
   exportScreen: {
@@ -145,6 +155,7 @@ const ja = {
   auth: {
     login: "ログイン",
     logout: "ログアウト",
+    logoutTitle: "ログアウト",
     logoutConfirm: "ログアウトしますか？",
     welcome: {
       getStarted: "さっそく始める",
@@ -388,6 +399,7 @@ const ja = {
     cancelNote: "サブスクリプションはいつでもキャンセルできます。\nApp Store の設定から管理できます。",
     termsLink: "利用規約",
     privacyLink: "プライバシーポリシー",
+    loginToUpgrade: "ログインしてアップグレード",
   },
 
   account: {

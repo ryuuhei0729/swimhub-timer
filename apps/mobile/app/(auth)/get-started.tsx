@@ -8,11 +8,13 @@ import { useGoogleAuth } from "../../hooks/useGoogleAuth";
 import { useAppleAuth } from "../../hooks/useAppleAuth";
 import { GoogleLoginButton } from "../../components/auth/GoogleLoginButton";
 import { AppleLoginButton } from "../../components/auth/AppleLoginButton";
+import { useAuth } from "../../contexts/AuthProvider";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 
 export default function GetStartedScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { continueAsGuest } = useAuth();
   const {
     signInWithGoogle,
     loading: googleLoading,
@@ -29,6 +31,11 @@ export default function GetStartedScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const isLoading = googleLoading || appleLoading;
+
+  const handleContinueAsGuest = () => {
+    continueAsGuest();
+    router.replace("/(app)");
+  };
   const displayError = error || googleError || appleError;
 
   const handleGoogleSignup = async () => {
@@ -107,6 +114,20 @@ export default function GetStartedScreen() {
               <Ionicons name="mail-outline" size={20} color="#FFFFFF" />
               <Text style={styles.emailButtonText}>{t("auth.getStarted.withEmail")}</Text>
             </View>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.guestButton,
+              isLoading && styles.buttonDisabled,
+              pressed && !isLoading && styles.guestButtonPressed,
+            ]}
+            onPress={handleContinueAsGuest}
+            disabled={isLoading}
+            accessibilityRole="button"
+            accessibilityLabel={t("auth.getStarted.continueAsGuest")}
+          >
+            <Text style={styles.guestButtonText}>{t("auth.getStarted.continueAsGuest")}</Text>
           </Pressable>
         </View>
       </View>
@@ -235,6 +256,25 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.5,
+  },
+  guestButton: {
+    borderRadius: radius.lg,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 52,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  guestButtonPressed: {
+    backgroundColor: colors.surfaceRaised,
+  },
+  guestButtonText: {
+    color: colors.muted,
+    fontSize: 17,
+    fontWeight: "600",
   },
   legalContainer: {
     paddingHorizontal: spacing.xl,

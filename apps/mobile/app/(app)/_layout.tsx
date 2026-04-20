@@ -19,6 +19,7 @@ export default function AppLayout() {
         options={{
           title: t("editor.title"),
           headerBackTitle: t("common.back"),
+          gestureEnabled: false,
         }}
       />
       <Stack.Screen name="export" options={{ title: t("common.export"), presentation: "modal" }} />

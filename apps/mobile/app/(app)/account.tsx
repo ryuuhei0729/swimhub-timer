@@ -13,7 +13,7 @@ import { PlanFeatureList } from "../../components/plan/PlanFeatureList";
 export default function AccountScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { user, subscription, signOut, refreshSubscription } = useAuth();
+  const { user, subscription, signOut, refreshSubscription, guestMode } = useAuth();
   const plan = subscription?.plan ?? "free";
   const [deleting, setDeleting] = useState(false);
   const [restoring, setRestoring] = useState(false);
@@ -84,6 +84,10 @@ export default function AccountScreen() {
 
   // リストア購入処理
   const handleRestore = async () => {
+    if (guestMode) {
+      router.push("/(auth)/get-started");
+      return;
+    }
     setRestoring(true);
     try {
       const customerInfo = await restorePurchases();
@@ -156,7 +160,7 @@ export default function AccountScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t("account.subscriptionSection")}</Text>
           <View style={styles.infoCard}>
-            {plan === "premium" ? (
+            {!guestMode && plan === "premium" ? (
               <>
                 {/* トライアル中 */}
                 {subscription?.status === "trialing" && trialDaysRemaining && (
@@ -195,35 +199,50 @@ export default function AccountScreen() {
               </>
             ) : (
               <>
-                <PlanFeatureList currentPlan={plan} />
+                <PlanFeatureList currentPlan={guestMode ? "guest" : plan} />
                 <Text style={styles.upgradePrompt}>{t("account.upgradePrompt")}</Text>
-                <TouchableOpacity
-                  style={styles.upgradeButton}
-                  onPress={() => router.push("/(app)/paywall")}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("account.upgradeToPremium")}
-                >
-                  <Text style={styles.upgradeButtonText}>{t("account.upgradeToPremium")}</Text>
-                </TouchableOpacity>
+                {guestMode ? (
+                  <TouchableOpacity
+                    style={styles.upgradeButton}
+                    onPress={() => router.push("/(auth)/get-started")}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("paywall.loginToUpgrade")}
+                  >
+                    <Text style={styles.upgradeButtonText}>{t("paywall.loginToUpgrade")}</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.upgradeButton}
+                    onPress={() => router.push("/(app)/paywall")}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("account.upgradeToPremium")}
+                  >
+                    <Text style={styles.upgradeButtonText}>{t("account.upgradeToPremium")}</Text>
+                  </TouchableOpacity>
+                )}
               </>
             )}
 
             {/* リストア購入ボタン */}
-            <View style={styles.divider} />
-            <TouchableOpacity
-              style={styles.restoreRow}
-              onPress={handleRestore}
-              disabled={restoring}
-              accessibilityRole="button"
-              accessibilityLabel={t("paywall.restore")}
-              accessibilityState={{ busy: restoring }}
-            >
-              {restoring ? (
-                <ActivityIndicator color={colors.primary} size="small" />
-              ) : (
-                <Text style={styles.restoreText}>{t("paywall.restore")}</Text>
-              )}
-            </TouchableOpacity>
+            {!guestMode && (
+              <>
+                <View style={styles.divider} />
+                <TouchableOpacity
+                  style={styles.restoreRow}
+                  onPress={handleRestore}
+                  disabled={restoring}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("paywall.restore")}
+                  accessibilityState={{ busy: restoring }}
+                >
+                  {restoring ? (
+                    <ActivityIndicator color={colors.primary} size="small" />
+                  ) : (
+                    <Text style={styles.restoreText}>{t("paywall.restore")}</Text>
+                  )}
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         </View>
 

@@ -7,27 +7,37 @@ import { AuthProvider, useAuth } from "../contexts/AuthProvider";
 import { colors } from "../lib/theme";
 
 function AuthGate() {
-  const { user, isAuthenticated, guestMode, loading, continueAsGuest } = useAuth();
+  const { user, isAuthenticated, guestMode, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
-  const autoGuestDone = useRef(false);
+  const redirectDone = useRef(false);
+  const prevAuthStateRef = useRef({ user: !!user, guestMode });
 
   useEffect(() => {
     if (loading) return;
 
+    // 認証状態が変化したときだけリダイレクトフラグをリセット
+    const prevUser = prevAuthStateRef.current.user;
+    const prevGuestMode = prevAuthStateRef.current.guestMode;
+    if (prevUser !== !!user || prevGuestMode !== guestMode) {
+      redirectDone.current = false;
+      prevAuthStateRef.current = { user: !!user, guestMode };
+    }
+
+    if (redirectDone.current) return;
+
     const inAuthGroup = segments[0] === "(auth)";
 
     if (!isAuthenticated && !guestMode && !inAuthGroup) {
-      // 未認証・非ゲスト・非authグループ → 自動ゲストモード
-      if (!autoGuestDone.current) {
-        autoGuestDone.current = true;
-        continueAsGuest();
-      }
+      // 未認証・非ゲスト・非authグループ → get-started へリダイレクト
+      redirectDone.current = true;
+      router.replace("/(auth)/get-started");
     } else if (!!user && inAuthGroup) {
       // ログイン済みユーザーのみauthグループからリダイレクト
+      redirectDone.current = true;
       router.replace("/(app)");
     }
-  }, [user, isAuthenticated, guestMode, loading, segments, router, continueAsGuest]);
+  }, [user, isAuthenticated, guestMode, loading, segments, router]);
 
   if (loading) {
     return (

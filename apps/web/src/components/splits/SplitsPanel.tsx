@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { useEditorStore } from "@/stores/editor-store";
 import { useAuth } from "@/hooks/useAuth";
 import { formatTime, getMaxSplitCount } from "@swimhub-timer/shared";
@@ -15,6 +16,8 @@ import {
   Plus,
   Lock,
 } from "lucide-react";
+import { SplitsOverlay } from "./SplitsOverlay";
+import { loadShowSplitsOverlay, saveShowSplitsOverlay } from "@/lib/storage";
 
 export function SplitsPanel() {
   const { t } = useTranslation();
@@ -29,6 +32,8 @@ export function SplitsPanel() {
     currentVideoTime,
     currentDistanceInput,
     currentMemoInput,
+    showSplitsOverlay,
+    setShowSplitsOverlay,
     setCurrentDistanceInput,
     setCurrentMemoInput,
     recordSplit,
@@ -37,6 +42,28 @@ export function SplitsPanel() {
     resetSplits,
     seekVideo,
   } = useEditorStore();
+
+  const [showOnFinish, setShowOnFinish] = useState(false);
+  const finishTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const value = await loadShowSplitsOverlay();
+      if (!cancelled) setShowOnFinish(value);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (finishTimerRef.current !== null) {
+        clearTimeout(finishTimerRef.current);
+      }
+    };
+  }, []);
 
   const elapsed = startTime !== null ? Math.max(0, currentVideoTime - startTime) : 0;
   const splitLimitReached = splitTimes.length >= maxSplits;
@@ -47,7 +74,16 @@ export function SplitsPanel() {
   };
 
   const handleFinish = () => {
+    if (finishTimerRef.current !== null) {
+      clearTimeout(finishTimerRef.current);
+    }
     finishRecording(elapsed, currentMemoInput);
+    if (showOnFinish) {
+      finishTimerRef.current = setTimeout(() => {
+        useEditorStore.getState().setShowSplitsOverlay(true);
+        finishTimerRef.current = null;
+      }, 1000);
+    }
   };
 
   // Seek video by delta (adjusts the video position)
@@ -58,6 +94,12 @@ export function SplitsPanel() {
 
   return (
     <div className="flex flex-col gap-4">
+      <SplitsOverlay
+        visible={showSplitsOverlay}
+        splitTimes={splitTimes}
+        finishTime={finishTime}
+        onClose={() => setShowSplitsOverlay(false)}
+      />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -170,6 +212,20 @@ export function SplitsPanel() {
             <Flag className="w-3.5 h-3.5" />
             {t("splits.finish")}
           </button>
+
+          {/* Show on finish checkbox */}
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showOnFinish}
+              onChange={(e) => {
+                setShowOnFinish(e.target.checked);
+                saveShowSplitsOverlay(e.target.checked);
+              }}
+              className="w-3.5 h-3.5 accent-primary"
+            />
+            <span className="text-[11px] text-muted-foreground">{t("splits.overlay.showOnFinish")}</span>
+          </label>
         </div>
       )}
 

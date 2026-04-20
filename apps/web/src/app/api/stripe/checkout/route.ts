@@ -36,6 +36,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "無効な priceId です" }, { status: 400 });
     }
 
+    // UUID 形式検証 (Issue #2) — user.id を外部呼び出し / DB クエリに渡す前にガード
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!UUID_REGEX.test(user.id)) {
+      return NextResponse.json({ error: "不正なユーザーIDです" }, { status: 400 });
+    }
+
     // 3. user_subscriptions テーブルから現在のプラン・trial_start を確認
     const { data: subscription } = (await supabase
       .from("user_subscriptions")

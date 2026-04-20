@@ -97,6 +97,16 @@ const en: TranslationShape = {
     count: "{{count}}",
     limitReached: "Split limit ({{max}}) reached.",
     upgradeToPremium: "Upgrade to Premium for unlimited splits →",
+    loginToRecordMore: "Log in to record unlimited splits →",
+    overlay: {
+      title: "Lap / Split",
+      tabByDistance: "By Distance",
+      tabAllLap: "All Laps",
+      showOnFinish: "Show on finish",
+      noSplits: "No split times",
+      splitTime: "SPLIT TIME",
+      lapHeader: "25M LAP",
+    },
   },
 
   exportScreen: {
@@ -148,6 +158,7 @@ const en: TranslationShape = {
   auth: {
     login: "Log In",
     logout: "Log Out",
+    logoutTitle: "Logout",
     logoutConfirm: "Are you sure you want to log out?",
     welcome: {
       getStarted: "Get Started",
@@ -391,6 +402,7 @@ const en: TranslationShape = {
     cancelNote: "You can cancel your subscription anytime.\nManage it in your App Store settings.",
     termsLink: "Terms of Use",
     privacyLink: "Privacy Policy",
+    loginToUpgrade: "Log In to Upgrade",
   },
 
   account: {

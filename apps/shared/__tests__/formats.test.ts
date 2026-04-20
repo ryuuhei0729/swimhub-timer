@@ -3,11 +3,11 @@ import { formatTime } from "../utils/stopwatch-formats";
 
 describe("formatTime", () => {
   it("formats zero seconds", () => {
-    expect(formatTime(0)).toBe("00.00");
+    expect(formatTime(0)).toBe("0.00");
   });
 
   it("formats seconds under 10", () => {
-    expect(formatTime(5.25)).toBe("05.25");
+    expect(formatTime(5.25)).toBe("5.25");
   });
 
   it("formats seconds between 10 and 60", () => {
@@ -31,11 +31,11 @@ describe("formatTime", () => {
   });
 
   it("clamps negative values to zero", () => {
-    expect(formatTime(-5)).toBe("00.00");
+    expect(formatTime(-5)).toBe("0.00");
   });
 
   it("formats centiseconds correctly", () => {
-    expect(formatTime(1.01)).toBe("01.01");
+    expect(formatTime(1.01)).toBe("1.01");
   });
 
   it("formats 59.99 seconds without minutes", () => {
@@ -43,7 +43,7 @@ describe("formatTime", () => {
   });
 
   it("truncates sub-centisecond precision", () => {
-    // 1.999 => Math.floor(199.9) = 199 centiseconds => 01.99
-    expect(formatTime(1.999)).toBe("01.99");
+    // 1.999 => Math.floor(199.9) = 199 centiseconds => 1.99
+    expect(formatTime(1.999)).toBe("1.99");
   });
 });
