@@ -24,7 +24,18 @@ import {
   getGuestTodayCount,
 } from "../../lib/guest-daily-limit";
 import { GuestExportIndicator } from "../../components/plan/GuestExportIndicator";
+import { FinishSummaryTable } from "../../components/splits/FinishSummaryTable";
+import { getStopwatchWrapperStyle } from "../../components/stopwatch/StopwatchOverlay";
 
+// react-native-view-shot loaded lazily to avoid crashing in Expo Go
+function getCaptureRef() {
+  try {
+    const { captureRef } = require("react-native-view-shot") as typeof import("react-native-view-shot");
+    return captureRef;
+  } catch {
+    return null;
+  }
+}
 
 export default function ExportScreen() {
   const { t } = useTranslation();
@@ -59,6 +70,10 @@ export default function ExportScreen() {
   // --- Export limit state ---
   const [limitReached, setLimitReached] = useState(false);
 
+  // --- Summary PNG capture ref & URI ---
+  const summaryViewRef = useRef<View>(null);
+  const [capturedSummaryUri, setCapturedSummaryUri] = useState<string | null>(null);
+
   // --- Derived ---
   const exportComplete = outputPath !== null;
   const isPremium = checkIsPremium(subscription);
@@ -66,6 +81,9 @@ export default function ExportScreen() {
   const duration = videoMetadata?.duration ?? 0;
   const availableResolutions = getAvailableResolutions(effectivePlan);
   const showWatermark = shouldShowWatermark(effectivePlan);
+
+  const videoWidth = videoMetadata?.width ?? 1920;
+  const videoHeight = videoMetadata?.height ?? 1080;
 
   const remainingExports = useMemo(() => {
     if (effectivePlan === "premium" || effectivePlan === "free") return null;
@@ -133,8 +151,6 @@ export default function ExportScreen() {
     }
   }, [adState, adUnavailable]);
 
-  // Free plan has unlimited exports — no need to fetch remaining count
-
   // Set limitReached based on remaining exports (guest only; free/premium unlimited)
   useEffect(() => {
     if (effectivePlan === "premium" || effectivePlan === "free") {
@@ -153,16 +169,13 @@ export default function ExportScreen() {
       return;
     }
 
-    // --- Export limit check ---
     if (effectivePlan === "guest") {
       if (!canGuestUseToday("timer")) {
         setLimitReached(true);
         return;
       }
     }
-    // Free plan: unlimited exports, no limit check needed
 
-    // Runtime guard: ensure selected resolution is still available
     let resolvedSettings = exportSettings;
     if (!availableResolutions.includes(exportSettings.resolution)) {
       const fallback = availableResolutions[0] ?? "720";
@@ -175,7 +188,7 @@ export default function ExportScreen() {
     setError(null);
     exportTriggeredRef.current = true;
 
-    // --- Show ad (fire-and-forget, runs in parallel with encoding; premium skips) ---
+    // --- Show ad (fire-and-forget; premium skips) ---
     if (!isPremium) {
       const controller = adControllerRef.current;
       if (controller) {
@@ -188,6 +201,26 @@ export default function ExportScreen() {
       }
     }
 
+    // --- Capture summary PNG (only when finished) ---
+    let summaryImageUri: string | null = null;
+    if (isFinished && finishTime !== null && summaryViewRef.current) {
+      try {
+        const captureRef = getCaptureRef();
+        if (captureRef) {
+          summaryImageUri = await captureRef(summaryViewRef, {
+            format: "png",
+            quality: 1.0,
+            width: videoWidth,
+            height: videoHeight,
+          });
+          setCapturedSummaryUri(summaryImageUri);
+        }
+      } catch {
+        // PNG capture failed — export without summary overlay
+        summaryImageUri = null;
+      }
+    }
+
     // --- Start encoding ---
     try {
       const durationMs = duration * 1000;
@@ -195,7 +228,6 @@ export default function ExportScreen() {
         videoUri,
         startTime,
         stopwatchConfig,
-        splitTimes,
         isFinished,
         finishTime,
         videoMetadata?.height ?? 1080,
@@ -206,11 +238,11 @@ export default function ExportScreen() {
           }
         },
         showWatermark,
+        summaryImageUri,
       );
       setOutputPath(path);
       setProgress(1);
 
-      // Record usage after successful export (guest only)
       if (effectivePlan === "guest") {
         markGuestUsedToday("timer");
       }
@@ -223,7 +255,6 @@ export default function ExportScreen() {
     videoUri,
     startTime,
     stopwatchConfig,
-    splitTimes,
     isFinished,
     finishTime,
     exportSettings,
@@ -234,6 +265,8 @@ export default function ExportScreen() {
     showWatermark,
     effectivePlan,
     isPremium,
+    videoWidth,
+    videoHeight,
     t,
   ]);
 
@@ -261,14 +294,50 @@ export default function ExportScreen() {
   }, [outputPath]);
 
   const handleDone = useCallback(async () => {
-    await cleanupExportFiles(outputPath ?? undefined);
+    await cleanupExportFiles(outputPath, capturedSummaryUri);
     router.back();
-  }, [router, outputPath]);
+  }, [router, outputPath, capturedSummaryUri]);
 
   const progressPercent = Math.round(progress * 100);
 
+  const showSummaryCapture = isFinished && finishTime !== null;
+
   return (
     <View style={styles.container}>
+      {/* Hidden summary view for PNG capture — rendered off-screen at video resolution.
+          The outer View (summaryCapture) is sized to videoWidth × videoHeight.
+          The inner View (summaryCaptureInner) mirrors StopwatchOverlay.summaryWrapper:
+            position: "absolute", top: "55%", left: 0, right: 0, alignItems: "center"
+          This produces the same pixel position in the PNG as seen in the preview. */}
+      {showSummaryCapture && (
+        <View
+          ref={summaryViewRef}
+          style={[
+            styles.summaryCapture,
+            { width: videoWidth, height: videoHeight },
+          ]}
+          pointerEvents="none"
+        >
+          <View
+            style={getStopwatchWrapperStyle(
+              stopwatchConfig.summaryPosition,
+              stopwatchConfig.summaryAnchor,
+            )}
+          >
+            <FinishSummaryTable
+              splitTimes={splitTimes}
+              finishTime={finishTime!}
+              config={{
+                textColor: stopwatchConfig.textColor,
+                backgroundColor: stopwatchConfig.backgroundColor,
+                fontFamily: stopwatchConfig.fontFamily,
+              }}
+              scaleFactor={1}
+            />
+          </View>
+        </View>
+      )}
+
       {/* Summary */}
       <View style={styles.summaryCard}>
         <Text style={styles.summaryTitle}>{t("exportScreen.settings")}</Text>
@@ -396,6 +465,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     padding: spacing.lg,
     gap: spacing.xl,
+  },
+  // Off-screen hidden view for summary PNG capture.
+  // The outer container matches the video frame exactly (videoWidth × videoHeight).
+  // FinishSummaryTable is placed at position: "absolute", top: "55%", left: 0, right: 0
+  // with alignItems: "center" — identical to the StopwatchOverlay.summaryWrapper style.
+  // This guarantees WYSIWYG: the PNG pixel coordinates match the on-screen preview position.
+  summaryCapture: {
+    position: "absolute",
+    opacity: 0,
+    top: -9999,
+    left: -9999,
   },
   summaryCard: {
     backgroundColor: colors.surface,

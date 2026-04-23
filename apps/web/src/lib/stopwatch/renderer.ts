@@ -60,6 +60,10 @@ function calculatePosition(
     case "top-right":
       x = px - boxWidth;
       break;
+    case "center":
+      x = px - boxWidth / 2;
+      y = py - boxHeight / 2;
+      break;
     case "bottom-left":
       y = py - boxHeight;
       break;

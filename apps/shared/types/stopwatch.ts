@@ -2,6 +2,7 @@ export type StopwatchAnchor =
   | "top-left"
   | "top-center"
   | "top-right"
+  | "center"
   | "bottom-left"
   | "bottom-center"
   | "bottom-right";
@@ -17,6 +18,8 @@ export interface StopwatchConfig {
   padding: number;
   position: { x: number; y: number };
   anchor: StopwatchAnchor;
+  summaryPosition: { x: number; y: number };
+  summaryAnchor: StopwatchAnchor;
 }
 
 export interface StopwatchPreset {

@@ -99,11 +99,6 @@ const en: TranslationShape = {
     upgradeToPremium: "Upgrade to Premium for unlimited splits →",
     loginToRecordMore: "Log in to record unlimited splits →",
     overlay: {
-      title: "Lap / Split",
-      tabByDistance: "By Distance",
-      tabAllLap: "All Laps",
-      showOnFinish: "Show on finish",
-      noSplits: "No split times",
       splitTime: "SPLIT TIME",
       lapHeader: "25M LAP",
     },

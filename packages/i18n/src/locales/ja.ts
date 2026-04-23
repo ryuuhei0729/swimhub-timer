@@ -97,11 +97,6 @@ const ja = {
     upgradeToPremium: "Premiumプランで無制限に記録できます →",
     loginToRecordMore: "ログインして無制限に記録 →",
     overlay: {
-      title: "ラップ / スプリット",
-      tabByDistance: "距離別 Lap",
-      tabAllLap: "All Lap",
-      showOnFinish: "完了時に表示",
-      noSplits: "スプリットタイムがありません",
       splitTime: "SPLIT TIME",
       lapHeader: "25M LAP",
     },

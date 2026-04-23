@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from "react";
-import { View, Text, TextInput, StyleSheet, Pressable, FlatList, Keyboard, Switch } from "react-native";
+import { View, Text, TextInput, StyleSheet, Pressable, FlatList, Keyboard } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "expo-router";
@@ -7,8 +6,6 @@ import { useEditorStore } from "../../stores/editor-store";
 import { useAuth } from "../../contexts/AuthProvider";
 import { formatTime, getMaxSplitCount } from "@swimhub-timer/shared";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
-import { loadShowSplitsOverlay, saveShowSplitsOverlay } from "../../lib/storage";
-import { SplitsOverlay } from "./SplitsOverlay";
 
 interface SplitsPanelProps {
   onFinish?: () => void;
@@ -29,8 +26,6 @@ export function SplitsPanel({ onFinish }: SplitsPanelProps) {
     currentVideoTime,
     currentDistanceInput,
     currentMemoInput,
-    showSplitsOverlay,
-    setShowSplitsOverlay,
     setCurrentDistanceInput,
     setCurrentMemoInput,
     recordSplit,
@@ -39,18 +34,6 @@ export function SplitsPanel({ onFinish }: SplitsPanelProps) {
     revertFinish,
     seekVideo,
   } = useEditorStore();
-
-  const overlayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [showOnFinish, setShowOnFinish] = useState(() => loadShowSplitsOverlay());
-
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (overlayTimerRef.current !== null) {
-        clearTimeout(overlayTimerRef.current);
-      }
-    };
-  }, []);
 
   const elapsed = startTime !== null ? Math.max(0, currentVideoTime - startTime) : 0;
   const splitLimitReached = splitTimes.length >= maxSplits;
@@ -66,17 +49,6 @@ export function SplitsPanel({ onFinish }: SplitsPanelProps) {
     finishRecording(elapsed, currentMemoInput);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     onFinish?.();
-    if (showOnFinish) {
-      overlayTimerRef.current = setTimeout(() => {
-        useEditorStore.getState().setShowSplitsOverlay(true);
-        overlayTimerRef.current = null;
-      }, 1000);
-    }
-  };
-
-  const handleOverlaySettingChange = (value: boolean) => {
-    setShowOnFinish(value);
-    saveShowSplitsOverlay(value);
   };
 
   const handleEdit = () => {
@@ -91,12 +63,6 @@ export function SplitsPanel({ onFinish }: SplitsPanelProps) {
 
   return (
     <View style={styles.container}>
-      <SplitsOverlay
-        visible={showSplitsOverlay}
-        splitTimes={splitTimes}
-        finishTime={finishTime}
-        onClose={() => setShowSplitsOverlay(false)}
-      />
       {/* Recording controls */}
       {startTime !== null && !isFinished && (
         <View style={styles.recordingCard}>
@@ -166,17 +132,6 @@ export function SplitsPanel({ onFinish }: SplitsPanelProps) {
               </Text>
             </Pressable>
           )}
-
-          {/* Overlay toggle */}
-          <View style={styles.overlayToggleRow}>
-            <Text style={styles.overlayToggleLabel}>{t("splits.overlay.showOnFinish")}</Text>
-            <Switch
-              value={showOnFinish}
-              onValueChange={handleOverlaySettingChange}
-              trackColor={{ false: colors.border, true: colors.primaryBorder }}
-              thumbColor={showOnFinish ? colors.primary : colors.muted}
-            />
-          </View>
 
           {/* Finish */}
           <Pressable style={styles.finishBtn} onPress={handleFinish}>
@@ -437,16 +392,6 @@ const styles = StyleSheet.create({
   deleteBtnText: {
     fontSize: 16,
     color: colors.muted,
-  },
-  overlayToggleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  overlayToggleLabel: {
-    fontSize: fontSize.sm,
-    color: colors.muted,
-    fontWeight: "500",
   },
   limitBanner: {
     backgroundColor: "#FEF3C7",

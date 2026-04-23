@@ -11,14 +11,15 @@ import {
 } from "react-native";
 import { useEditorStore } from "../../stores/editor-store";
 import { formatTime } from "@swimhub-timer/shared";
-import type { SplitTime } from "@swimhub-timer/shared";
-
-const SPLIT_DISPLAY_DURATION = 3;
+import type { StopwatchAnchor } from "@swimhub-timer/shared";
+import { FinishSummaryTable } from "../splits/FinishSummaryTable";
 
 interface Props {
   videoWidth: number;
   videoHeight: number;
 }
+
+export const SUMMARY_DELAY_SECONDS = 2;
 
 export function StopwatchOverlay({ videoWidth, videoHeight }: Props) {
   const config = useEditorStore((s) => s.stopwatchConfig);
@@ -31,10 +32,9 @@ export function StopwatchOverlay({ videoWidth, videoHeight }: Props) {
 
   const containerSize = useRef({ width: 0, height: 0 });
   const contentRect = useRef({ x: 0, y: 0, width: 0, height: 0 });
-  const dragStart = useRef({ x: 0, y: 0 });
+  const timerDragStart = useRef({ x: 0, y: 0 });
+  const summaryDragStart = useRef({ x: 0, y: 0 });
 
-  // Compute the actual video content area within the container
-  // (accounting for contentFit="contain" letterboxing/pillarboxing)
   const updateContentRect = useCallback(() => {
     const cw = containerSize.current.width;
     const ch = containerSize.current.height;
@@ -44,26 +44,24 @@ export function StopwatchOverlay({ videoWidth, videoHeight }: Props) {
     const videoAspect = videoWidth / videoHeight;
 
     if (videoAspect > containerAspect) {
-      // Video is wider than container → width-limited (letterboxing top/bottom)
       const contentW = cw;
       const contentH = cw / videoAspect;
       contentRect.current = { x: 0, y: (ch - contentH) / 2, width: contentW, height: contentH };
     } else {
-      // Video is taller than container → height-limited (pillarboxing left/right)
       const contentH = ch;
       const contentW = ch * videoAspect;
       contentRect.current = { x: (cw - contentW) / 2, y: 0, width: contentW, height: contentH };
     }
   }, [videoWidth, videoHeight]);
 
-  const panResponder = useMemo(
+  const timerPanResponder = useMemo(
     () =>
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
         onPanResponderGrant: () => {
           const pos = useEditorStore.getState().stopwatchConfig.position;
-          dragStart.current = { x: pos.x, y: pos.y };
+          timerDragStart.current = { x: pos.x, y: pos.y };
         },
         onPanResponderMove: (_, gestureState) => {
           const { width, height } = contentRect.current;
@@ -72,8 +70,8 @@ export function StopwatchOverlay({ videoWidth, videoHeight }: Props) {
           const dx = gestureState.dx / width;
           const dy = gestureState.dy / height;
 
-          const newX = Math.max(0, Math.min(1, dragStart.current.x + dx));
-          const newY = Math.max(0, Math.min(1, dragStart.current.y + dy));
+          const newX = Math.max(0, Math.min(1, timerDragStart.current.x + dx));
+          const newY = Math.max(0, Math.min(1, timerDragStart.current.y + dy));
 
           updateStopwatchConfig({
             position: { x: newX, y: newY },
@@ -83,8 +81,33 @@ export function StopwatchOverlay({ videoWidth, videoHeight }: Props) {
     [updateStopwatchConfig],
   );
 
-  // Re-compute contentRect when videoWidth/videoHeight change
-  // (onLayout only fires on container resize, not on prop changes)
+  const summaryPanResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderGrant: () => {
+          const pos = useEditorStore.getState().stopwatchConfig.summaryPosition;
+          summaryDragStart.current = { x: pos.x, y: pos.y };
+        },
+        onPanResponderMove: (_, gestureState) => {
+          const { width, height } = contentRect.current;
+          if (width === 0 || height === 0) return;
+
+          const dx = gestureState.dx / width;
+          const dy = gestureState.dy / height;
+
+          const newX = Math.max(0, Math.min(1, summaryDragStart.current.x + dx));
+          const newY = Math.max(0, Math.min(1, summaryDragStart.current.y + dy));
+
+          updateStopwatchConfig({
+            summaryPosition: { x: newX, y: newY },
+          });
+        },
+      }),
+    [updateStopwatchConfig],
+  );
+
   useEffect(() => {
     updateContentRect();
   }, [updateContentRect]);
@@ -100,7 +123,6 @@ export function StopwatchOverlay({ videoWidth, videoHeight }: Props) {
     [updateContentRect],
   );
 
-  // Scale based on actual video content area vs video resolution
   const scaleFactor =
     contentRect.current.width > 0 && videoWidth > 0 ? contentRect.current.width / videoWidth : 0.2;
   const watermarkFontSize = Math.max(8, Math.round(videoHeight * 0.06 * scaleFactor));
@@ -113,34 +135,21 @@ export function StopwatchOverlay({ videoWidth, videoHeight }: Props) {
   }
   const timeText = formatTime(elapsed);
 
-  // Find the most recent split within the 3-second display window
-  let activeSplit: SplitTime | null = null;
-  if (splitTimes.length > 0) {
-    for (let i = splitTimes.length - 1; i >= 0; i--) {
-      const s = splitTimes[i];
-      if (elapsed >= s.time && elapsed < s.time + SPLIT_DISPLAY_DURATION) {
-        activeSplit = s;
-        break;
-      }
-    }
-  }
-
   const scaledFontSize = config.fontSize * scaleFactor;
   const scaledPadding = config.padding * scaleFactor;
   const scaledRadius = config.borderRadius * scaleFactor;
 
-  const splitFontSize = Math.round(scaledFontSize * 0.55);
-  const splitPadding = Math.round(scaledPadding * 0.6);
-  const memoFontSize = Math.round(scaledFontSize * 0.38);
-
-  const isBottomAnchor = config.anchor.startsWith("bottom");
-  const wrapperStyle = getWrapperStyle(config);
-
+  const timerWrapperStyle = getWrapperStyle(config.position, config.anchor);
+  const summaryWrapperStyle = getWrapperStyle(config.summaryPosition, config.summaryAnchor);
   const cr = contentRect.current;
+
+  const showSummary =
+    isFinished &&
+    finishTime !== null &&
+    currentVideoTime - startTime >= finishTime + SUMMARY_DELAY_SECONDS;
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none" onLayout={onContainerLayout}>
-      {/* Inner view matching the actual video content area */}
       <View
         style={{
           position: "absolute",
@@ -183,23 +192,11 @@ export function StopwatchOverlay({ videoWidth, videoHeight }: Props) {
           </Text>
         </View>
 
-        <View style={wrapperStyle} pointerEvents="box-none">
-          <View style={{ alignItems: "center" }}>
-            {/* Split display above stopwatch (for bottom anchors) */}
-            {activeSplit && isBottomAnchor && (
-              <SplitDisplay
-                split={activeSplit}
-                config={config}
-                fontSize={splitFontSize}
-                memoFontSize={memoFontSize}
-                padding={splitPadding}
-                radius={Math.min(scaledRadius, 8)}
-                style={{ marginBottom: 2 }}
-              />
-            )}
-
+        {/* Stopwatch timer — hidden while the summary is shown */}
+        {!showSummary && (
+          <View style={timerWrapperStyle} pointerEvents="box-none">
             <View
-              {...panResponder.panHandlers}
+              {...timerPanResponder.panHandlers}
               style={{
                 backgroundColor: config.backgroundColor,
                 borderRadius: scaledRadius,
@@ -218,136 +215,86 @@ export function StopwatchOverlay({ videoWidth, videoHeight }: Props) {
                 {timeText}
               </Text>
             </View>
-
-            {/* Split display below stopwatch (for top anchors) */}
-            {activeSplit && !isBottomAnchor && (
-              <SplitDisplay
-                split={activeSplit}
-                config={config}
-                fontSize={splitFontSize}
-                memoFontSize={memoFontSize}
-                padding={splitPadding}
-                radius={Math.min(scaledRadius, 8)}
-                style={{ marginTop: 2 }}
-              />
-            )}
           </View>
-        </View>
+        )}
+
+        {/* Goal summary table — appears 2s after finish; draggable like the timer */}
+        {showSummary && (
+          <View style={summaryWrapperStyle} pointerEvents="box-none" testID="finish-summary-table">
+            <View {...summaryPanResponder.panHandlers}>
+              <FinishSummaryTable
+                splitTimes={splitTimes}
+                finishTime={finishTime!}
+                config={{
+                  textColor: config.textColor,
+                  backgroundColor: config.backgroundColor,
+                  fontFamily: config.fontFamily,
+                }}
+                scaleFactor={scaleFactor}
+              />
+            </View>
+          </View>
+        )}
       </View>
     </View>
   );
-}
-
-function formatSplitText(split: SplitTime): string {
-  const timeStr = formatTime(split.time);
-  if (split.lapTime !== null) {
-    return `${split.distance}m: ${timeStr} (lap: ${formatTime(split.lapTime)})`;
-  }
-  return `${split.distance}m: ${timeStr}`;
-}
-
-function SplitDisplay({
-  split,
-  config,
-  fontSize,
-  memoFontSize,
-  padding,
-  radius,
-  style,
-}: {
-  split: SplitTime;
-  config: { backgroundColor: string; textColor: string; fontFamily: string };
-  fontSize: number;
-  memoFontSize: number;
-  padding: number;
-  radius: number;
-  style?: ViewStyle;
-}) {
-  const hasMemo = split.memo.length > 0;
-  return (
-    <View
-      style={[
-        {
-          backgroundColor: config.backgroundColor,
-          borderRadius: radius,
-          padding: padding,
-          alignItems: "center",
-        },
-        style,
-      ]}
-    >
-      <Text
-        style={{
-          color: config.textColor,
-          fontSize,
-          fontWeight: "700",
-          fontFamily: config.fontFamily === "monospace" ? "monospace" : undefined,
-          fontVariant: ["tabular-nums"],
-        }}
-      >
-        {formatSplitText(split)}
-      </Text>
-      {hasMemo && (
-        <Text
-          style={{
-            color: config.textColor,
-            fontSize: memoFontSize,
-            opacity: 0.75,
-            marginTop: 1,
-            fontFamily: config.fontFamily === "monospace" ? "monospace" : undefined,
-          }}
-        >
-          {split.memo}
-        </Text>
-      )}
-    </View>
-  );
-}
-
-/** Returns whether anchor is horizontally centered */
-function isCenterAnchor(anchor: string): boolean {
-  return anchor === "top-center" || anchor === "bottom-center";
 }
 
 function pct(value: number): DimensionValue {
   return `${value * 100}%` as DimensionValue;
 }
 
-function getWrapperStyle(config: {
-  position: { x: number; y: number };
-  anchor: string;
-}): ViewStyle {
+export function getStopwatchWrapperStyle(
+  position: { x: number; y: number },
+  anchor: StopwatchAnchor,
+): ViewStyle {
+  return getWrapperStyle(position, anchor);
+}
+
+function getWrapperStyle(
+  position: { x: number; y: number },
+  anchor: StopwatchAnchor,
+): ViewStyle {
   const base: ViewStyle = { position: "absolute" };
-  const yPos = pct(config.position.y);
 
-  const center: ViewStyle = isCenterAnchor(config.anchor)
-    ? { left: 0, right: 0, flexDirection: "row", justifyContent: "center" }
-    : {};
-
-  switch (config.anchor) {
+  switch (anchor) {
     case "top-left":
-      return { ...base, ...center, left: pct(config.position.x), top: yPos };
+      return { ...base, left: pct(position.x), top: pct(position.y) };
     case "top-center":
-      return { ...base, ...center, top: yPos };
+      return {
+        ...base,
+        left: 0,
+        right: 0,
+        top: pct(position.y),
+        flexDirection: "row",
+        justifyContent: "center",
+      };
     case "top-right":
-      return { ...base, ...center, right: pct(1 - config.position.x), top: yPos };
+      return { ...base, right: pct(1 - position.x), top: pct(position.y) };
+    case "center":
+      return {
+        ...base,
+        left: pct(position.x),
+        top: pct(position.y),
+        transform: [
+          { translateX: "-50%" as unknown as number },
+          { translateY: "-50%" as unknown as number },
+        ],
+      };
     case "bottom-left":
-      return {
-        ...base,
-        ...center,
-        left: pct(config.position.x),
-        bottom: pct(1 - config.position.y),
-      };
+      return { ...base, left: pct(position.x), bottom: pct(1 - position.y) };
     case "bottom-center":
-      return { ...base, ...center, bottom: pct(1 - config.position.y) };
-    case "bottom-right":
       return {
         ...base,
-        ...center,
-        right: pct(1 - config.position.x),
-        bottom: pct(1 - config.position.y),
+        left: 0,
+        right: 0,
+        bottom: pct(1 - position.y),
+        flexDirection: "row",
+        justifyContent: "center",
       };
+    case "bottom-right":
+      return { ...base, right: pct(1 - position.x), bottom: pct(1 - position.y) };
     default:
-      return { ...base, ...center, left: pct(config.position.x), top: yPos };
+      return { ...base, left: pct(position.x), top: pct(position.y) };
   }
 }

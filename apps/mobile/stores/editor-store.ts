@@ -43,9 +43,6 @@ interface EditorState {
   finishTime: number | null;
   finishMemo: string;
 
-  showSplitsOverlay: boolean;
-  setShowSplitsOverlay: (v: boolean) => void;
-
   setStep: (step: EditorStep) => void;
   setVideoUri: (uri: string) => void;
   clearVideo: () => void;
@@ -92,7 +89,6 @@ const initialState = {
   isFinished: false,
   finishTime: null as number | null,
   finishMemo: "",
-  showSplitsOverlay: false,
 };
 
 export const useEditorStore = create<EditorState>((set, get) => ({
@@ -184,8 +180,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     });
   },
 
-  setShowSplitsOverlay: (v) => set({ showSplitsOverlay: v }),
-
   revertFinish: () => {
     set({
       isFinished: false,
@@ -202,7 +196,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       isFinished: false,
       finishTime: null,
       finishMemo: "",
-      showSplitsOverlay: false,
     });
   },
 
