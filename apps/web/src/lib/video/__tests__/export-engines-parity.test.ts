@@ -1,19 +1,46 @@
 /**
  * Sprint Contract テスト — Phase B 実装済み (QA)
- * 対象: プレビュー (useCanvasCompositor.ts) / WebCodecs 書き出し
- *      (webcodecs-frame-compositor.ts の compositeFrame) / ffmpeg フォールバック書き出し
- *      (overlay-frame-renderer.ts の compositeOverlayFrame) の三経路が同一の overlay
- *      描画結果になること (回帰固定用リグレッションテスト)
+ *
+ * 対象: WebCodecs 書き出し (webcodecs-frame-compositor.ts の compositeFrame) /
+ *      ffmpeg フォールバック書き出し (overlay-frame-renderer.ts の
+ *      compositeOverlayFrame) / プレビュー (hooks/useCanvasCompositor.ts) の
+ *      三経路が同一の overlay 描画結果になること (回帰固定用リグレッションテスト)
  *
  * 目的: 今回の不具合はそもそも「ffmpeg フォールバックだけが共有 overlay-renderer を
  * 使わず手書き再実装していた」ことが原因だった。案A実装後にこのテストが存在しないと、
  * 将来またどれか1経路だけが共有関数から外れて再乖離しても検知できない。
+ *
+ * SC-4 QA 注記 (このコメント自体の修正): 元の版はこの冒頭コメントで「三経路」と
+ * 主張していたが、実際に import/実行していたのは compositeFrame と
+ * compositeOverlayFrame の「二経路」だけで、プレビュー (useCanvasCompositor.ts)
+ * は比較対象に一切含まれていなかった (import すらされていない)。
+ * 調査の結果、useCanvasCompositor.ts の `render()` 自体は独自の描画ロジックを
+ * 持たず `@/lib/stopwatch/renderer.ts` の renderStopwatch/renderSplitDisplay/
+ * renderWatermark/renderFinishSummary (= 共有 drawStopwatch 等の薄いラッパー) を
+ * 呼ぶだけなので、動的に比較対象へ含めることは構造上可能だった。V-18b/V-18c として
+ * 実際に `renderHook` でフックを実行し、WebCodecs/ffmpeg 経路と同じ
+ * drawStopwatch/drawPassedSplit/drawWatermark 呼び出しに帰着することを追加した。
+ *
+ * 既知の未カバー範囲 (このテストでは検証していない):
+ *   - drawFinishSummary (サマリーテーブル) は3経路とも比較対象に含めていない。
+ *     3経路 (useCanvasCompositor / compositeFrame / compositeOverlayFrame) は
+ *     いずれも同じ素の `rawElapsed >= finishTime + SUMMARY_DELAY_SECONDS`
+ *     (WebCodecs/ffmpeg は `summaryOverlayStartMicros` 経由) で summary 表示を
+ *     判定しており、3経路間で「食い違ってはいない」— が、mobile の
+ *     computeSummaryStartT のような動画長に対するクランプがどの経路にも無いため、
+ *     finish が動画終端近くだと3経路とも揃って summary を出し損なう可能性がある
+ *     (mobile SC-2 とは別の、web 側の独立した潜在バグ)。この観点は
+ *     「3経路の一致」ではなく「web 全体の未対応」なので本ファイルのスコープ外とし、
+ *     PM に別途報告する。V-18 の対象は drawStopwatch/drawPassedSplit/drawWatermark
+ *     の3関数の呼び出し一致に限定している。
  *
  * 検証対象の Sprint Contract 項目:
  *   V-18: 同一の StopwatchConfig・同一の elapsed 相当の入力から、WebCodecs 書き出し経路
  *         (compositeFrame) と ffmpeg フォールバック経路 (compositeOverlayFrame) が
  *         どちらも共有 overlay-renderer の drawStopwatch/drawPassedSplit/drawWatermark を
  *         「同じ引数の形」で呼び出している (= 手書き再実装が紛れ込んでいない)
+ *   V-18b/V-18c: プレビュー経路 (useCanvasCompositor) も同じ drawStopwatch/
+ *         drawPassedSplit/drawWatermark に帰着すること (追加, SC-4)
  *   V-19: 3経路とも時刻表示の元になる関数が @swimhub-timer/shared の formatTime ただ1つで
  *         あること (どこかの経路が独自の時刻フォーマットを持たない) — ソースの静的検査で確認
  *   V-20: 3経路とも位置計算の元になる関数が @swimhub-timer/shared の calculatePosition
@@ -25,9 +52,10 @@
  * 加えて、ソースファイルに「独自の時刻フォーマット/位置計算ロジックが存在しないこと」を
  * 正規表現で確認する (Developer 実装のコピーではなく、旧バグの症状パターンそのものを検出する)。
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
+import { renderHook, act } from "@testing-library/react";
 
 vi.mock("@swimhub-timer/shared", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@swimhub-timer/shared")>();
@@ -46,6 +74,8 @@ import { compositeFrame } from "../webcodecs-frame-compositor";
 import type { FrameCompositorContext, FrameCompositorInput } from "../webcodecs-types";
 import { compositeOverlayFrame } from "../overlay-frame-renderer";
 import type { OverlayFrameCompositorContext, OverlayFrameInput } from "../overlay-frame-renderer";
+import { useCanvasCompositor } from "@/hooks/useCanvasCompositor";
+import { useEditorStore } from "@/stores/editor-store";
 
 function makeWebCodecsContext(): FrameCompositorContext {
   const ctx = {
@@ -193,6 +223,152 @@ describe("両経路が同一の共有描画関数を同じ引数で呼ぶこと 
     compositeFrame(makeWebCodecsContext(), { ...baseWebCodecs, showWatermark: false });
     compositeOverlayFrame(makeOverlayContext(), { ...baseOverlay, showWatermark: false });
     expect(drawWatermark).not.toHaveBeenCalled();
+  });
+});
+
+describe("プレビュー経路 (useCanvasCompositor) も同じ共有描画関数に帰着すること (V-18b/V-18c)", () => {
+  function makePreviewCtx() {
+    return {
+      clearRect: vi.fn(),
+      drawImage: vi.fn(),
+      fillText: vi.fn(),
+      fillRect: vi.fn(),
+      beginPath: vi.fn(),
+      fill: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      quadraticCurveTo: vi.fn(),
+      closePath: vi.fn(),
+      save: vi.fn(),
+      restore: vi.fn(),
+      fillStyle: "",
+      globalAlpha: 1,
+      textBaseline: "top" as const,
+      font: "",
+      measureText: vi.fn(() => ({ width: 10 })),
+    };
+  }
+
+  let getContextSpy: { mockRestore: () => void } | undefined;
+  let rafSpy: { mockRestore: () => void } | undefined;
+  let hookUnmount: (() => void) | undefined;
+
+  afterEach(() => {
+    // Unmount the hook FIRST (act()-wrapped internally by testing-library) —
+    // otherwise the store reset below fires while the previous test's
+    // TestComponent is still subscribed, triggering a React update outside
+    // any act() scope. That's currently harmless (nothing here uses
+    // `waitFor`), but is exactly the shape that turns into a silent
+    // false-green if a future edit adds an async assertion.
+    hookUnmount?.();
+    getContextSpy?.mockRestore();
+    rafSpy?.mockRestore();
+    useEditorStore.getState().reset();
+  });
+
+  function setupHook(overrides: {
+    startTime: number;
+    currentTime: number;
+    isFinished: boolean;
+    finishTime: number | null;
+    splitTimes: SplitTime[];
+  }) {
+    useEditorStore.setState({
+      ...useEditorStore.getState(),
+      stopwatchConfig: DEFAULT_STOPWATCH_CONFIG,
+      startTime: overrides.startTime,
+      splitTimes: overrides.splitTimes,
+      isFinished: overrides.isFinished,
+      finishTime: overrides.finishTime,
+      raceDistance: null,
+    });
+
+    // render() schedules `requestAnimationFrame(render)` for the NEXT frame at
+    // the end of every call — real in the browser, but in jsdom it fires
+    // asynchronously outside this test's `act()` scope and only produces an
+    // unhelpful "not wrapped in act(...)" warning here (we only assert on the
+    // single synchronous call below). Stub it to a no-op.
+    rafSpy = vi.spyOn(window, "requestAnimationFrame").mockReturnValue(0);
+
+    const canvas = document.createElement("canvas");
+    // renderStopwatch/renderSplitDisplay (apps/web/src/lib/stopwatch/renderer.ts)
+    // read the canvas size off `ctx.canvas`, not a separate size argument —
+    // the mock ctx must reference the SAME canvas element `render()` resizes.
+    const previewCtx = { ...makePreviewCtx(), canvas };
+    getContextSpy = vi
+      .spyOn(HTMLCanvasElement.prototype, "getContext")
+      .mockReturnValue(previewCtx as unknown as CanvasRenderingContext2D);
+
+    const video = document.createElement("video");
+    Object.defineProperty(video, "videoWidth", { value: 1920, configurable: true });
+    Object.defineProperty(video, "videoHeight", { value: 1080, configurable: true });
+    Object.defineProperty(video, "currentTime", { value: overrides.currentTime, configurable: true });
+
+    const canvasRef = { current: canvas };
+    const videoRef = { current: video };
+
+    const { result, unmount } = renderHook(() => useCanvasCompositor(canvasRef, videoRef));
+    hookUnmount = unmount;
+    act(() => {
+      result.current.render();
+    });
+    return previewCtx;
+  }
+
+  it("[V-18b] preview calls drawStopwatch(size, config, elapsed) with the SAME elapsed as the WebCodecs/ffmpeg paths for the same video time", () => {
+    setupHook({ startTime: 5, currentTime: 30, isFinished: false, finishTime: null, splitTimes: [] });
+    const previewCall = vi.mocked(drawStopwatch).mock.calls[0];
+    expect(previewCall).toBeDefined(); // drawStopwatch must have been called by the preview path
+    vi.clearAllMocks();
+
+    const webCodecsInput: FrameCompositorInput = {
+      sourceFrame: {} as CanvasImageSource,
+      timestamp: 30,
+      startSignalTime: 5,
+      stopwatchConfig: DEFAULT_STOPWATCH_CONFIG,
+      splitTimes: [],
+      isFinished: false,
+      finishTime: null,
+      raceDistance: null,
+      showWatermark: false,
+      watermarkIcon: null,
+    };
+    compositeFrame(makeWebCodecsContext(), webCodecsInput);
+    const webCodecsCall = vi.mocked(drawStopwatch).mock.calls[0];
+    expect(webCodecsCall).toBeDefined();
+
+    // args[1]=size, [2]=config, [3]=elapsed (args[0]=ctx differs per path, excluded).
+    expect(previewCall![1]).toEqual(webCodecsCall![1]);
+    expect(previewCall![2]).toEqual(webCodecsCall![2]);
+    expect(previewCall![3]).toEqual(webCodecsCall![3]);
+  });
+
+  it("[V-18c] preview calls drawPassedSplit for the SAME active split window as the ffmpeg fallback path", () => {
+    const split: SplitTime = { distance: 50, time: 25, lapTime: 25, memo: "" };
+    // currentTime=31, startTime=5 → elapsed=26 → inside [25,28).
+    setupHook({ startTime: 5, currentTime: 31, isFinished: false, finishTime: null, splitTimes: [split] });
+    const previewSplitCalls = vi.mocked(drawPassedSplit).mock.calls.length;
+    vi.clearAllMocks();
+
+    compositeOverlayFrame(makeOverlayContext(), {
+      timestamp: 31,
+      startSignalTime: 5,
+      stopwatchConfig: DEFAULT_STOPWATCH_CONFIG,
+      splitTimes: [split],
+      isFinished: false,
+      finishTime: null,
+      showWatermark: false,
+      watermarkIcon: null,
+    });
+    const ffmpegSplitCalls = vi.mocked(drawPassedSplit).mock.calls.length;
+
+    expect(previewSplitCalls).toBe(1);
+    expect(ffmpegSplitCalls).toBe(1);
+  });
+
+  it("[V-18c] preview calls drawWatermark unconditionally (own gating is Story-out-of-scope) — sanity check it's wired to the shared function at all", () => {
+    setupHook({ startTime: 0, currentTime: 0, isFinished: false, finishTime: null, splitTimes: [] });
+    expect(drawWatermark).toHaveBeenCalledTimes(1);
   });
 });
 

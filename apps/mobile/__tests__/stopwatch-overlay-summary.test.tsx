@@ -1,143 +1,151 @@
 /**
- * Sprint Contract テストスケルトン
- * ゴール後サマリーオーバーレイ — StopwatchOverlay サマリー切替ロジック
+ * Sprint Contract (SC-4 / mobile-overlay-export-preview-parity)
+ * V-04 回帰テスト — StopwatchOverlay ジェスチャー層のサマリー切替クランプ (SC-2)
  *
- * NOTE: このファイルはスケルトンのみ。
- * - StopwatchOverlay の改修 (FinishSummaryTable 表示ロジック追加) は未実装。
- * - Phase B で Developer が実装完了後、コメントアウトを外して実装する。
- * - React Native Testing Library (@testing-library/react-native) を想定。
- * - useEditorStore は jest.mock でモックする。
+ * 監査結果 (PM 実測, mobile ③):
+ *   可視の Skia 層 (StopwatchSkiaOverlay) はクランプ済み computeSummaryStartT
+ *   を使ってサマリー表示に切り替わるが、ジェスチャー層
+ *   (components/stopwatch/StopwatchOverlay.tsx, hideVisuals=true) は
+ *   `currentVideoTime - startTime >= finishTime + SUMMARY_DELAY_SECONDS` という
+ *   未クランプ式を使っていた → 動画終端近くでフィニッシュすると、可視のサマリー
+ *   テーブルと編集ハンドル(タイマー用 vs サマリー用)が別の瞬間に切り替わり、
+ *   ハンドルが追従しなくなる。
  *
- * 対象ファイル (実装後):
- *   apps/mobile/components/stopwatch/StopwatchOverlay.tsx
+ * このファイルは旧スケルトン (全件 it.skip, 対象はいずれ削除予定の
+ * FinishSummaryTable 表示ロジックの想定違い) を置き換える。旧ケースは
+ * StopwatchOverlay の現在の実装 (ジェスチャー層は当たり判定のみを描画し、
+ * FinishSummaryTable 自体は描画しない) と噛み合っていないため実装せず削除した
+ * (根拠: components/stopwatch/StopwatchOverlay.tsx の hideVisuals 分岐は
+ * summaryPreviewBounds に基づくヒットエリアの View のみを描画し、
+ * FinishSummaryTable はレンダーしない — Skia 側が描画を担当する)。
  *
- * Sprint Contract 参照:
- *   V-01: isFinished=true かつ elapsed >= finishTime のとき FinishSummaryTable が表示される
- *   V-02: isFinished=true かつ elapsed < finishTime のとき FinishSummaryTable が表示されない
- *   V-03: isFinished=false のとき FinishSummaryTable が表示されない
- *   V-04: SplitDisplay (通過時ポップアップ) が削除されている (回帰)
- *   V-05: ストップウォッチ時計表示が引き続きレンダリングされる
+ * 検証方法: ジェスチャー層 (hideVisuals=true) が「タイマー用ヒットエリア」から
+ * 「サマリー用ヒットエリア」に切り替わる video time が、
+ * computeSummaryStartT(startTime, finishTime, videoDuration) と一致するかを、
+ * store に注入した一意な bounds (x 座標) で判別する。
  */
-
 import React from "react";
-// import { render, screen } from "@testing-library/react-native";
+import { render, fireEvent, act } from "@testing-library/react-native";
 import { StopwatchOverlay } from "../components/stopwatch/StopwatchOverlay";
+import { useEditorStore, MOBILE_DEFAULT_STOPWATCH_CONFIG } from "../stores/editor-store";
+import { computeSummaryStartT } from "../lib/video/export-pipeline";
 
-// ---- editor-store モック ----
-// jest.mock("../stores/editor-store", () => ({
-//   useEditorStore: jest.fn(),
-// }));
-// import { useEditorStore } from "../stores/editor-store";
+const TIMER_BOUNDS = { x: 111, y: 11, width: 40, height: 20 };
+const SUMMARY_BOUNDS = { x: 222, y: 22, width: 60, height: 30 };
 
-// ---- FinishSummaryTable モック (描画確認のため testID を使う) ----
-// jest.mock("../components/splits/FinishSummaryTable", () => ({
-//   FinishSummaryTable: () => <View testID="finish-summary-table" />,
-// }));
+type JsonNode = {
+  type: string;
+  props?: Record<string, unknown>;
+  children?: (JsonNode | string)[] | null;
+};
 
-// ---- ヘルパー: ストア状態を注入 ----
-// function mockStore(overrides: Partial<ReturnType<typeof useEditorStore>>) {
-//   (useEditorStore as jest.Mock).mockImplementation((selector: (s: any) => any) =>
-//     selector({ ...defaultStoreState, ...overrides })
-//   );
-// }
+/** Recursively search the rendered tree for a host node whose (possibly
+ * array-valued) style contains `left === value`. Structural traversal only —
+ * does not re-implement any StopwatchOverlay business logic. */
+function treeHasStyleLeft(node: JsonNode | string | null | undefined, value: number): boolean {
+  if (!node || typeof node === "string") return false;
+  const style = node.props?.style;
+  const styles = Array.isArray(style) ? style : [style];
+  if (styles.some((s) => s && typeof s === "object" && (s as { left?: number }).left === value)) {
+    return true;
+  }
+  const children = node.children ?? [];
+  return children.some((c) => treeHasStyleLeft(c, value));
+}
 
-// const defaultStoreState = {
-//   stopwatchConfig: {
-//     fontSize: 48,
-//     padding: 12,
-//     borderRadius: 8,
-//     textColor: "#FFFFFF",
-//     backgroundColor: "rgba(0,0,0,0.75)",
-//     fontFamily: "monospace",
-//     position: { x: 0.05, y: 0.05 },
-//     anchor: "top-left",
-//   },
-//   startTime: 5.0,
-//   currentVideoTime: 70.0,
-//   splitTimes: [
-//     { distance: 50, time: 30.12, lapTime: 30.12, memo: "" },
-//     { distance: 100, time: 62.45, lapTime: 32.33, memo: "" },
-//   ],
-//   isFinished: false,
-//   finishTime: null,
-//   updateStopwatchConfig: jest.fn(),
-// };
-
-describe("StopwatchOverlay — FinishSummaryTable 表示制御", () => {
-  describe("[V-01] isFinished=true かつ elapsed >= finishTime", () => {
-    it.skip("should render FinishSummaryTable when isFinished is true and elapsed >= finishTime", () => {
-      // 前提:
-      //   startTime = 5.0, currentVideoTime = 70.0
-      //   isFinished = true, finishTime = 60.0
-      //   elapsed = 70.0 - 5.0 = 65.0 >= finishTime(60.0)
-      // 操作: render(<StopwatchOverlay videoWidth={1920} videoHeight={1080} />)
-      //        with mocked store
-      // 期待: testID="finish-summary-table" の要素が存在する
-      // 検証: expect(screen.getByTestId("finish-summary-table")).toBeTruthy()
-    });
-
-    it.skip("should render FinishSummaryTable when elapsed equals finishTime exactly", () => {
-      // 前提: elapsed = finishTime (境界値: elapsed = 60.0, finishTime = 60.0)
-      // 期待: サマリーテーブルが表示される (>= の境界)
-      // 検証: expect(screen.getByTestId("finish-summary-table")).toBeTruthy()
-    });
+async function renderGestureLayer(overrides: Partial<ReturnType<typeof useEditorStore.getState>>) {
+  useEditorStore.setState({
+    ...useEditorStore.getState(),
+    stopwatchConfig: MOBILE_DEFAULT_STOPWATCH_CONFIG,
+    splitTimes: [],
+    raceDistance: null,
+    timerPreviewBounds: TIMER_BOUNDS,
+    summaryPreviewBounds: SUMMARY_BOUNDS,
+    timerEditing: false,
+    summaryEditing: false,
+    ...overrides,
   });
 
-  describe("[V-02] isFinished=true だが elapsed < finishTime", () => {
-    it.skip("should NOT render FinishSummaryTable when elapsed < finishTime", () => {
-      // 前提:
-      //   startTime = 5.0, currentVideoTime = 60.0
-      //   isFinished = true, finishTime = 65.0
-      //   elapsed = 60.0 - 5.0 = 55.0 < finishTime(65.0)
-      // 期待: testID="finish-summary-table" の要素が存在しない
-      // 検証: expect(screen.queryByTestId("finish-summary-table")).toBeNull()
+  const view = await render(
+    <StopwatchOverlay videoWidth={1920} videoHeight={1080} hideVisuals />,
+  );
+  // Force contentRect to become non-zero so the component proceeds past its
+  // "still measuring" early-return into the hideVisuals gesture branch.
+  await act(async () => {
+    await fireEvent(view.root, "layout", {
+      nativeEvent: { layout: { x: 0, y: 0, width: 1920, height: 1080 } },
     });
   });
+  return view;
+}
 
-  describe("[V-03] isFinished=false", () => {
-    it.skip("should NOT render FinishSummaryTable when isFinished is false", () => {
-      // 前提: isFinished = false, finishTime = null
-      // 期待: FinishSummaryTable がレンダリングされない
-      // 検証: expect(screen.queryByTestId("finish-summary-table")).toBeNull()
-    });
+beforeEach(() => {
+  useEditorStore.getState().reset();
+});
 
-    it.skip("should NOT render FinishSummaryTable when isFinished is false even if finishTime is set", () => {
-      // 前提: isFinished = false, finishTime = 60.0 (ありえないが防衛的テスト)
-      // 期待: FinishSummaryTable が表示されない
-    });
+describe("[V-04] gesture layer summary switch uses the same clamp as the Skia preview", () => {
+  it("computeSummaryStartT clamps the naive finishTime+SUMMARY_DELAY_SECONDS instant for this fixture (sanity check)", () => {
+    // Sanity check on the fixture itself: duration=60, finishTime=58.5 must
+    // force the clamp branch (finishAbs+delay overruns the clip), otherwise
+    // this test would not distinguish the clamped vs. unclamped formulas.
+    const clamped = computeSummaryStartT(0, 58.5, 60);
+    expect(clamped).toBe(58.5); // clamp, not 58.5 + SUMMARY_DELAY_SECONDS(2) = 60.5
   });
 
-  describe("[V-04] 旧 SplitDisplay (通過時ポップアップ) の削除確認 (回帰)", () => {
-    it.skip("should NOT render split popup even when elapsed is within 3s of a split time", () => {
-      // 前提:
-      //   isFinished = false
-      //   elapsed = splitTimes[0].time + 1.5 (スプリット通過後1.5秒 = 旧ロジックなら表示される状態)
-      // 期待: "SplitDisplay" に相当するテキスト (例: "50m: 30.12 (lap: 30.12)") が表示されない
-      // 検証: screen.queryByText(/\dm:/) がない / testID="split-display" がない
+  it("shows the SUMMARY hit-area (not the timer hit-area) once currentVideoTime reaches the CLAMPED transition", async () => {
+    const startTime = 0;
+    const finishTime = 58.5;
+    const videoDuration = 60;
+    const clampedT = computeSummaryStartT(startTime, finishTime, videoDuration);
+    expect(clampedT).not.toBeNull();
+
+    const view = await renderGestureLayer({
+      startTime,
+      isFinished: true,
+      finishTime,
+      videoMetadata: { width: 1920, height: 1080, duration: videoDuration, name: "clip.mp4" },
+      currentVideoTime: clampedT as number,
     });
+
+    const json = view.toJSON();
+    // Regression target: with the OLD unclamped formula
+    // (finishTime + SUMMARY_DELAY_SECONDS = 60.5), currentVideoTime=58.5 would
+    // NOT satisfy `>= 60.5`, so the timer hit-area would still be showing here
+    // instead of the summary one.
+    expect(treeHasStyleLeft(json, SUMMARY_BOUNDS.x)).toBe(true);
+    expect(treeHasStyleLeft(json, TIMER_BOUNDS.x)).toBe(false);
   });
 
-  describe("[V-05] ストップウォッチ時計の継続表示 (回帰)", () => {
-    it.skip("should still render the stopwatch time text regardless of finish state", () => {
-      // 前提: isFinished = false, startTime = 5.0, currentVideoTime = 35.0
-      //        elapsed = 30.0 → formatTime(30.0) = "30.00"
-      // 期待: "30.00" が画面に表示される
-      // 検証: screen.getByText("30.00")
+  it("still shows the TIMER hit-area just before the clamped transition (control case)", async () => {
+    const startTime = 0;
+    const finishTime = 58.5;
+    const videoDuration = 60;
+    const clampedT = computeSummaryStartT(startTime, finishTime, videoDuration) as number;
+
+    const view = await renderGestureLayer({
+      startTime,
+      isFinished: true,
+      finishTime,
+      videoMetadata: { width: 1920, height: 1080, duration: videoDuration, name: "clip.mp4" },
+      currentVideoTime: clampedT - 0.01,
     });
 
-    it.skip("should freeze stopwatch at finishTime when isFinished is true", () => {
-      // 前提: isFinished = true, finishTime = 62.45, currentVideoTime = 100.0
-      //        elapsed が finishTime を超えても finishTime に固定される
-      // 期待: formatTime(62.45) = "1:02.45" が表示される
-      // 検証: screen.getByText("1:02.45")
-    });
+    const json = view.toJSON();
+    expect(treeHasStyleLeft(json, TIMER_BOUNDS.x)).toBe(true);
+    expect(treeHasStyleLeft(json, SUMMARY_BOUNDS.x)).toBe(false);
   });
 
-  describe("[V-05] startTime が null の場合", () => {
-    it.skip("should return null and render nothing when startTime is null", () => {
-      // 前提: startTime = null
-      // 期待: コンポーネントが null を返す (何もレンダリングされない)
-      // 検証: render の結果が空 / queryByTestId が null
+  it("never shows the summary hit-area when not finished, regardless of currentVideoTime", async () => {
+    const view = await renderGestureLayer({
+      startTime: 0,
+      isFinished: false,
+      finishTime: null,
+      videoMetadata: { width: 1920, height: 1080, duration: 60, name: "clip.mp4" },
+      currentVideoTime: 59,
     });
+
+    const json = view.toJSON();
+    expect(treeHasStyleLeft(json, TIMER_BOUNDS.x)).toBe(true);
+    expect(treeHasStyleLeft(json, SUMMARY_BOUNDS.x)).toBe(false);
   });
 });

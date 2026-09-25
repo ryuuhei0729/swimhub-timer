@@ -352,6 +352,11 @@ export default function ExportScreen() {
     // the export filtergraph scales them to the output resolution.
     let timerSequence: TimerSequenceInput | null = null;
     let timerSequenceDir: string | null = null;
+    // Tracked separately from `timerSequence.preRollImageUri` so the `finally`
+    // block below can delete it even if an error after this point leaves
+    // `timerSequence` reassigned to null (see the catch at the bottom of this
+    // if-block).
+    let preRollImageUri: string | null = null;
     if (USE_SKIA_TIMER_SEQUENCE && startTime !== null) {
       try {
         const summaryStartAbs =
@@ -388,7 +393,7 @@ export default function ExportScreen() {
             }
             return null;
           };
-          const { renderTimerSequence } =
+          const { renderTimerSequence, renderTimerFramePng } =
             require("../../lib/overlay/render-offscreen") as typeof import("../../lib/overlay/render-offscreen");
           const seq = await renderTimerSequence({
             config: stopwatchConfig,
@@ -407,12 +412,38 @@ export default function ExportScreen() {
             },
           });
           timerSequenceDir = seq.dir;
+          // Static "0:00" pre-roll covering [0, seqStart): the preview shows
+          // 0:00 from video time 0 (elapsed = max(0, currentVideoTime -
+          // startTime)), but the sequence above only covers [seqStart, endAbs)
+          // — leaving t=0..seqStart with no overlay at all in the export. A
+          // single full-frame PNG is enough because elapsed is 0 (unchanging)
+          // for the entire pre-roll window; rendering it as a PNG sequence
+          // instead is what caused the JS-thread-freeze regression noted above.
+          // Only needed when the pre-roll window is non-empty — seqStart is 0
+          // whenever startTime <= PRE_ROLL_SECONDS (see Math.max(0, ...)
+          // above), which already covers `startTime <= 0` and small positive
+          // values without any extra branching here.
+          preRollImageUri =
+            seqStart > 0
+              ? await renderTimerFramePng({
+                  config: stopwatchConfig,
+                  elapsedSeconds: 0,
+                  // Mirror frame 0 of the sequence (elapsedFor(seqStart) === 0)
+                  // exactly, in case a split is somehow active at elapsed 0.
+                  activeSplit: activeSplitAt(0),
+                  watermarkIcon: null, // watermark stays a separate FFmpeg overlay
+                  width: videoWidth,
+                  height: videoHeight,
+                  fileName: `swimhub-preroll_${videoWidth}x${videoHeight}.png`,
+                })
+              : null;
           timerSequence = {
             pattern: seq.pattern,
             fps: seq.fps,
             startT: seqStart, // frame 0 = video time seqStart
             endT: endAbs,
             region: seq.region,
+            preRollImageUri,
           };
         }
       } catch (e) {
@@ -475,6 +506,18 @@ export default function ExportScreen() {
           const { deleteTimerSequence } =
             require("../../lib/overlay/render-offscreen") as typeof import("../../lib/overlay/render-offscreen");
           deleteTimerSequence(timerSequenceDir);
+        } catch {
+          // ignore cleanup errors
+        }
+      }
+      // The pre-roll PNG (SC-1) is a single file outside `timerSequenceDir`
+      // (see renderTimerFramePng's writePng), so `deleteTimerSequence` above
+      // doesn't reach it. FFmpeg has already read it as an overlay input by
+      // this point (success or failure), so it's safe to delete unconditionally.
+      if (preRollImageUri) {
+        try {
+          const { File } = require("expo-file-system") as typeof import("expo-file-system");
+          new File(preRollImageUri).delete();
         } catch {
           // ignore cleanup errors
         }
