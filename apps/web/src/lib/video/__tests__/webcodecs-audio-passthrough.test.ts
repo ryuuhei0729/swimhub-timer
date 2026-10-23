@@ -15,13 +15,14 @@
 import { describe, it, expect, vi } from "vitest";
 import { WebCodecsUnsupportedError } from "../webcodecs-types";
 
+// vitest 4 では `new` で呼ぶモックの実装にアロー関数を使えない (not a constructor) ため function 式にしている
 vi.mock("mediabunny", () => ({
-  EncodedAudioPacketSource: vi.fn().mockImplementation(() => ({ add: vi.fn(), close: vi.fn() })),
-  EncodedPacketSink: vi.fn().mockImplementation(() => ({
+  EncodedAudioPacketSource: vi.fn().mockImplementation(function () { return { add: vi.fn(), close: vi.fn() }; }),
+  EncodedPacketSink: vi.fn().mockImplementation(function () { return {
     packets: async function* () {
       /* empty by default; individual tests override via track mocks, not this sink */
     },
-  })),
+  }; }),
 }));
 
 import { setupAudioPassthrough } from "../webcodecs-audio-passthrough";

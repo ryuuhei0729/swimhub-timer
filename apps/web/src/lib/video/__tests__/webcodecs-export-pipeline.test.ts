@@ -43,21 +43,22 @@ const { state } = vi.hoisted(() => {
   };
 });
 
+// vitest 4 では `new` で呼ぶモックの実装にアロー関数を使えない (not a constructor) ため function 式にしている
 vi.mock("mediabunny", () => ({
-  BufferTarget: vi.fn().mockImplementation(() => ({ buffer: new ArrayBuffer(8) })),
-  Mp4OutputFormat: vi.fn().mockImplementation(() => ({})),
-  Output: vi.fn().mockImplementation(() => ({
+  BufferTarget: vi.fn().mockImplementation(function () { return { buffer: new ArrayBuffer(8) }; }),
+  Mp4OutputFormat: vi.fn().mockImplementation(function () { return {}; }),
+  Output: vi.fn().mockImplementation(function () { return {
     start: state.outputStart,
     cancel: state.outputCancel,
     finalize: state.outputFinalize,
     addVideoTrack: state.addVideoTrack,
     addAudioTrack: state.addAudioTrack,
-  })),
-  CanvasSource: vi.fn().mockImplementation(() => ({
+  }; }),
+  CanvasSource: vi.fn().mockImplementation(function () { return {
     add: state.canvasSourceAdd,
     close: state.canvasSourceClose,
-  })),
-  CanvasSink: vi.fn().mockImplementation(() => ({
+  }; }),
+  CanvasSink: vi.fn().mockImplementation(function () { return {
     // Async generator that yields many frames with a microtask delay between each —
     // long enough that an *unaborted* loop would process most/all of FAKE_TOTAL_FRAMES,
     // so early stopping is clearly distinguishable from "ran to completion".
@@ -67,7 +68,7 @@ vi.mock("mediabunny", () => ({
         yield { canvas: {}, timestamp: i / 30, duration: 1 / 30 };
       }
     },
-  })),
+  }; }),
 }));
 
 vi.mock("../webcodecs-capability", () => ({
