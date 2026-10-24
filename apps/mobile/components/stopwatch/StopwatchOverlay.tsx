@@ -17,10 +17,10 @@ import {
   formatTime,
   STOPWATCH_FONT_SIZE_MIN,
   SPLIT_DISPLAY_DURATION_SECONDS,
-  SUMMARY_DELAY_SECONDS,
 } from "@swimhub-timer/shared";
 import type { StopwatchAnchor } from "@swimhub-timer/shared";
 import { FinishSummaryTable } from "../splits/FinishSummaryTable";
+import { computeSummaryStartT } from "../../lib/video/export-pipeline";
 
 interface Props {
   videoWidth: number;
@@ -53,6 +53,11 @@ export function StopwatchOverlay({ videoWidth, videoHeight, hideVisuals = false 
   const isFinished = useEditorStore((s) => s.isFinished);
   const finishTime = useEditorStore((s) => s.finishTime);
   const raceDistance = useEditorStore((s) => s.raceDistance);
+  // Same clamped source of truth as StopwatchSkiaOverlay's `summaryStartAbs` —
+  // needed so both the hideVisuals (Skia-preview) gesture layer AND the
+  // legacy visible layer transition to the summary at the same instant the
+  // Skia picture / export do (see computeSummaryStartT's doc comment).
+  const videoDuration = useEditorStore((s) => s.videoMetadata?.duration ?? 0);
   const updateStopwatchConfig = useEditorStore((s) => s.updateStopwatchConfig);
   // Publish editing state so the Skia preview defers the element under edit.
   const setStoreTimerEditing = useEditorStore((s) => s.setTimerEditing);
@@ -469,8 +474,15 @@ export function StopwatchOverlay({ videoWidth, videoHeight, hideVisuals = false 
   // from the bounds the Skia layer published. One geometry → frame glued to the
   // glyphs, no jump, preview == export.
   if (hideVisuals) {
+    // Clamped to the clip length via computeSummaryStartT — the SAME
+    // transition instant StopwatchSkiaOverlay's picture uses (SC-2). The
+    // previous `currentVideoTime - startTime >= finishTime +
+    // SUMMARY_DELAY_SECONDS` was unclamped: when the finish lands near the
+    // clip end the Skia picture (clamped) already shows the summary while
+    // this gesture layer kept the edit handles on the timer.
+    const summaryStartAbs = computeSummaryStartT(startTime, finishTime, videoDuration);
     const showSummaryNow =
-      isFinished && finishTime !== null && currentVideoTime - startTime >= finishTime + SUMMARY_DELAY_SECONDS;
+      isFinished && finishTime !== null && summaryStartAbs !== null && currentVideoTime >= summaryStartAbs;
     const pad = HANDLE_OVERLAP_PAD;
 
     return (
@@ -585,10 +597,19 @@ export function StopwatchOverlay({ videoWidth, videoHeight, hideVisuals = false 
     summaryLayout,
   );
 
+  // This branch only renders when hideVisuals is false — currently unreached
+  // in the app (VideoPlayer always passes hideVisuals={USE_SKIA_PREVIEW} with
+  // USE_SKIA_PREVIEW hardcoded true) but kept live as the non-Skia fallback
+  // chrome (same category as USE_SKIA_TIMER_SEQUENCE/USE_SKIA_SUMMARY — a
+  // flag someone could flip back for an Expo-Go / non-Skia build).
+  // __tests__/stopwatch-overlay-summary.test.tsx renders this component with
+  // hideVisuals defaulted to false (reaching this branch) but its cases are
+  // all `it.skip` skeletons today, so it isn't currently asserting on this.
+  // Unified with the hideVisuals branch above (SC-2) rather than deleted, so
+  // flipping USE_SKIA_PREVIEW back to false doesn't reintroduce the drift.
+  const summaryStartAbs = computeSummaryStartT(startTime, finishTime, videoDuration);
   const showSummary =
-    isFinished &&
-    finishTime !== null &&
-    currentVideoTime - startTime >= finishTime + SUMMARY_DELAY_SECONDS;
+    isFinished && finishTime !== null && summaryStartAbs !== null && currentVideoTime >= summaryStartAbs;
 
   const splitFontSize = Math.max(8, Math.round(scaledFontSize * 0.55));
   const splitMemoFontSize = Math.max(7, Math.round(scaledFontSize * 0.38));

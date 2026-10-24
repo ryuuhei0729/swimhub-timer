@@ -154,6 +154,23 @@ function buildBoxedPositionX(config: StopwatchConfig, boxBorderW: number): strin
   }
 }
 
+// Elapsed-seconds expression with UNESCAPED commas — safe inside any
+// single-quoted drawtext option value (`enable='...'`, `x='...'`): FFmpeg's
+// argument parser treats a quoted option's commas as `eval` function-argument
+// separators rather than filter-chain separators, which is already how
+// `enable=` below uses raw commas successfully. Shared by the timer's own
+// enable clause and the split fallback's timer-box-width estimate
+// (buildTimerBoxCenterXExpr) so both agree on exactly when the displayed
+// format switches from S.xx to M:SS.xx.
+function buildElapsedTExpr(
+  startSignalTime: number,
+  isFinished: boolean,
+  finishTime: number | null,
+): string {
+  const raw = `max(0, t-${startSignalTime.toFixed(3)})`;
+  return isFinished && finishTime !== null ? `min(${finishTime.toFixed(3)}, ${raw})` : raw;
+}
+
 // Timer Y: the timer box is anchored directly at the point (unlike the split,
 // which sits below the timer), so the same boxborder compensation applies here.
 function buildTimerPositionY(config: StopwatchConfig): string {
@@ -191,10 +208,7 @@ function buildStopwatchFilters(
   const rawText = `max(0\\, t-${startT})`;
   const elapsedText =
     isFinished && finishTime !== null ? `min(${finishTime.toFixed(3)}\\, ${rawText})` : rawText;
-  const elapsedEnable =
-    isFinished && finishTime !== null
-      ? `min(${finishTime.toFixed(3)}, max(0, t-${startSignalTime.toFixed(3)}))`
-      : `max(0, t-${startSignalTime.toFixed(3)})`;
+  const elapsedEnable = buildElapsedTExpr(startSignalTime, isFinished, finishTime);
 
   const minutes = `trunc(${elapsedText}/60)`;
   const seconds = `trunc(mod(${elapsedText}\\,60))`;
@@ -231,6 +245,43 @@ function buildStopwatchFilters(
     `drawtext=enable='${under60Enable}':${baseParts.join(":")}:text='${textUnder60}'`,
     `drawtext=enable='${over60Enable}':${baseParts.join(":")}:text='${textOver60}'`,
   ];
+}
+
+// Horizontal center of the TIMER BOX (not the anchor point) — mirrors the
+// shared `drawPassedSplit` (apps/shared/overlay-renderer/split.ts), which
+// centers the split badge on `getStopwatchBounds().x + width/2` regardless of
+// anchor. `timerWidthExpr` is an ESTIMATE of the timer box's current width
+// (see buildPassedSplitFilters) since a drawtext filter can't read another
+// filter's rendered-text metrics (`tw`) — there's no cross-filter reference in
+// FFmpeg's expression language, so the split filter can't ask the timer
+// filter how wide its own text is.
+function buildTimerBoxCenterXExpr(config: StopwatchConfig, timerWidthExpr: string): string {
+  const base = `(w*${config.position.x})`;
+  switch (config.anchor) {
+    case "top-center":
+    case "bottom-center":
+      // buildBoxedPositionX (the TIMER's own X, in this same drawtext pass)
+      // hardcodes `(w-tw)/2` for these two anchors — i.e. it frame-centers
+      // the timer box UNCONDITIONALLY, ignoring config.position.x entirely.
+      // Box center = textOriginX + tw/2 = (w-tw)/2 + tw/2 = w/2, independent
+      // of tw/boxBorderW — so this must also be `w/2`, not `base`, to stay
+      // consistent with the sibling timer filter regardless of position.x
+      // (deriving from buildBoxedPositionX's actual formula rather than
+      // assuming position.x happens to be 0.5).
+      return `(w/2)`;
+    case "center":
+      // buildBoxedPositionX's "center" case is `base-tw/2` (box center =
+      // that + tw/2 = base exactly) — position.x-dependent, unlike the two
+      // cases above, so `base` already matches with no width term needed.
+      return base;
+    case "top-right":
+    case "bottom-right":
+      return `${base}-${config.padding}-(${timerWidthExpr})/2`;
+    default:
+      // top-left / bottom-left: box left edge = base + padding (see
+      // buildBoxedPositionX), so center = that + half the box width.
+      return `${base}+${config.padding}+(${timerWidthExpr})/2`;
+  }
 }
 
 /**
@@ -272,6 +323,36 @@ function buildPassedSplitFilters(
   const timerH = config.fontSize + 2 * config.padding;
   const fontPart = fontfileArg(fontPath);
 
+  // --- SC-3: timer-box-width estimate, for centering the split under it ---
+  // A drawtext filter only knows its OWN rendered text width (`tw`); it can't
+  // read the timer filter's `tw`. To approximate the timer's current box
+  // width we replicate its measurement using the SAME bundled font metrics
+  // the timer text is actually drawn with (measured directly from each
+  // .ttf's `hmtx` table at 1000 unitsPerEm — not a guess):
+  //   NotoSansMono-Bold (config.fontFamily === "monospace"): digit/.'/':' 0.60em
+  //   NotoSansJP-Bold (default):                             digit 0.59em, '.'/':' 0.325em
+  // Re-derivable from assets/fonts/{NotoSansMono-Bold,NotoSansJP-Bold}.ttf:
+  // read `head.unitsPerEm` (=1000 in both fonts) and the `hmtx` table's
+  // advanceWidth for the glyphs mapped (via `cmap`) from codepoints
+  // '0'-'9' (0x30-0x39), '.' (0x2E) and ':' (0x3A); ratio = advanceWidth /
+  // unitsPerEm. If either .ttf is ever replaced, re-measure and update these.
+  // The estimate assumes the common case within each display-format bucket —
+  // 2-digit seconds under 60s, 1-digit minutes at/after 60s — so a 1-digit-
+  // second timer ("5.23") is narrower by one digit than assumed. That's the
+  // same class of approximation `timerH` above already makes for the split Y
+  // position (a fixed number that ignores which exact text is rendered).
+  const isMonoTimerFont = config.fontFamily === "monospace";
+  const timerDigitW = config.fontSize * (isMonoTimerFont ? 0.6 : 0.59);
+  const timerSepW = config.fontSize * (isMonoTimerFont ? 0.6 : 0.325);
+  const timerWidthUnder60 = 4 * timerDigitW + timerSepW; // "SS.xx"
+  const timerWidthOver60 = 5 * timerDigitW + 2 * timerSepW; // "M:SS.xx"
+  // `finishTime !== null` is this function's only isFinished signal (it
+  // isn't passed the separate isFinished flag) — already how the finish-split
+  // filter above treats it.
+  const elapsedForTimerWidth = buildElapsedTExpr(startSignalTime, finishTime !== null, finishTime);
+  const timerWidthExpr = `if(gte(${elapsedForTimerWidth},60),${timerWidthOver60.toFixed(1)},${timerWidthUnder60.toFixed(1)})`;
+  const timerCenterXExpr = buildTimerBoxCenterXExpr(config, timerWidthExpr);
+
   // Always render the split badge directly below the timer to match the
   // mobile preview (StopwatchOverlay.getSplitBadgePixelStyle). The preview
   // positions the OUTER box; drawtext positions the TEXT and paints the box
@@ -308,7 +389,11 @@ function buildPassedSplitFilters(
 
     const enable = `gte(t,${startT})*lt(t,${endT})`;
 
-    const xExpr = buildBoxedPositionX(config, splitPad);
+    // Center this split's OWN box (its `tw`, exact) under the timer box's
+    // estimated center (SC-3) — anchor-independent, matching the shared
+    // drawPassedSplit. `text=` origin = box center - half this box's width,
+    // same boxBorderW-outer-edge convention as buildBoxedPositionX.
+    const xExpr = `(${timerCenterXExpr})-tw/2`;
 
     // Mirror the preview's SplitBadge headline exactly:
     //   "<dist>m: <time>"  and, when a lap time exists, " (lap: <lap>)".
@@ -326,7 +411,10 @@ function buildPassedSplitFilters(
       `box=1`,
       `boxcolor=${rgbaToFFmpegColor(config.backgroundColor)}`,
       `boxborderw=${splitPad}`,
-      `x=${xExpr}`,
+      // Single-quoted: xExpr's `if(gte(t,60),...)` contains raw commas, which
+      // would otherwise be parsed as the OUTER filter-chain separator (like
+      // `enable='...'` below already relies on for its own raw commas).
+      `x='${xExpr}'`,
       `y=${splitYExpr}`,
       `text='${headlineText}'`,
     ];
@@ -345,7 +433,7 @@ function buildPassedSplitFilters(
         `box=1`,
         `boxcolor=${rgbaToFFmpegColor(config.backgroundColor)}`,
         `boxborderw=${splitPad}`,
-        `x=${xExpr}`,
+        `x='${xExpr}'`,
         `y=${memoYExpr}`,
         `text='${escapeDrawtextText(trimmedMemo)}'`,
       ];
@@ -579,6 +667,14 @@ export interface TimerSequenceInput {
   endT: number;
   /** Native-resolution sub-rectangle the frames cover (overlay offset + size). */
   region: { x: number; y: number; width: number; height: number };
+  /**
+   * Static "0:00" full-frame PNG covering [0, startT) — the pre-roll before
+   * the start signal, matching the preview (which shows 0:00 from video time
+   * 0, not just from `startT`). Null when there is no pre-roll window
+   * (`startT <= 0`, e.g. the start signal is within the pre-roll window of
+   * the clip start) — in that case no static overlay input is added at all.
+   */
+  preRollImageUri: string | null;
 }
 
 interface ExtraInput {
@@ -637,7 +733,31 @@ function buildSeqOverlayGraph(params: {
   let cur = "base";
   let stage = 1;
 
-  // Timer sequence (input 1). -itsoffset shifts frame 0 to startT; `enable`
+  // Static "0:00" pre-roll (SC-1), covering [0, seq.startT) — before the
+  // start signal, where the timer sequence below has no frames at all.
+  // Full-frame PNG (not region-cropped), scaled like the summary PNG and
+  // placed at 0:0.
+  //
+  // Seam with the sequence overlay: FFmpeg's `between(t,a,b)` is inclusive on
+  // BOTH ends, so if this used `between(t,0,seq.startT)` it would double-draw
+  // the exact frame at t=seq.startT together with the sequence's own
+  // `between(t,startT,endT)` below (harmless here since both draw the
+  // identical "0:00" frame, but not the explicit no-overlap/no-gap contract).
+  // Using the strict `lt(t,seq.startT)` upper bound instead makes the two
+  // windows partition [0,endT] exactly: pre-roll on [0,startT), sequence on
+  // [startT,endT] — no overlap, no gap.
+  if (seq.preRollImageUri) {
+    extraInputs.push({ path: seq.preRollImageUri });
+    parts.push(`[${extraInputs.length}:v]${overlayScale}[preroll]`);
+    const prerollOut = `v${stage++}`;
+    parts.push(
+      `[${cur}][preroll]overlay=0:0:enable='lt(t,${seq.startT.toFixed(3)})'[${prerollOut}]`,
+    );
+    cur = prerollOut;
+  }
+
+  // Timer sequence (index depends on whether the pre-roll input above was
+  // added). -itsoffset shifts frame 0 to startT; `enable`
   // gates visibility to [startT, endT); eof_action=pass avoids freezing the
   // last frame over the rest of the clip.
   // The frames cover only the timer+split sub-region (seq.region, native px);

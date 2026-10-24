@@ -1,0 +1,44 @@
+# Trivy の抑制設定。安易に追加しないこと。
+#
+# 追加してよいのは「上流に修正版が存在せず、こちらで取れる対処が無い」ものだけ。
+# バージョンを上げれば直るものは overrides (package.json の pnpm.overrides) で直す。
+#
+# expired_at を必ず入れる。期限を過ぎると検出が復活するので、
+# 修正版が出たかどうかを定期的に見直す強制力が働く。
+# pnpm audit 側の抑止 (package.json の pnpm.auditConfig.ignoreGhsas) と対にしておく。
+vulnerabilities:
+  # image-size ≤2.0.2 (GHSA-5p2g-fcmc-qvqq / GHSA-w3rx-r6r6-pgpr)。metro の直接依存で、
+  # React Native のバンドラがローカルの画像アセットの寸法を読むためにビルド時のみ使う。
+  # 修正版は 2.0.3 (2026-09-14) だが、metro 0.83 は ^1.0.2 を要求し、1.x (最新 1.2.1) には修正が無い。
+  # 2.x は API 破壊変更なので overrides で 2.x へ寄せると metro が壊れる。入力はリポジトリ内の自前アセットのみ。
+  - id: CVE-2025-71329
+    statement: >-
+      metro のビルド時依存。metro が要求する 1.x に修正版が存在しないため対処不能。
+      metro が image-size 2.0.3 以上に移行したらこのエントリを削除する。
+    expired_at: 2026-12-04
+  - id: CVE-2025-71330
+    statement: >-
+      metro のビルド時依存。metro が要求する 1.x に修正版が存在しないため対処不能。
+      metro が image-size 2.0.3 以上に移行したらこのエントリを削除する。
+    expired_at: 2026-12-04
+
+  # node-forge ≤1.4.0 の RSA PKCS#1 v1.5 署名検証 (GHSA-86w9-cpqp-85rv)。
+  # @expo/cli と @expo/code-signing-certificates 経由で、開発時の CLI でのみ使う。
+  # 1.4.0 が最新で修正版が無い。
+  - id: CVE-2026-85393
+    statement: >-
+      expo CLI の開発時依存。修正版が存在しないため対処不能。
+      修正版が出たら overrides で上げてこのエントリを削除する。
+    expired_at: 2026-12-24
+
+  # zod ≤4.6.5 の長さ制約なし配列でのメモリ枯渇 (GHSA-mrhx-c7xc-m3w5)。
+  # 修正は 4.6.6 のみで 3 系には無い。4 系は overrides で 4.6.6 以上に上げ済み。
+  # 3.25.76 は @expo/cli と shadcn (どちらも開発時 CLI) が ^3 を要求しており 4 へ寄せられない。
+  # アプリ本体は zod を使っておらず、外部からの入力を parse する経路が無い。
+  - id: CVE-2023-54404
+    purls:
+      - pkg:npm/zod@3.25.76
+    statement: >-
+      @expo/cli・shadcn の開発時依存で 3 系に修正版が存在しないため対処不能。
+      両者が zod 4 に移行したらこのエントリを削除する。
+    expired_at: 2026-12-24
