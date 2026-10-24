@@ -85,6 +85,8 @@ jobs:
           severity: 'CRITICAL,HIGH'
           # SARIF 出力時は既定で severity フィルタが無視され全件出るため明示する
           limit-severities-for-sarif: true
+          # 上流に修正版が無く対処不能なものだけを期限付きで抑制する (中身のコメント参照)
+          trivyignores: '.trivyignore.yaml'
           exit-code: '0'
 
       - name: Check if SARIF file exists

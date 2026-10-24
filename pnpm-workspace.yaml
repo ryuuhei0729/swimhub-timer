@@ -24,3 +24,5 @@ autoInstallPeers: true
 # - decode-uri-component 0.2.2 (GHSA-vcc3, medium): query-string 7 経由で @react-navigation/core と expo-router の deep link URL 解析
 #   (端末上の実行時) に到達する。影響は不正なリンクを開いた端末での CPU 消費 (DoS) に限られ、query-string 7 が修正版 0.5.0 に
 #   未追従なので受け入れる。swim-hub と同じ扱い
+# - zod ≤4.6.5 (GHSA-mrhx): 修正は 4.6.6 のみで 3 系に無い。4 系は overrides で上げ済み。3.25.76 は @expo/cli と
+#   shadcn (どちらも開発時 CLI) が ^3 を要求するため残る。アプリ本体は zod を使わない
