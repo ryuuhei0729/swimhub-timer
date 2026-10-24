@@ -9,16 +9,17 @@
 vulnerabilities:
   # image-size ≤2.0.2 (GHSA-5p2g-fcmc-qvqq / GHSA-w3rx-r6r6-pgpr)。metro の直接依存で、
   # React Native のバンドラがローカルの画像アセットの寸法を読むためにビルド時のみ使う。
-  # 公開済みの全バージョンが該当し上げ先が無い。入力はリポジトリ内の自前アセットのみ。
+  # 修正版は 2.0.3 (2026-09-14) だが、metro 0.83 は ^1.0.2 を要求し、1.x (最新 1.2.1) には修正が無い。
+  # 2.x は API 破壊変更なので overrides で 2.x へ寄せると metro が壊れる。入力はリポジトリ内の自前アセットのみ。
   - id: CVE-2025-71329
     statement: >-
-      metro のビルド時依存。全公開バージョンが該当し修正版が存在しないため対処不能。
-      修正版が出たら overrides で上げてこのエントリを削除する。
+      metro のビルド時依存。metro が要求する 1.x に修正版が存在しないため対処不能。
+      metro が image-size 2.0.3 以上に移行したらこのエントリを削除する。
     expired_at: 2026-12-04
   - id: CVE-2025-71330
     statement: >-
-      metro のビルド時依存。全公開バージョンが該当し修正版が存在しないため対処不能。
-      修正版が出たら overrides で上げてこのエントリを削除する。
+      metro のビルド時依存。metro が要求する 1.x に修正版が存在しないため対処不能。
+      metro が image-size 2.0.3 以上に移行したらこのエントリを削除する。
     expired_at: 2026-12-04
 
   # node-forge ≤1.4.0 の RSA PKCS#1 v1.5 署名検証 (GHSA-86w9-cpqp-85rv)。
