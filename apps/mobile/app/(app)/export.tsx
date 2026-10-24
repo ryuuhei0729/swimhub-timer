@@ -88,6 +88,11 @@ export default function ExportScreen() {
 
   // --- Encoding state ---
   const [isExporting, setIsExporting] = useState(false);
+  // `isExporting` は再描画されて初めて反映されるので、同一フレーム内の二度押しは
+  // 止められない。プリロール PNG は解像度ごとに固定パス (swimhub-preroll_WxH.png) で、
+  // writePng が書き込み前に既存ファイルを消し、finally が終了時に消す。二重起動すると
+  // 先行 export の finally が後続の入力 PNG を消し、overlay 欠落や失敗につながる。
+  const exportInProgressRef = useRef(false);
   const [progress, setProgress] = useState(0);
   const [outputPath, setOutputPath] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -252,6 +257,8 @@ export default function ExportScreen() {
   }, [isFinished, finishTime, videoWidth, videoHeight, captureSummaryLayout]);
 
   const handleExport = useCallback(async () => {
+    if (exportInProgressRef.current) return;
+
     if (!videoUri || startTime === null) {
       Alert.alert(t("common.error"), t("exportScreen.needVideoAndStart"));
       return;
@@ -271,6 +278,7 @@ export default function ExportScreen() {
       resolvedSettings = { ...exportSettings, resolution: fallback };
     }
 
+    exportInProgressRef.current = true;
     setIsExporting(true);
     setProgress(0);
     setError(null);
@@ -500,6 +508,7 @@ export default function ExportScreen() {
     } catch (e) {
       setError(e instanceof Error ? e.message : t("exportScreen.errorDuringExport"));
     } finally {
+      exportInProgressRef.current = false;
       setIsExporting(false);
       if (timerSequenceDir) {
         try {
