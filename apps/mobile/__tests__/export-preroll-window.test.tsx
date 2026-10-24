@@ -30,6 +30,12 @@ import ExportScreen from "../app/(app)/export";
 import { useEditorStore, MOBILE_DEFAULT_STOPWATCH_CONFIG } from "../stores/editor-store";
 import { formatTime } from "@swimhub-timer/shared";
 
+// ExportScreen の初回描画で遅延 require される react-native 等の babel 変換が、
+// このファイルで最初に走る it の実行時間に計上される。変換キャッシュが空だと
+// ローカルでも 1.2s 程度かかり (キャッシュ有りなら 75ms)、キャッシュの無い CI の
+// 低速な runner で既定 (5s) を超えて落ちた実例がある。遅いテストを黙らせるためではなく、cold start の吸収のため。
+jest.setTimeout(30_000);
+
 // ---- i18n: return the raw key so button text is queryable without loading
 // the real i18next instance (mirrors the pattern already used in
 // oauthCodeDoubleClaimIntegration.test.tsx). ----
