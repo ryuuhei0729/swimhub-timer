@@ -124,6 +124,18 @@ export async function getCustomerInfo(): Promise<CustomerInfo | null> {
   }
 }
 
+/**
+ * 有効なエンタイトルメント（= Premium）を持っているか。
+ * RevenueCat SDK は顧客情報を端末にキャッシュするため、Supabase からプランを
+ * 取得できない状況（オフライン等）でも課金ユーザーを判定できる。
+ * このアプリの課金商品は Premium のみなので「何らかの有効なエンタイトルメント」で判定する。
+ * 未初期化・取得失敗時は false。
+ */
+export async function hasActiveEntitlement(): Promise<boolean> {
+  const info = await getCustomerInfo();
+  return !!info && Object.keys(info.entitlements.active).length > 0;
+}
+
 /** 顧客情報の変更リスナーを登録する。クリーンアップ用の関数を返す */
 export function addCustomerInfoUpdateListener(
   listener: (info: CustomerInfo) => void,

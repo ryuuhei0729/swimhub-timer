@@ -25,16 +25,8 @@ import {
 } from "@shopify/react-native-skia";
 import { Asset } from "expo-asset";
 import { useEditorStore } from "../../stores/editor-store";
-import {
-  drawStopwatch,
-  drawPassedSplit,
-  drawFinishSummary,
-  drawWatermark,
-  getStopwatchBounds,
-  getFinishSummaryBounds,
-  SPLIT_DISPLAY_DURATION_SECONDS,
-} from "@swimhub-timer/shared";
-import type { SplitTime, Rect } from "@swimhub-timer/shared";
+import { drawFinishSummary, drawWatermark, getFinishSummaryBounds } from "@swimhub-timer/shared";
+import type { Rect } from "@swimhub-timer/shared";
 import { computeSummaryStartT } from "../../lib/video/export-pipeline";
 import {
   loadOverlayTypefaces,
@@ -42,6 +34,12 @@ import {
   type OverlayTypefaces,
 } from "../../lib/overlay/fonts";
 import { SkiaOverlayContext } from "../../lib/overlay/skia-context";
+import {
+  cardMemoAt,
+  cardRowsAt,
+  drawStopwatchCard,
+  getStopwatchCardBounds,
+} from "../../lib/overlay/stopwatch-card";
 
 interface Props {
   videoWidth: number;
@@ -111,21 +109,10 @@ export function StopwatchSkiaOverlay({ videoWidth, videoHeight }: Props) {
     return isFinished && finishTime !== null ? Math.min(raw, finishTime) : raw;
   }, [startTime, currentVideoTime, isFinished, finishTime]);
 
-  const activeSplit = useMemo<SplitTime | null>(() => {
-    if (startTime === null) return null;
-    const cap = isFinished && finishTime !== null ? Math.min(elapsed, finishTime) : elapsed;
-    const sorted = [...splitTimes].sort((a, b) => a.time - b.time);
-    for (let i = sorted.length - 1; i >= 0; i--) {
-      const s = sorted[i];
-      if (!s) continue; // i stays within [0, sorted.length) by the loop bound,
-                         // so s is always defined; guard is defensive against future drift
-      if (isFinished && finishTime !== null && raceDistance !== null) {
-        if (s.distance === raceDistance && s.time === finishTime) continue;
-      }
-      if (cap >= s.time && cap < s.time + SPLIT_DISPLAY_DURATION_SECONDS) return s;
-    }
-    return null;
-  }, [splitTimes, elapsed, isFinished, finishTime, raceDistance, startTime]);
+  // The card's lap table: splits already passed (the finish included once
+  // reached — elapsed is capped at finishTime), and a fresh split's memo.
+  const cardRows = useMemo(() => cardRowsAt(splitTimes, elapsed), [splitTimes, elapsed]);
+  const cardMemo = useMemo(() => cardMemoAt(splitTimes, elapsed), [splitTimes, elapsed]);
 
   // The timer freezes at finishTime (elapsed is capped above); the summary
   // appears at computeSummaryStartT — the SAME clamped absolute time the export
@@ -162,9 +149,8 @@ export function StopwatchSkiaOverlay({ videoWidth, videoHeight }: Props) {
           summaryB = getFinishSummaryBounds(ctx, config, splitTimes, finishTime, raceDistance, rect);
           drawFinishSummary(ctx, config, splitTimes, finishTime, raceDistance, rect);
         } else {
-          timerB = getStopwatchBounds(ctx, size, config, elapsed);
-          drawStopwatch(ctx, size, config, elapsed);
-          if (activeSplit) drawPassedSplit(ctx, size, config, elapsed, activeSplit);
+          timerB = getStopwatchCardBounds(ctx, size, config, elapsed, cardRows, cardMemo);
+          drawStopwatchCard(ctx, size, config, elapsed, cardRows, cardMemo);
         }
         if (icon) {
           drawWatermark(ctx, size, icon, MOBILE_WATERMARK_OPTIONS);
@@ -180,7 +166,8 @@ export function StopwatchSkiaOverlay({ videoWidth, videoHeight }: Props) {
     videoHeight,
     config,
     elapsed,
-    activeSplit,
+    cardRows,
+    cardMemo,
     showSummary,
     finishTime,
     splitTimes,

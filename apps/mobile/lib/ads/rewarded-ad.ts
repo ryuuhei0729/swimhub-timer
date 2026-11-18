@@ -1,27 +1,29 @@
 import { Platform } from "react-native";
+import type { RewardedAd as RewardedAdType } from "react-native-google-mobile-ads";
+import { ensureAdsReady, getAdsModule } from "./ads-sdk";
 
-function getAdModule() {
-  try {
-    return require("react-native-google-mobile-ads");
-  } catch {
-    return null;
-  }
-}
+/**
+ * 同意取得・初期化が済んでから、この時間内に LOADED/ERROR が来なければ失敗扱いにする。
+ * SDK は通常エラーを返すが、万一応答が無いと「広告待ち」のまま保存に進めなくなるため。
+ */
+const LOAD_TIMEOUT_MS = 15_000;
 
-function getRewardedAdUnitId(): string {
-  const mod = getAdModule();
-  if (!mod) return "";
+/**
+ * 読み込み済みのリワード広告は 1 時間で失効し、表示できなくなる。
+ * 書き出し画面に長く留まった場合に備え、失効前に読み直す。
+ */
+const AD_EXPIRY_MS = 50 * 60 * 1000;
 
+function getRewardedAdUnitId(testId: string): string {
   if (__DEV__) {
-    return mod.TestIds.REWARDED;
+    return testId;
   }
-
-  // TODO: Replace with actual ad unit IDs from AdMob console
-  return Platform.select({
-    ios: "ca-app-pub-4640414097368188/7995042374",
-    android: "ca-app-pub-4640414097368188/9802123652",
-    default: "",
-  }) as string;
+  return (
+    Platform.select({
+      ios: "ca-app-pub-4640414097368188/7995042374",
+      android: "ca-app-pub-4640414097368188/9802123652",
+    }) ?? ""
+  );
 }
 
 export type AdState =
@@ -31,12 +33,14 @@ export type AdState =
   | "showing"
   | "rewarded"
   // User closed the ad before earning the reward (distinct from a load/show
-  // failure). Must NOT grant free access — the caller re-presents the ad.
+  // failure). Must NOT grant free access — the caller offers the ad again.
   | "dismissed"
   | "error";
 
 export interface RewardedAdController {
+  /** 広告を読み込む（表示はしない）。読み込み中・表示中でも新しい広告で読み直す */
   load: () => void;
+  /** 読み込み済みの広告を表示する。ユーザーが視聴を選んだときだけ呼ぶこと */
   show: () => Promise<void>;
   getState: () => AdState;
   onStateChange: (callback: (state: AdState) => void) => () => void;
@@ -44,78 +48,121 @@ export interface RewardedAdController {
 }
 
 export function createRewardedAdController(): RewardedAdController | null {
-  const mod = getAdModule();
+  const mod = getAdsModule();
   if (!mod) return null;
 
   const { RewardedAd, RewardedAdEventType, AdEventType } = mod;
-  const adUnitId = getRewardedAdUnitId();
+  const adUnitId = getRewardedAdUnitId(mod.TestIds.REWARDED);
+  if (!adUnitId) return null;
 
   let state: AdState = "idle";
   let listeners: ((state: AdState) => void)[] = [];
   let unsubscribers: (() => void)[] = [];
-  type RewardedAdInstance = {
-    load: () => void;
-    show: () => Promise<void>;
-    addAdEventListener: (event: string, callback: () => void) => () => void;
-  };
-  let rewardedAd: RewardedAdInstance | null = null;
+  let rewardedAd: RewardedAdType | null = null;
   let adRewardEarned = false;
+  let loadTimer: ReturnType<typeof setTimeout> | null = null;
+  let expiryTimer: ReturnType<typeof setTimeout> | null = null;
+  let disposed = false;
+  // load() / dispose() のたびに進める。古い読み込みの非同期コールバックを無視するため。
+  let generation = 0;
 
   function setState(newState: AdState) {
+    if (disposed) return;
     state = newState;
     listeners.forEach((cb) => cb(newState));
   }
 
-  function setupAd() {
+  function clearTimers() {
+    if (loadTimer) clearTimeout(loadTimer);
+    if (expiryTimer) clearTimeout(expiryTimer);
+    loadTimer = null;
+    expiryTimer = null;
+  }
+
+  function teardownAd() {
     unsubscribers.forEach((unsub) => unsub());
     unsubscribers = [];
+    rewardedAd = null;
+    clearTimers();
+  }
+
+  function load() {
+    if (disposed) return;
+    teardownAd();
     adRewardEarned = false;
+    const gen = ++generation;
+    setState("loading");
 
-    rewardedAd = RewardedAd.createForAdRequest(adUnitId) as RewardedAdInstance;
-    const ad = rewardedAd;
-
-    unsubscribers.push(
-      ad.addAdEventListener(RewardedAdEventType.LOADED, () => {
-        setState("loaded");
-      }),
-    );
-
-    unsubscribers.push(
-      ad.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => {
-        adRewardEarned = true;
-        setState("rewarded");
-      }),
-    );
-
-    unsubscribers.push(
-      ad.addAdEventListener(AdEventType.CLOSED, () => {
-        if (!adRewardEarned) {
-          // Closed without earning the reward — the user dismissed it. Report
-          // "dismissed" (not "error") so the export gate stays closed and the
-          // caller can re-present the ad instead of granting free access.
-          setState("dismissed");
-        }
-      }),
-    );
-
-    unsubscribers.push(
-      ad.addAdEventListener(AdEventType.ERROR, () => {
+    void ensureAdsReady().then((canRequestAds) => {
+      if (gen !== generation) return;
+      if (!canRequestAds) {
+        // 同意が得られない・SDK を初期化できない → 広告は出せない
         setState("error");
-      }),
-    );
+        return;
+      }
+
+      const ad = RewardedAd.createForAdRequest(adUnitId);
+      rewardedAd = ad;
+
+      unsubscribers.push(
+        ad.addAdEventListener(RewardedAdEventType.LOADED, () => {
+          if (gen !== generation) return;
+          if (loadTimer) clearTimeout(loadTimer);
+          loadTimer = null;
+          expiryTimer = setTimeout(() => {
+            if (gen === generation && state === "loaded") load();
+          }, AD_EXPIRY_MS);
+          setState("loaded");
+        }),
+      );
+
+      unsubscribers.push(
+        ad.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => {
+          if (gen !== generation) return;
+          adRewardEarned = true;
+          setState("rewarded");
+        }),
+      );
+
+      unsubscribers.push(
+        ad.addAdEventListener(AdEventType.CLOSED, () => {
+          if (gen !== generation) return;
+          if (!adRewardEarned) {
+            // Closed without earning the reward — the user dismissed it. Report
+            // "dismissed" (not "error") so the export gate stays closed.
+            setState("dismissed");
+          }
+        }),
+      );
+
+      unsubscribers.push(
+        ad.addAdEventListener(AdEventType.ERROR, () => {
+          if (gen !== generation || adRewardEarned) return;
+          teardownAd();
+          setState("error");
+        }),
+      );
+
+      // 同意フォームの操作時間を含めないよう、タイムアウトは広告リクエスト直前から数える
+      loadTimer = setTimeout(() => {
+        if (gen !== generation || state !== "loading") return;
+        generation++;
+        teardownAd();
+        setState("error");
+      }, LOAD_TIMEOUT_MS);
+      ad.load();
+    });
   }
 
   return {
-    load() {
-      setupAd();
-      setState("loading");
-      rewardedAd!.load();
-    },
+    load,
 
     async show() {
       if (state !== "loaded" || !rewardedAd) {
         throw new Error("Ad is not loaded yet");
       }
+      if (expiryTimer) clearTimeout(expiryTimer);
+      expiryTimer = null;
       setState("showing");
       await rewardedAd.show();
     },
@@ -132,11 +179,11 @@ export function createRewardedAdController(): RewardedAdController | null {
     },
 
     dispose() {
-      unsubscribers.forEach((unsub) => unsub());
-      unsubscribers = [];
+      generation++;
+      teardownAd();
       listeners = [];
-      rewardedAd = null;
       state = "idle";
+      disposed = true;
     },
   };
 }

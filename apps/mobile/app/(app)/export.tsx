@@ -1,5 +1,15 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
-import { View, Text, StyleSheet, Pressable, Alert, Dimensions, Platform, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  Alert,
+  Dimensions,
+  Platform,
+  ScrollView,
+  Modal,
+} from "react-native";
 import { useRouter } from "expo-router";
 import type * as SharingType from "expo-sharing";
 import { useTranslation } from "react-i18next";
@@ -10,7 +20,6 @@ import {
   getAvailableResolutions,
   shouldShowWatermark,
   checkIsPremium,
-  SPLIT_DISPLAY_DURATION_SECONDS,
 } from "@swimhub-timer/shared";
 import type { ExportResolution } from "@swimhub-timer/shared";
 import {
@@ -25,6 +34,7 @@ import {
   type AdState,
   type RewardedAdController,
 } from "../../lib/ads/rewarded-ad";
+import { hasActiveEntitlement } from "../../lib/revenucat";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 import {
   canGuestUseToday,
@@ -71,7 +81,7 @@ function getCaptureRef() {
 export default function ExportScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { subscription, guestMode } = useAuth();
+  const { subscription, subscriptionResolved, guestMode, refreshSubscription } = useAuth();
   const effectivePlan = guestMode ? "guest" : (subscription?.plan ?? "free");
   const {
     videoUri,
@@ -98,11 +108,20 @@ export default function ExportScreen() {
   const [error, setError] = useState<string | null>(null);
 
   // --- Ad state ---
+  // 流れ: 書き出しボタン → (非 Premium のみ) 「広告を見て保存 / Premium で広告なし」を選択
+  // → 広告を見るを選ぶと書き出しを開始し、その待ち時間に広告を表示する。
+  // リワード広告はユーザーが自分で視聴を選んだときだけ表示する（AdMob ポリシー）。
   const adControllerRef = useRef<RewardedAdController | null>(null);
+  const adUnsubscribeRef = useRef<(() => void) | null>(null);
   const [adState, setAdState] = useState<AdState>("idle");
   const [adRewardEarned, setAdRewardEarned] = useState(false);
+  // 広告を出せない（読み込み失敗・SDK なし）→ 保存を止めずに通す
   const [adUnavailable, setAdUnavailable] = useState(false);
-  const exportTriggeredRef = useRef(false);
+  // ユーザーが「広告を見て保存」を選んだ（読み込み完了次第表示してよい）
+  const [adOptedIn, setAdOptedIn] = useState(false);
+  const [showAdChoice, setShowAdChoice] = useState(false);
+  // プラン取得が未確定のまま書き出したときに、RevenueCat で Premium と確認できた
+  const [premiumByEntitlement, setPremiumByEntitlement] = useState(false);
 
   // --- Export limit state ---
   const [limitReached, setLimitReached] = useState(false);
@@ -118,7 +137,10 @@ export default function ExportScreen() {
   // --- Derived ---
   const exportComplete = outputPath !== null;
   const isPremium = checkIsPremium(subscription);
-  const canProceed = exportComplete && (isPremium || adRewardEarned || adUnavailable);
+  const adFree = isPremium || premiumByEntitlement;
+  // 広告の視聴待ち（まだ報酬を得ておらず、広告を出せない状態でもない）
+  const adPending = !adFree && !adRewardEarned && !adUnavailable;
+  const canProceed = exportComplete && !adPending;
   const duration = videoMetadata?.duration ?? 0;
   const availableResolutions = getAvailableResolutions(effectivePlan);
   const showWatermark = shouldShowWatermark(effectivePlan);
@@ -152,60 +174,94 @@ export default function ExportScreen() {
     }
   }, [availableResolutions, exportSettings.resolution, setExportSettings]);
 
-  // Preload ad on mount (premium users skip ads)
-  useEffect(() => {
-    if (isPremium) {
-      setAdUnavailable(true);
-      return;
-    }
-
+  // --- Ad controller lifecycle ---
+  const ensureAdController = useCallback((): RewardedAdController | null => {
+    if (adControllerRef.current) return adControllerRef.current;
     const controller = createRewardedAdController();
-    if (!controller) {
-      setAdUnavailable(true);
-      return;
-    }
-    adControllerRef.current = controller;
-
-    const unsubscribe = controller.onStateChange((state) => {
+    if (!controller) return null;
+    adUnsubscribeRef.current = controller.onStateChange((state) => {
       setAdState(state);
       if (state === "rewarded") {
         setAdRewardEarned(true);
       }
     });
+    adControllerRef.current = controller;
+    return controller;
+  }, []);
 
-    controller.load();
+  const disposeAdController = useCallback(() => {
+    adUnsubscribeRef.current?.();
+    adUnsubscribeRef.current = null;
+    adControllerRef.current?.dispose();
+    adControllerRef.current = null;
+  }, []);
 
-    return () => {
-      unsubscribe();
-      controller.dispose();
-    };
-  }, [isPremium]);
+  useEffect(() => disposeAdController, [disposeAdController]);
 
-  // If ad loads AFTER export was triggered, show it automatically
+  // Preload (load only — never show) once we know this user will see ads:
+  // plan resolved and not Premium. While the plan is still unknown we don't
+  // touch the ad SDK at all, so a paying user is never sent ad requests.
+  const shouldPreloadAd = subscriptionResolved && !adFree;
   useEffect(() => {
-    if (exportTriggeredRef.current && adState === "loaded" && !adRewardEarned && !adUnavailable) {
-      adControllerRef.current?.show().catch(() => setAdUnavailable(true));
+    if (!shouldPreloadAd) return;
+    const controller = ensureAdController();
+    if (controller && controller.getState() === "idle") controller.load();
+  }, [shouldPreloadAd, ensureAdController]);
+
+  // Became ad-free (e.g. bought Premium from the choice sheet) → drop the ad.
+  useEffect(() => {
+    if (adFree) {
+      disposeAdController();
+      setAdState("idle");
+      setAdOptedIn(false);
     }
-  }, [adState, adRewardEarned, adUnavailable]);
+  }, [adFree, disposeAdController]);
 
-  // Fallback: if the ad genuinely fails to LOAD/SHOW, allow export without ad
-  // after a short delay. Note: a user who *dismisses* the ad reports "dismissed"
-  // (not "error"), so early-closing no longer grants free access.
+  // Show the ad once it's loaded — but only after the user chose to watch it.
   useEffect(() => {
-    if (adState === "error" && !adUnavailable) {
+    if (!adOptedIn || adState !== "loaded" || !adPending) return;
+    adControllerRef.current?.show().catch(() => setAdUnavailable(true));
+  }, [adOptedIn, adState, adPending]);
+
+  // Closed before earning the reward: do NOT re-show automatically. Preload a
+  // fresh ad and let the user choose again (watch ad / go Premium) from the UI.
+  useEffect(() => {
+    if (adState !== "dismissed") return;
+    setAdOptedIn(false);
+    adControllerRef.current?.load();
+  }, [adState]);
+
+  // Fallback: if the ad the user opted into genuinely fails to load/show, let
+  // them save without it after a short delay (shows the "ad failed" note first).
+  useEffect(() => {
+    if (adOptedIn && adState === "error" && !adUnavailable) {
       const timer = setTimeout(() => setAdUnavailable(true), 2000);
       return () => clearTimeout(timer);
     }
-  }, [adState, adUnavailable]);
+  }, [adOptedIn, adState, adUnavailable]);
 
-  // If the user dismissed the ad without earning the reward, reload it so the
-  // auto-show effect re-presents it — the export stays gated until they watch
-  // one through (or one genuinely can't be loaded → the fallback above).
-  useEffect(() => {
-    if (adState === "dismissed" && !adRewardEarned && !adUnavailable) {
-      adControllerRef.current?.load();
+  // User chose "watch ad". Shows immediately if loaded, otherwise once loaded
+  // (the effect above). A failed/idle/dismissed ad is (re)loaded here — this is
+  // the single retry before the fallback lets them through.
+  const watchAd = useCallback(() => {
+    setAdOptedIn(true);
+    const controller = ensureAdController();
+    if (!controller) {
+      setAdUnavailable(true);
+      return;
     }
-  }, [adState, adRewardEarned, adUnavailable]);
+    const state = controller.getState();
+    if (state === "loaded") {
+      // Show right away from the tap, before the export's heavy JS work starts.
+      controller.show().catch(() => setAdUnavailable(true));
+    } else if (state === "idle" || state === "error" || state === "dismissed") {
+      controller.load();
+    }
+  }, [ensureAdController]);
+
+  const goPremium = useCallback(() => {
+    router.push("/(app)/paywall");
+  }, [router]);
 
   // Set limitReached based on remaining exports (guest only; free/premium unlimited)
   useEffect(() => {
@@ -256,7 +312,7 @@ export default function ExportScreen() {
     return () => clearTimeout(handle);
   }, [isFinished, finishTime, videoWidth, videoHeight, captureSummaryLayout]);
 
-  const handleExport = useCallback(async () => {
+  const runExport = useCallback(async () => {
     if (exportInProgressRef.current) return;
 
     if (!videoUri || startTime === null) {
@@ -282,20 +338,6 @@ export default function ExportScreen() {
     setIsExporting(true);
     setProgress(0);
     setError(null);
-    exportTriggeredRef.current = true;
-
-    // --- Show ad (fire-and-forget; premium skips) ---
-    if (!isPremium) {
-      const controller = adControllerRef.current;
-      if (controller) {
-        const currentState = controller.getState();
-        if (currentState === "loaded") {
-          controller.show().catch(() => setAdUnavailable(true));
-        } else if (currentState !== "loading") {
-          setAdUnavailable(true);
-        }
-      }
-    }
 
     // --- Capture summary PNG (only when finished) ---
     // If pre-capture (on mount) already produced a URI, reuse it. Otherwise
@@ -382,24 +424,9 @@ export default function ExportScreen() {
         const PRE_ROLL_SECONDS = 3;
         const seqStart = Math.max(0, startTime - PRE_ROLL_SECONDS);
         if (endAbs > seqStart) {
-          const sortedSplits = [...splitTimes].sort((a, b) => a.time - b.time);
           const elapsedFor = (videoSec: number) => {
             const e = Math.max(0, videoSec - startTime);
             return isFinished && finishTime !== null ? Math.min(e, finishTime) : e;
-          };
-          const activeSplitAt = (elapsed: number) => {
-            const cap =
-              isFinished && finishTime !== null ? Math.min(elapsed, finishTime) : elapsed;
-            for (let i = sortedSplits.length - 1; i >= 0; i--) {
-              const s = sortedSplits[i];
-              if (!s) continue; // i stays within [0, sortedSplits.length) by the loop bound,
-                                 // so s is always defined; guard is defensive against future drift
-              if (isFinished && finishTime !== null && raceDistance !== null) {
-                if (s.distance === raceDistance && s.time === finishTime) continue;
-              }
-              if (cap >= s.time && cap < s.time + SPLIT_DISPLAY_DURATION_SECONDS) return s;
-            }
-            return null;
           };
           const { renderTimerSequence, renderTimerFramePng } =
             require("../../lib/overlay/render-offscreen") as typeof import("../../lib/overlay/render-offscreen");
@@ -411,7 +438,7 @@ export default function ExportScreen() {
             width: videoWidth,
             height: videoHeight,
             elapsedFor,
-            activeSplitAt,
+            splitTimes,
             watermarkIcon: null, // watermark stays a separate FFmpeg overlay
             // Surface render progress so the UI isn't frozen at 0% during the
             // (potentially long) headless PNG-sequence render.
@@ -436,9 +463,8 @@ export default function ExportScreen() {
               ? await renderTimerFramePng({
                   config: stopwatchConfig,
                   elapsedSeconds: 0,
-                  // Mirror frame 0 of the sequence (elapsedFor(seqStart) === 0)
-                  // exactly, in case a split is somehow active at elapsed 0.
-                  activeSplit: activeSplitAt(0),
+                  // Mirror frame 0 of the sequence (elapsedFor(seqStart) === 0).
+                  splitTimes,
                   watermarkIcon: null, // watermark stays a separate FFmpeg overlay
                   width: videoWidth,
                   height: videoHeight,
@@ -544,7 +570,6 @@ export default function ExportScreen() {
     duration,
     showWatermark,
     effectivePlan,
-    isPremium,
     videoWidth,
     videoHeight,
     splitTimes,
@@ -552,6 +577,65 @@ export default function ExportScreen() {
     capturedSummaryUri,
     t,
   ]);
+
+  // 書き出しボタン: Premium はそのまま書き出し、それ以外は広告の選択肢を出す。
+  const choosingRef = useRef(false);
+  const handleExport = useCallback(async () => {
+    if (exportInProgressRef.current || choosingRef.current) return;
+
+    if (!videoUri || startTime === null) {
+      Alert.alert(t("common.error"), t("exportScreen.needVideoAndStart"));
+      return;
+    }
+    if (effectivePlan === "guest" && !canGuestUseToday("timer")) {
+      setLimitReached(true);
+      return;
+    }
+
+    if (adFree || adRewardEarned) {
+      await runExport();
+      return;
+    }
+
+    choosingRef.current = true;
+    try {
+      // プランが未確定（取得中・オフライン等）のログインユーザーは、Premium の可能性が
+      // あるので広告を出す前に RevenueCat のキャッシュ込みの購入情報で確認する。
+      if (!subscriptionResolved && !guestMode) {
+        void refreshSubscription();
+        if (await hasActiveEntitlement()) {
+          setPremiumByEntitlement(true);
+          await runExport();
+          return;
+        }
+      }
+      setShowAdChoice(true);
+    } finally {
+      choosingRef.current = false;
+    }
+  }, [
+    videoUri,
+    startTime,
+    effectivePlan,
+    adFree,
+    adRewardEarned,
+    subscriptionResolved,
+    guestMode,
+    refreshSubscription,
+    runExport,
+    t,
+  ]);
+
+  const handleChooseWatchAd = useCallback(() => {
+    setShowAdChoice(false);
+    watchAd();
+    void runExport();
+  }, [watchAd, runExport]);
+
+  const handleChoosePremium = useCallback(() => {
+    setShowAdChoice(false);
+    goPremium();
+  }, [goPremium]);
 
   const handleSaveToLibrary = useCallback(async () => {
     if (!outputPath) return;
@@ -734,9 +818,24 @@ export default function ExportScreen() {
           <View style={styles.progressBar}>
             <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
           </View>
-          {exportComplete && !adRewardEarned && !adUnavailable && (
+          {adPending && !adOptedIn ? (
+            // Closed the ad early → let them choose again (never auto re-show).
+            <View style={styles.adRetrySection}>
+              <Text style={styles.adWaitText}>{t("exportScreen.adDismissedPrompt")}</Text>
+              <Pressable style={styles.adChoicePrimaryBtn} onPress={watchAd}>
+                <Text style={styles.adChoicePrimaryText}>{t("exportScreen.watchAdAndSave")}</Text>
+              </Pressable>
+              <Pressable style={styles.adChoiceSecondaryBtn} onPress={goPremium}>
+                <Text style={styles.adChoiceSecondaryText}>{t("exportScreen.premiumNoAds")}</Text>
+              </Pressable>
+            </View>
+          ) : adPending && adState === "loading" ? (
+            <Text style={styles.adWaitText}>{t("exportScreen.adLoading")}</Text>
+          ) : adPending && adState === "error" ? (
+            <Text style={styles.adWaitText}>{t("exportScreen.adFailed")}</Text>
+          ) : adPending && exportComplete ? (
             <Text style={styles.adWaitText}>{t("exportScreen.adWatchPrompt")}</Text>
-          )}
+          ) : null}
         </View>
       ) : canProceed ? (
         <View style={styles.doneSection}>
@@ -771,15 +870,33 @@ export default function ExportScreen() {
           >
             <Text style={styles.exportBtnText}>{t("exportScreen.startExport")}</Text>
           </Pressable>
-          {adState === "loading" && (
-            <Text style={styles.adStatusText}>{t("exportScreen.adLoading")}</Text>
-          )}
-          {adState === "error" && (
-            <Text style={styles.adStatusText}>{t("exportScreen.adFailed")}</Text>
-          )}
         </View>
       )}
       </ScrollView>
+
+      {/* 非 Premium: 書き出し前に広告視聴を自分で選んでもらう（リワード広告はオプトイン必須） */}
+      <Modal
+        visible={showAdChoice}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowAdChoice(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.adChoiceCard}>
+            <Text style={styles.adChoiceTitle}>{t("exportScreen.adChoiceTitle")}</Text>
+            <Text style={styles.adChoiceMessage}>{t("exportScreen.adChoiceMessage")}</Text>
+            <Pressable style={styles.adChoicePrimaryBtn} onPress={handleChooseWatchAd}>
+              <Text style={styles.adChoicePrimaryText}>{t("exportScreen.watchAdAndSave")}</Text>
+            </Pressable>
+            <Pressable style={styles.adChoiceSecondaryBtn} onPress={handleChoosePremium}>
+              <Text style={styles.adChoiceSecondaryText}>{t("exportScreen.premiumNoAds")}</Text>
+            </Pressable>
+            <Pressable style={styles.adChoiceCancelBtn} onPress={() => setShowAdChoice(false)}>
+              <Text style={styles.adChoiceCancelText}>{t("common.cancel")}</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -996,9 +1113,64 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     textAlign: "center",
   },
-  adStatusText: {
-    fontSize: fontSize.xs,
+  adRetrySection: {
+    width: "100%",
+    gap: spacing.sm,
+    alignItems: "stretch",
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.45)",
+    justifyContent: "center",
+    padding: spacing.lg,
+  },
+  adChoiceCard: {
+    backgroundColor: colors.background,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
+  adChoiceTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: "700",
+    color: colors.text,
+    textAlign: "center",
+  },
+  adChoiceMessage: {
+    fontSize: fontSize.sm,
     color: colors.muted,
     textAlign: "center",
+    lineHeight: 20,
+  },
+  adChoicePrimaryBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  adChoicePrimaryText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.white,
+  },
+  adChoiceSecondaryBtn: {
+    backgroundColor: "#FEF3C7",
+    borderRadius: radius.md,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  adChoiceSecondaryText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#92400E",
+  },
+  adChoiceCancelBtn: {
+    paddingVertical: spacing.sm,
+    alignItems: "center",
+  },
+  adChoiceCancelText: {
+    fontSize: fontSize.sm,
+    color: colors.muted,
+    fontWeight: "500",
   },
 });

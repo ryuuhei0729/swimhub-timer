@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { View, Text, StyleSheet, Pressable, ActivityIndicator, Modal } from "react-native";
+import { View, Text, StyleSheet, Pressable, ActivityIndicator, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../../stores/editor-store";
@@ -34,34 +34,50 @@ export function SignalDetector({ onConfirm }: SignalDetectorProps) {
   const [error, setError] = useState<string | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
   const extractedForUri = useRef<string | null>(null);
+  // "Change" mode for an already-confirmed start: the confirmed time stays in
+  // the store (splits stay unlocked) until the user confirms a new one, and
+  // leaving the mode discards the candidate.
+  const [editing, setEditing] = useState(false);
+  // The waveform / detection UI (and the audio it needs) is only for choosing
+  // a start: first time, or after "Change".
+  const choosingStart = startTime === null || editing;
 
-  // Auto-extract audio when video is available
+  const mountedRef = useRef(true);
   useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // Extract audio once the start is being chosen — not just for visiting the
+  // tab with a confirmed start. Once started, the extraction is never
+  // abandoned by leaving "Change" mode (that left the spinner stuck and the
+  // next "Change" never re-extracted); its result goes to the store as long
+  // as the same video is still loaded, so it is reused next time.
+  useEffect(() => {
+    if (!choosingStart) return;
     if (!videoUri || audioData || extractedForUri.current === videoUri) return;
     extractedForUri.current = videoUri;
+    const uri = videoUri;
 
-    let cancelled = false;
     (async () => {
       setIsExtracting(true);
       try {
-        const audio = await extractAudioFromVideo(videoUri);
-        if (cancelled) return;
+        const audio = await extractAudioFromVideo(uri);
+        if (useEditorStore.getState().videoUri !== uri) return; // a different video now
         setAudioData(audio);
-        const waveform = generateWaveformData(audio.pcmData);
-        setWaveformData(waveform);
+        setWaveformData(generateWaveformData(audio.pcmData));
       } catch (e) {
-        if (!cancelled) {
+        if (mountedRef.current) {
+          extractedForUri.current = null; // allow a retry
           setError(e instanceof Error ? e.message : t("signal.audioExtractionError"));
         }
       } finally {
-        if (!cancelled) setIsExtracting(false);
+        if (mountedRef.current) setIsExtracting(false);
       }
     })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [videoUri, audioData, setAudioData, setWaveformData, t]);
+  }, [choosingStart, videoUri, audioData, setAudioData, setWaveformData, t]);
 
   const runAutoDetect = async () => {
     if (!audioData) return;
@@ -69,7 +85,7 @@ export function SignalDetector({ onConfirm }: SignalDetectorProps) {
     setIsDetecting(true);
     setError(null);
 
-    // Yield once so the loading modal commits to native before the synchronous
+    // Yield once so the loading indicator commits to native before the synchronous
     // FFT pass blocks the JS thread. Matches the web flow's microtask flush.
     await new Promise<void>((r) => setTimeout(r, 0));
 
@@ -118,33 +134,62 @@ export function SignalDetector({ onConfirm }: SignalDetectorProps) {
   const confirmStart = () => {
     if (detectedSignalTime !== null) {
       setStartTime(detectedSignalTime);
+      setEditing(false);
       onConfirm?.();
     }
   };
 
-  const isConfirmed = startTime !== null;
+  const startEditing = () => {
+    if (startTime === null) return;
+    setError(null);
+    setDetectedSignalTime(startTime);
+    seekVideoAndPause(startTime);
+    setEditing(true);
+  };
 
-  const isLoading = isExtracting || isDetecting;
+  const leaveEditing = () => {
+    if (startTime === null) return;
+    const discard = () => {
+      setDetectedSignalTime(startTime);
+      seekVideoAndPause(startTime);
+      setError(null);
+      setEditing(false);
+    };
+    if (detectedSignalTime === null || detectedSignalTime === startTime) {
+      discard();
+      return;
+    }
+    Alert.alert(t("signal.discardChangeTitle"), t("signal.discardChangeMessage"), [
+      { text: t("common.cancel"), style: "cancel" },
+      { text: t("signal.discardChange"), style: "destructive", onPress: discard },
+    ]);
+  };
+
+  const isConfirmed = startTime !== null && !editing;
+
+  // Only relevant while choosing; an extraction finishing in the background
+  // after leaving "Change" mode shows nothing.
+  const isLoading = choosingStart && (isExtracting || isDetecting);
   const loadingMessage = isExtracting ? t("signal.extracting") : t("signal.analyzingStart");
 
   return (
     <View style={styles.container}>
-      {/* Full-screen loading modal */}
-      <Modal visible={isLoading} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <ActivityIndicator color={colors.primary} size="large" />
-            <Text style={styles.modalText}>{loadingMessage}</Text>
-          </View>
+      {/* Loading shown in place. (A full-screen Modal here could make iOS
+          re-evaluate orientation while the phone is still held sideways
+          after filming.) */}
+      {isLoading && (
+        <View style={styles.loadingCard} testID="signal-loading">
+          <ActivityIndicator color={colors.primary} />
+          <Text style={styles.modalText}>{loadingMessage}</Text>
         </View>
-      </Modal>
+      )}
 
       {/* 1. Auto detect button (or confirmed status when locked in) */}
       {isConfirmed ? (
         <View style={styles.statusCard}>
           <Text style={styles.statusLabel}>{t("signal.confirmedTime")}</Text>
           <Text style={styles.statusTime}>{formatTime(startTime)}</Text>
-          <Pressable style={styles.resetBtn} onPress={() => setStartTime(null)}>
+          <Pressable style={styles.resetBtn} onPress={startEditing} testID="signal-change">
             <Text style={styles.resetBtnText}>{t("signal.change")}</Text>
           </Pressable>
         </View>
@@ -169,8 +214,8 @@ export function SignalDetector({ onConfirm }: SignalDetectorProps) {
         </View>
       )}
 
-      {/* 2. Waveform */}
-      {waveformData && audioData && (
+      {/* 2. Waveform (only while choosing the start) */}
+      {choosingStart && waveformData && audioData && (
         <WaveformDisplay
           waveformData={waveformData}
           duration={audioData.duration}
@@ -181,7 +226,7 @@ export function SignalDetector({ onConfirm }: SignalDetectorProps) {
       )}
 
       {/* 3. Fine-tune */}
-      {!isConfirmed && detectedSignalTime !== null && (
+      {choosingStart && detectedSignalTime !== null && (
         <View style={styles.tuneSection}>
           <Text style={styles.tuneLabel}>{t("signal.fineTune")}</Text>
           <View style={styles.tuneRow}>
@@ -200,14 +245,25 @@ export function SignalDetector({ onConfirm }: SignalDetectorProps) {
       )}
 
       {/* 4. Candidate time + confirm */}
-      {!isConfirmed && detectedSignalTime !== null && (
+      {choosingStart && detectedSignalTime !== null && (
         <View style={styles.statusCard}>
           <Text style={styles.statusLabel}>{t("signal.candidateTime")}</Text>
           <Text style={styles.statusTime}>{formatTime(detectedSignalTime)}</Text>
-          <Pressable style={styles.confirmBtn} onPress={confirmStart}>
+          <Pressable style={styles.confirmBtn} onPress={confirmStart} testID="signal-confirm">
             <Text style={styles.confirmBtnText}>{t("signal.setAsStartPoint")}</Text>
           </Pressable>
         </View>
+      )}
+
+      {/* Leave "Change" mode without saving */}
+      {editing && (
+        <Pressable
+          style={styles.cancelEditBtn}
+          onPress={leaveEditing}
+          testID="signal-cancel-change"
+        >
+          <Text style={styles.cancelEditBtnText}>{t("signal.cancelChange")}</Text>
+        </Pressable>
       )}
     </View>
   );
@@ -241,19 +297,14 @@ const styles = StyleSheet.create({
     color: colors.muted,
     marginTop: 2,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
+  loadingCard: {
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-  },
-  modalCard: {
+    gap: spacing.md,
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
-    padding: spacing.xl,
-    alignItems: "center",
-    gap: spacing.md,
-    minWidth: 200,
+    padding: spacing.lg,
   },
   modalText: {
     fontSize: fontSize.sm,
@@ -337,6 +388,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     alignSelf: "stretch",
     marginTop: spacing.sm,
+  },
+  cancelEditBtn: {
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  cancelEditBtnText: {
+    fontSize: fontSize.sm,
+    fontWeight: "600",
+    color: colors.muted,
   },
   confirmBtnText: {
     fontSize: 15,

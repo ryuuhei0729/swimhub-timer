@@ -8,6 +8,16 @@ import type {
   Rect,
 } from "@swimhub-timer/shared";
 import { STOPWATCH_PRESETS } from "@swimhub-timer/shared";
+import { CARD_TIME_FONT_RATIO } from "../lib/overlay/stopwatch-card";
+import {
+  assignDistancesByInterval,
+  buildRaceFromCapturedMarks,
+  nextCapturedMarkId,
+  sortCapturedMarks,
+  validateCapturedMarks,
+  type CapturedMark,
+  type MarkValidationError,
+} from "../lib/capture/captured-marks";
 
 // STOPWATCH_PRESETS is a non-empty literal array (see stopwatch-presets.ts),
 // so the [0] fallback below is always defined.
@@ -28,10 +38,19 @@ export const MOBILE_DEFAULT_SUMMARY_SCALE = 5;
 export const MOBILE_DEFAULT_STOPWATCH_CONFIG: StopwatchConfig = {
   ...MOBILE_BASE_PRESET.config,
   backgroundColor: "rgba(0,0,0,0.6)",
-  anchor: "bottom-left",
+  // The stopwatch card (lib/overlay/stopwatch-card.ts) sits bottom-right like
+  // on the capture screen, its laps stacking upward. fontSize is set per video
+  // in setVideoMetadata (same size relative to the frame as on capture).
+  anchor: "bottom-right",
+  position: { x: 0.98, y: 0.96 },
   borderRadius: 0,
   summaryScale: MOBILE_DEFAULT_SUMMARY_SCALE,
 };
+
+/** Card time size for a frame height: the capture screen's proportion. */
+export function defaultCardFontSize(videoHeight: number): number {
+  return Math.max(1, Math.round(videoHeight * CARD_TIME_FONT_RATIO));
+}
 
 interface AudioData {
   pcmData: Float32Array;
@@ -61,18 +80,21 @@ interface EditorState {
   seekVideoAndPause: (time: number) => void;
   clearPendingSeek: () => void;
 
+  // The confirmed race (set by confirmCapturedMarks; the finish is also a
+  // split at raceDistance). Input happens in capturedMarks.
   splitTimes: SplitTime[];
-  currentDistanceInput: string;
-  currentMemoInput: string;
   raceDistance: number | null;
   isFinished: boolean;
   finishTime: number | null;
   finishMemo: string;
-  // The split (if any) at raceDistance that finishRecording replaced with the
-  // auto finish split — stashed so revertFinish can restore the user's original
-  // split (its time/memo) instead of silently discarding it.
-  replacedFinishSplit: SplitTime | null;
   designConfirmed: boolean;
+
+  // Split times being assigned distances, as absolute video times: LAP/STOP
+  // presses from the camera capture screen and/or times added at the playhead
+  // in the editor (both entry points use the same assignment panel).
+  // Confirming turns them into splitTimes; they stay here so "Edit" can bring
+  // them back.
+  capturedMarks: CapturedMark[];
 
   // Which overlay element is currently being edited in the preview. Shared so
   // the Skia preview (StopwatchSkiaOverlay) can defer to the RN editing chrome
@@ -105,15 +127,18 @@ interface EditorState {
   setExportSettings: (settings: Partial<ExportSettings>) => void;
   setExportProgress: (progress: number) => void;
   setIsExporting: (exporting: boolean) => void;
-  setCurrentDistanceInput: (value: string) => void;
-  setCurrentMemoInput: (value: string) => void;
-  setRaceDistance: (distance: number | null) => void;
   setDesignConfirmed: (confirmed: boolean) => void;
-  recordSplit: (elapsedSeconds: number) => void;
-  removeSplit: (index: number) => void;
-  finishRecording: (elapsedSeconds: number, memo?: string) => void;
+  /** "Edit": back to assigning distances; the marks are kept. */
   revertFinish: () => void;
-  resetSplits: () => void;
+  setCapturedMarks: (marks: CapturedMark[]) => void;
+  setCapturedMarkDistance: (id: string, distance: number | null) => void;
+  setCapturedMarkTime: (id: string, videoTime: number) => void;
+  setCapturedMarkMemo: (id: string, memo: string) => void;
+  addCapturedMark: (videoTime: number) => void;
+  removeCapturedMark: (id: string) => void;
+  assignCapturedDistances: (interval: number) => void;
+  /** Turns the captured marks into splits + finish. Returns the reason on failure. */
+  confirmCapturedMarks: () => MarkValidationError | null;
   reset: () => void;
 }
 
@@ -134,14 +159,12 @@ const initialState = {
   pendingVideoSeek: null as number | null,
   pendingPause: false,
   splitTimes: [] as SplitTime[],
-  currentDistanceInput: "",
-  currentMemoInput: "",
   raceDistance: null as number | null,
   isFinished: false,
   finishTime: null as number | null,
   finishMemo: "",
-  replacedFinishSplit: null as SplitTime | null,
   designConfirmed: false,
+  capturedMarks: [] as CapturedMark[],
   timerEditing: false,
   summaryEditing: false,
   timerPreviewBounds: null as Rect | null,
@@ -164,11 +187,47 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     });
   },
 
-  setVideoMetadata: (metadata) => set({ videoMetadata: metadata }),
+  setVideoMetadata: (metadata) =>
+    set((state) => ({
+      videoMetadata: metadata,
+      // Size the card to this video, as on the capture screen; the user can
+      // still resize it in the editor afterwards.
+      stopwatchConfig: {
+        ...state.stopwatchConfig,
+        fontSize: defaultCardFontSize(metadata.height),
+      },
+    })),
   setAudioData: (data) => set({ audioData: data }),
   setWaveformData: (data) => set({ waveformData: data }),
   setDetectedSignalTime: (time) => set({ detectedSignalTime: time }),
-  setStartTime: (time) => set({ startTime: time }),
+  setStartTime: (time) => {
+    const { capturedMarks, isFinished } = get();
+    // Captured marks are absolute video times, so a confirmed camera session
+    // can follow a moved start (e.g. re-detected start signal) — rebuild the
+    // splits instead of leaving them on the old baseline. If the new start
+    // makes the marks invalid (a mark before it), drop back to assignment.
+    if (time !== null && isFinished && capturedMarks.length > 0) {
+      const race = buildRaceFromCapturedMarks(capturedMarks, time);
+      if (race) {
+        set({
+          startTime: time,
+          splitTimes: race.splitTimes,
+          finishTime: race.finishTime,
+          raceDistance: race.raceDistance,
+        });
+      } else {
+        set({
+          startTime: time,
+          splitTimes: [],
+          isFinished: false,
+          finishTime: null,
+          finishMemo: "",
+        });
+      }
+      return;
+    }
+    set({ startTime: time });
+  },
   setIsDetecting: (detecting) => set({ isDetecting: detecting }),
 
   updateStopwatchConfig: (partial) =>
@@ -190,107 +249,81 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   seekVideo: (time) => set({ pendingVideoSeek: time }),
   seekVideoAndPause: (time) => set({ pendingVideoSeek: time, pendingPause: true }),
   clearPendingSeek: () => set({ pendingVideoSeek: null, pendingPause: false }),
-  setCurrentDistanceInput: (value) => set({ currentDistanceInput: value }),
-  setCurrentMemoInput: (value) => set({ currentMemoInput: value }),
-  setRaceDistance: (distance) => set({ raceDistance: distance }),
   setDesignConfirmed: (confirmed) => set({ designConfirmed: confirmed }),
   setTimerEditing: (editing) => set({ timerEditing: editing }),
   setSummaryEditing: (editing) => set({ summaryEditing: editing }),
   setPreviewBounds: ({ timer, summary }) =>
     set({ timerPreviewBounds: timer, summaryPreviewBounds: summary }),
 
-  recordSplit: (elapsedSeconds) => {
-    const { currentDistanceInput, currentMemoInput, splitTimes } = get();
-    const distance = parseFloat(currentDistanceInput);
-    if (isNaN(distance) || distance <= 0) return;
-    if (splitTimes.some((s) => s.distance === distance)) return;
-
-    // lapTime is derived at display time via calculateRaceLapTimesTable.
-    // Keep the field for backward compat but stop populating it here.
-    const newSplit: SplitTime = {
-      distance,
-      time: elapsedSeconds,
-      lapTime: null,
-      memo: currentMemoInput.trim(),
-    };
-    const updated = [...splitTimes, newSplit].sort((a, b) => a.distance - b.distance);
-    set({
-      splitTimes: updated,
-      currentDistanceInput: "",
-      currentMemoInput: "",
-    });
-  },
-
-  removeSplit: (index) => {
-    const { splitTimes } = get();
-    set({ splitTimes: splitTimes.filter((_, i) => i !== index) });
-  },
-
-  finishRecording: (elapsedSeconds, memo) => {
-    const { raceDistance, splitTimes } = get();
-    // Auto-record a split at raceDistance so the FinishSummaryTable can compute
-    // the final lap times consistently with the rest of the rows.
-    let updatedSplits = splitTimes;
-    // Stash any split the user already recorded at raceDistance so revertFinish
-    // can put it back — otherwise finishing then editing silently loses it.
-    let replacedFinishSplit: SplitTime | null = null;
-    if (raceDistance !== null && raceDistance > 0) {
-      replacedFinishSplit = splitTimes.find((s) => s.distance === raceDistance) ?? null;
-      const filtered = splitTimes.filter((s) => s.distance !== raceDistance);
-      updatedSplits = [
-        ...filtered,
-        {
-          distance: raceDistance,
-          time: elapsedSeconds,
-          lapTime: null,
-          memo: (memo ?? "").trim(),
-        },
-      ].sort((a, b) => a.distance - b.distance);
-    }
-    set({
-      splitTimes: updatedSplits,
-      replacedFinishSplit,
-      isFinished: true,
-      finishTime: elapsedSeconds,
-      finishMemo: (memo ?? "").trim(),
-    });
-  },
-
   revertFinish: () => {
-    const { splitTimes, finishTime, raceDistance, replacedFinishSplit } = get();
-    // Drop the auto-added finish split (only if it still matches finishTime —
-    // that disambiguates from a split the user manually placed at raceDistance).
-    let restored = splitTimes;
-    if (raceDistance !== null && raceDistance > 0 && finishTime !== null) {
-      restored = splitTimes.filter(
-        (s) => !(s.distance === raceDistance && s.time === finishTime),
-      );
-      // Restore the user's original split at raceDistance that finishRecording
-      // replaced (with its original time/memo), keeping the list distance-sorted.
-      if (replacedFinishSplit) {
-        restored = [...restored, replacedFinishSplit].sort((a, b) => a.distance - b.distance);
-      }
-    }
-    set({
-      splitTimes: restored,
-      replacedFinishSplit: null,
-      isFinished: false,
-      finishTime: null,
-      finishMemo: "",
-    });
-  },
-
-  resetSplits: () => {
+    // The marks are the only input now, so the confirmed splits are simply
+    // dropped (keeping them would leave stale split popups in the preview
+    // while the marks are being edited); confirming rebuilds them.
     set({
       splitTimes: [],
-      currentDistanceInput: "",
-      currentMemoInput: "",
-      raceDistance: null,
       isFinished: false,
       finishTime: null,
       finishMemo: "",
-      replacedFinishSplit: null,
     });
+  },
+
+  setCapturedMarks: (marks) => set({ capturedMarks: sortCapturedMarks(marks) }),
+
+  setCapturedMarkDistance: (id, distance) =>
+    set((state) => ({
+      capturedMarks: state.capturedMarks.map((m) => (m.id === id ? { ...m, distance } : m)),
+    })),
+
+  setCapturedMarkTime: (id, videoTime) =>
+    set((state) => ({
+      capturedMarks: sortCapturedMarks(
+        state.capturedMarks.map((m) =>
+          m.id === id ? { ...m, videoTime: Math.max(0, videoTime) } : m,
+        ),
+      ),
+    })),
+
+  setCapturedMarkMemo: (id, memo) =>
+    set((state) => ({
+      capturedMarks: state.capturedMarks.map((m) => (m.id === id ? { ...m, memo } : m)),
+    })),
+
+  addCapturedMark: (videoTime) =>
+    set((state) => ({
+      capturedMarks: sortCapturedMarks([
+        ...state.capturedMarks,
+        { id: nextCapturedMarkId(), videoTime: Math.max(0, videoTime), distance: null, memo: "" },
+      ]),
+    })),
+
+  removeCapturedMark: (id) =>
+    set((state) => ({
+      capturedMarks: state.capturedMarks.filter((m) => m.id !== id),
+    })),
+
+  assignCapturedDistances: (interval) =>
+    set((state) => ({
+      capturedMarks: assignDistancesByInterval(state.capturedMarks, interval),
+    })),
+
+  confirmCapturedMarks: () => {
+    const { capturedMarks: marks, startTime } = get();
+    const error = validateCapturedMarks(marks, startTime);
+    if (error) return error;
+    const race = buildRaceFromCapturedMarks(marks, startTime);
+    if (!race) return "noMarks";
+    // The finish is included as a split at raceDistance — the shape
+    // SplitsPanel / FinishSummaryTable / export expect.
+    // The marks stay in the store: "Edit" (revertFinish) brings the user back
+    // to the assignment panel with everything they entered.
+    set({
+      splitTimes: race.splitTimes,
+      raceDistance: race.raceDistance,
+      isFinished: true,
+      finishTime: race.finishTime,
+      finishMemo: race.finishMemo,
+    });
+    return null;
   },
 
   reset: () => {

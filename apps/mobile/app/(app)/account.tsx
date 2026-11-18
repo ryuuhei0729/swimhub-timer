@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../contexts/AuthProvider";
 import { restorePurchases } from "../../lib/revenucat";
+import { isAdPrivacyOptionsRequired, showAdPrivacyOptions } from "../../lib/ads/ads-sdk";
 import { deleteAccount, ApiError } from "../../lib/api-client";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 import { PlanFeatureList } from "../../components/plan/PlanFeatureList";
@@ -27,6 +28,24 @@ export default function AccountScreen() {
   const plan = subscription?.plan ?? "free";
   const [deleting, setDeleting] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  // EEA 等で広告の同意を取ったユーザーには、同意を後から変更できる入口が必要（UMP の要件）
+  const [adPrivacyRequired, setAdPrivacyRequired] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void isAdPrivacyOptionsRequired().then((required) => {
+      if (!cancelled) setAdPrivacyRequired(required);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleAdPrivacyOptions = () => {
+    showAdPrivacyOptions().catch((e) => {
+      console.warn("[ads] privacy options form failed", e);
+    });
+  };
 
   const handleSignOut = () => {
     Alert.alert(t("auth.logout"), t("auth.logoutConfirm"), [
@@ -323,6 +342,17 @@ export default function AccountScreen() {
             {t("account.privacyLink")}
           </Text>
         </View>
+        {adPrivacyRequired && (
+          <View style={styles.legalLinks}>
+            <Text
+              style={styles.legalLink}
+              onPress={handleAdPrivacyOptions}
+              accessibilityRole="button"
+            >
+              {t("account.adPrivacySettings")}
+            </Text>
+          </View>
+        )}
 
         {/* App info */}
         <View style={styles.footer}>

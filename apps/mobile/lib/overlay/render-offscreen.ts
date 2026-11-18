@@ -14,15 +14,10 @@ import { Skia, type SkImage } from "@shopify/react-native-skia";
 import { Directory, File, Paths } from "expo-file-system";
 import { Asset } from "expo-asset";
 import type { SplitTime, StopwatchConfig, OverlayContext, Size } from "@swimhub-timer/shared";
-import {
-  drawStopwatch,
-  drawPassedSplit,
-  drawFinishSummary,
-  drawWatermark,
-  getStopwatchBounds,
-} from "@swimhub-timer/shared";
+import { drawFinishSummary, drawWatermark } from "@swimhub-timer/shared";
 import { loadOverlayTypefaces, MOBILE_WATERMARK_OPTIONS } from "./fonts";
 import { SkiaOverlayContext } from "./skia-context";
+import { cardMemoAt, cardRowsAt, drawStopwatchCard, getStopwatchCardBand } from "./stopwatch-card";
 
 /** Draw callback operating on the unified overlay context at a given size. */
 type DrawFn = (ctx: OverlayContext, size: Size) => void;
@@ -120,24 +115,40 @@ export async function renderWatermarkPng(width: number, height: number): Promise
   return writePng(bytes, `swimhub-watermark_${width}x${height}.png`);
 }
 
+/** The stopwatch card at `elapsed`, exactly as the editor preview draws it. */
+function drawCardAt(
+  ctx: OverlayContext,
+  size: Size,
+  config: StopwatchConfig,
+  splitTimes: readonly SplitTime[],
+  elapsed: number,
+): void {
+  drawStopwatchCard(
+    ctx,
+    size,
+    config,
+    elapsed,
+    cardRowsAt(splitTimes, elapsed),
+    cardMemoAt(splitTimes, elapsed),
+  );
+}
+
 /**
- * Render one timer frame (stopwatch + optional active split + optional
- * watermark) — used to build the per-frame PNG sequence that retires FFmpeg
- * `drawtext` so the timer box height matches the preview exactly (Phase 4).
+ * Render one timer frame (stopwatch card + optional watermark) — e.g. the
+ * static pre-roll before the start. Same draw as each sequence frame.
  */
 export async function renderTimerFramePng(opts: {
   config: StopwatchConfig;
   elapsedSeconds: number;
-  activeSplit: SplitTime | null;
+  splitTimes: readonly SplitTime[];
   watermarkIcon: unknown | null;
   width: number;
   height: number;
   fileName: string;
 }): Promise<string> {
-  const { config, elapsedSeconds, activeSplit, watermarkIcon, width, height, fileName } = opts;
+  const { config, elapsedSeconds, splitTimes, watermarkIcon, width, height, fileName } = opts;
   const bytes = await renderOverlayPngBytes(width, height, (ctx, size) => {
-    drawStopwatch(ctx, size, config, elapsedSeconds);
-    if (activeSplit) drawPassedSplit(ctx, size, config, elapsedSeconds, activeSplit);
+    drawCardAt(ctx, size, config, splitTimes, elapsedSeconds);
     if (watermarkIcon) {
       drawWatermark(ctx, size, watermarkIcon, MOBILE_WATERMARK_OPTIONS);
     }
@@ -166,8 +177,8 @@ export interface TimerSequence {
  * the caller should measure and, per the design doc, consider rendering only
  * changed frames or a raw pipe if I/O dominates.
  *
- * `activeSplitAt(elapsed)` lets the caller mirror the preview's split-visibility
- * window per frame.
+ * Each frame draws the stopwatch card with the laps passed so far — the same
+ * cardRowsAt / cardMemoAt the preview uses.
  */
 export async function renderTimerSequence(opts: {
   config: StopwatchConfig;
@@ -181,7 +192,7 @@ export async function renderTimerSequence(opts: {
    *  show 0:00 before the start signal, count during the race, and freeze at
    *  the finish time, exactly like the preview. */
   elapsedFor: (videoSeconds: number) => number;
-  activeSplitAt: (elapsedSeconds: number) => SplitTime | null;
+  splitTimes: readonly SplitTime[];
   watermarkIcon: unknown | null;
   onProgress?: (done: number, total: number) => void;
 }): Promise<TimerSequence> {
@@ -193,36 +204,25 @@ export async function renderTimerSequence(opts: {
     width,
     height,
     elapsedFor,
-    activeSplitAt,
+    splitTimes,
     watermarkIcon,
     onProgress,
   } = opts;
   const typefaces = await loadOverlayTypefaces();
 
-  // Compute the sub-rectangle the timer + split occupy (full frame WIDTH for
-  // safety — the split centers below the timer and can be wider — but only the
-  // vertical band from the timer top to the split bottom). The timer's vertical
-  // bounds don't depend on the elapsed value (height is fontSize-based and the
-  // position is fixed during export), so we measure once.
+  // Sub-rectangle the card can occupy over the whole race: full frame WIDTH,
+  // but only the vertical band from its tallest layout (4 laps + memo) to its
+  // anchored edge. The card's position is fixed during export, so one
+  // measurement covers every frame.
   const region = (() => {
     const scratch = Skia.Surface.MakeOffscreen(8, 8);
     if (!scratch) throw new Error("Skia.Surface.MakeOffscreen returned null (measure)");
     const measureCtx = new SkiaOverlayContext(scratch.getCanvas(), typefaces);
-    const tb = getStopwatchBounds(measureCtx, { width, height }, config, 0);
+    const band = getStopwatchCardBand(measureCtx, { width, height }, config);
     scratch.dispose?.();
-    const splitFontSize = Math.round(config.fontSize * 0.55);
-    const splitPad = Math.round(config.padding * 0.6);
-    const memoGap = Math.round(splitFontSize * 0.25);
-    const memoFontSize = Math.round(config.fontSize * 0.38);
-    const splitGap = 4;
-    // Assume a memo is present (tallest case) so the band never clips a split.
-    const maxSplitH = splitFontSize + 2 * splitPad + memoGap + memoFontSize;
     const margin = Math.max(8, Math.round(config.fontSize * 0.12));
-    const top = Math.max(0, Math.floor(tb.y - margin));
-    const bottom = Math.min(
-      Math.round(height),
-      Math.ceil(tb.y + tb.height + splitGap + maxSplitH + margin),
-    );
+    const top = Math.max(0, Math.floor(band.top - margin));
+    const bottom = Math.min(Math.round(height), Math.ceil(band.bottom + margin));
     return { x: 0, y: top, width: Math.round(width), height: Math.max(1, bottom - top) };
   })();
 
@@ -262,9 +262,7 @@ export async function renderTimerSequence(opts: {
       // region-sized surface.
       canvas.save();
       canvas.translate(-region.x, -region.y);
-      drawStopwatch(ctx, { width, height }, config, elapsed);
-      const split = activeSplitAt(elapsed);
-      if (split) drawPassedSplit(ctx, { width, height }, config, elapsed, split);
+      drawCardAt(ctx, { width, height }, config, splitTimes, elapsed);
       if (watermarkIcon) {
         drawWatermark(ctx, { width, height }, watermarkIcon, MOBILE_WATERMARK_OPTIONS);
       }

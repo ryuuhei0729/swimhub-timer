@@ -120,6 +120,9 @@ importers:
       expo-image-picker:
         specifier: ~55.0.20
         version: 55.0.20(expo@55.0.26)
+      expo-keep-awake:
+        specifier: ~55.0.8
+        version: 55.0.8(expo@55.0.26)(react@19.2.4)
       expo-linking:
         specifier: ~55.0.15
         version: 55.0.15(expo@55.0.26)(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
@@ -132,6 +135,9 @@ importers:
       expo-router:
         specifier: ~55.0.16
         version: 55.0.16(8b6413afcb5bcd928f6d0f1a5c2a8c58)
+      expo-screen-orientation:
+        specifier: ~55.0.20
+        version: 55.0.20(expo@55.0.26)(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))
       expo-secure-store:
         specifier: ~55.0.15
         version: 55.0.15(expo@55.0.26)
@@ -179,7 +185,13 @@ importers:
         version: 16.2.2(expo@55.0.26)(react@19.2.4)
       react-native-mmkv:
         specifier: ^4.1.2
-        version: 4.2.0(react-native-nitro-modules@0.35.0(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
+        version: 4.2.0(react-native-nitro-modules@0.35.9(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
+      react-native-nitro-image:
+        specifier: 0.15.0
+        version: 0.15.0(react-native-nitro-modules@0.35.9(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
+      react-native-nitro-modules:
+        specifier: 0.35.9
+        version: 0.35.9(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
       react-native-purchases:
         specifier: ^9.12.0
         version: 9.12.0(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
@@ -198,6 +210,9 @@ importers:
       react-native-view-shot:
         specifier: ^4.0.3
         version: 4.0.3(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
+      react-native-vision-camera:
+        specifier: 5.0.11
+        version: 5.0.11(react-native-nitro-image@0.15.0(react-native-nitro-modules@0.35.9(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native-nitro-modules@0.35.9(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
       react-native-worklets:
         specifier: ~0.8.1
         version: 0.8.1(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
@@ -5134,6 +5149,12 @@ packages:
       react-server-dom-webpack:
         optional: true
 
+  expo-screen-orientation@55.0.20:
+    resolution: {integrity: sha512-GxV5QW+zRHJ+ChRzgqWncuKuJPrLFKrPjeaBSNfAdk24x83kmH4EvUcu4lHFBSKsUUMHQCCSslCofXN0+sXjFw==}
+    peerDependencies:
+      expo: '*'
+      react-native: '*'
+
   expo-secure-store@55.0.15:
     resolution: {integrity: sha512-w2T76G6U6A7NRDSTXn/9CarXMCDw+YFP4aEux+vskA0SrJGyMQXP+onJVAu2nGNaUvvW0RqIqxkxdW1bgSSjvQ==}
     peerDependencies:
@@ -7115,8 +7136,15 @@ packages:
       react-native: '*'
       react-native-nitro-modules: '*'
 
-  react-native-nitro-modules@0.35.0:
-    resolution: {integrity: sha512-Eho1yEcLbsteGpBFn2XZOp5FIptnEciWzuYBW49S0jo41Un2LeyesIO/MqYLY/c5o7D9Fw9th4pxGtV7OAb0+g==}
+  react-native-nitro-image@0.15.0:
+    resolution: {integrity: sha512-amzxT/jWNXhv+C9ZqYr24JkteQDBZGlt37mx0KQdGqhiQbfGhH6f43ojXGpYY+xk8vtpfmmGAwlf60IExrLEfA==}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
+      react-native-nitro-modules: '*'
+
+  react-native-nitro-modules@0.35.9:
+    resolution: {integrity: sha512-yCO6eJ85SPPUo4a4an7H5oj6wPCSIT72fbjr5WZ/20n6zswaJ2gNNpnWtg2We0AZwkAOjSqkOJ0Vjc05p6kGiA==}
     peerDependencies:
       react: '*'
       react-native: '*'
@@ -7161,6 +7189,14 @@ packages:
     peerDependencies:
       react: '*'
       react-native: '*'
+
+  react-native-vision-camera@5.0.11:
+    resolution: {integrity: sha512-7d8KYemov5k7TciBeR+ICzvEvApMgjrxNHW9EiCHWVQ8A65Qkx2NCDNhYmS00tzWDPQNGKSNWPKuAj2DwjqdmA==}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
+      react-native-nitro-image: '*'
+      react-native-nitro-modules: '*'
 
   react-native-worklets@0.8.1:
     resolution: {integrity: sha512-oWP/lStsAHU6oYCaWDXrda/wOHVdhusQJz1e6x9gPnXdFf4ndNDAOtWCmk2zGrAnlapfyA3rM6PCQq94mPg9cw==}
@@ -11948,9 +11984,7 @@ snapshots:
       metro-runtime: 0.83.7
     transitivePeerDependencies:
       - '@babel/core'
-      - bufferutil
       - supports-color
-      - utf-8-validate
 
   '@react-native/normalize-colors@0.83.6': {}
 
@@ -14068,7 +14102,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.57.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.4(jiti@2.6.1)):
+  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.57.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
@@ -14099,7 +14133,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.39.4(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.57.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.4(jiti@2.6.1))
+      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.57.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1))
       hasown: 2.0.2
       is-core-module: 2.16.1
       is-glob: 4.0.3
@@ -14512,6 +14546,11 @@ snapshots:
       - '@types/react-dom'
       - expo-font
       - supports-color
+
+  expo-screen-orientation@55.0.20(expo@55.0.26)(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4)):
+    dependencies:
+      expo: 55.0.26(@babel/core@7.29.0)(@expo/dom-webview@55.0.5)(@expo/metro-runtime@6.1.2)(expo-router@55.0.16)(react-dom@19.2.4(react@19.2.4))(react-native-worklets@0.8.1(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
+      react-native: 0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4)
 
   expo-secure-store@55.0.15(expo@55.0.26):
     dependencies:
@@ -16864,13 +16903,19 @@ snapshots:
       react: 19.2.4
       react-native: 0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4)
 
-  react-native-mmkv@4.2.0(react-native-nitro-modules@0.35.0(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4):
+  react-native-mmkv@4.2.0(react-native-nitro-modules@0.35.9(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4):
     dependencies:
       react: 19.2.4
       react-native: 0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4)
-      react-native-nitro-modules: 0.35.0(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
+      react-native-nitro-modules: 0.35.9(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
 
-  react-native-nitro-modules@0.35.0(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4):
+  react-native-nitro-image@0.15.0(react-native-nitro-modules@0.35.9(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4):
+    dependencies:
+      react: 19.2.4
+      react-native: 0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4)
+      react-native-nitro-modules: 0.35.9(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
+
+  react-native-nitro-modules@0.35.9(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4):
     dependencies:
       react: 19.2.4
       react-native: 0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4)
@@ -16915,6 +16960,13 @@ snapshots:
       html2canvas: 1.4.1
       react: 19.2.4
       react-native: 0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4)
+
+  react-native-vision-camera@5.0.11(react-native-nitro-image@0.15.0(react-native-nitro-modules@0.35.9(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native-nitro-modules@0.35.9(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4):
+    dependencies:
+      react: 19.2.4
+      react-native: 0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4)
+      react-native-nitro-image: 0.15.0(react-native-nitro-modules@0.35.9(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
+      react-native-nitro-modules: 0.35.9(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
 
   react-native-worklets@0.8.1(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(react-native@0.83.6(@babel/core@7.29.0)(@react-native/metro-config@0.84.1(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4):
     dependencies:

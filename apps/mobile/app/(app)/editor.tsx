@@ -15,6 +15,8 @@ import { useTranslation } from "react-i18next";
 import { VideoPlayer } from "../../components/video/VideoPlayer";
 import { SignalDetector } from "../../components/audio/SignalDetector";
 import { SplitsPanel } from "../../components/splits/SplitsPanel";
+import { MarkAssignPanel } from "../../components/splits/MarkAssignPanel";
+import { AddMarkAtPlayheadBar } from "../../components/splits/AddMarkAtPlayheadBar";
 import { TabBar } from "../../components/ui/TabBar";
 import { useEditorStore } from "../../stores/editor-store";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
@@ -25,7 +27,15 @@ export default function EditorScreen() {
   const startTime = useEditorStore((s) => s.startTime);
   const isFinished = useEditorStore((s) => s.isFinished);
   const setDesignConfirmed = useEditorStore((s) => s.setDesignConfirmed);
-  const [activeTab, setActiveTab] = useState("signal");
+  // Camera captures arrive with the start already set, so open straight on the
+  // splits tab; an imported video starts with start detection.
+  const [activeTab, setActiveTab] = useState(() =>
+    useEditorStore.getState().startTime !== null ? "splits" : "signal",
+  );
+  // Both entry points (camera / imported video) build splits the same way:
+  // times (captured, or added at the playhead) get distances in the
+  // assignment panel. Once confirmed, SplitsPanel shows the result.
+  const showMarkAssign = !isFinished;
 
   const splitsLocked = startTime === null;
 
@@ -105,16 +115,22 @@ export default function EditorScreen() {
       ) : (
         <ScrollView
           style={styles.tabContent}
-          contentContainerStyle={styles.tabContentInner}
+          contentContainerStyle={[
+            styles.tabContentInner,
+            showMarkAssign && styles.tabContentInnerWithAddBar,
+          ]}
           keyboardShouldPersistTaps="handled"
           automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
           keyboardDismissMode="interactive"
         >
-          {activeTab === "splits" && <SplitsPanel />}
+          {activeTab === "splits" && (showMarkAssign ? <MarkAssignPanel /> : <SplitsPanel />)}
         </ScrollView>
       )}
 
       {/* Bottom action bar */}
+      {/* Always reachable while assigning captured times (pinned, not in the scroll). */}
+      {activeTab === "splits" && showMarkAssign && <AddMarkAtPlayheadBar />}
+
       {showExport && (
         <View style={styles.exportBar}>
           <Pressable
@@ -143,6 +159,10 @@ const styles = StyleSheet.create({
   },
   tabContentInner: {
     paddingBottom: 100,
+  },
+  // Room for the taller pinned AddMarkAtPlayheadBar (seek row + add button).
+  tabContentInnerWithAddBar: {
+    paddingBottom: 170,
   },
   exportBar: {
     position: "absolute",
