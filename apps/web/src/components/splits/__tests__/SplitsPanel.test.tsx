@@ -45,6 +45,8 @@ i18n.use(initReactI18next).init({
         "splits.emptyHint": "Pause the video, enter distance,\nand tap Record to log a split",
         "splits.lap": "lap",
         "splits.limitReached": "Split limit ({{max}}) reached.",
+        "splits.upgradeToPremium": "Upgrade to Premium for unlimited splits",
+        "splits.loginToRecordMore": "Log in to record up to {{max}} splits",
         "common.reset": "Reset",
       },
     },
@@ -53,11 +55,11 @@ i18n.use(initReactI18next).init({
 });
 
 // useAuth の共通モック
-const mockAuth = () => {
+const mockAuth = (plan: "guest" | "free" | "premium" = "free") => {
   vi.spyOn(authHook, "useAuth").mockReturnValue({
     user: null,
     loading: false,
-    plan: "free",
+    plan,
     subscription: null,
     subscriptionStatus: null,
     signOut: vi.fn(),
@@ -224,5 +226,47 @@ describe("SplitsPanel — Edit button (revertFinish)", () => {
     mockStore({ isFinished: false, finishTime: null, startTime: null });
     renderPanel();
     expect(screen.queryByRole("button", { name: /Edit/i })).not.toBeInTheDocument();
+  });
+});
+
+describe("SplitsPanel — split limit", () => {
+  const split = (distance: number, time: number) => ({ distance, time, memo: "" });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("free: 2 件では上限メッセージを出さない", () => {
+    mockAuth("free");
+    mockStore({ splitTimes: [split(50, 30), split(100, 62)] });
+    renderPanel();
+    expect(screen.queryByText("Split limit (3) reached.")).not.toBeInTheDocument();
+  });
+
+  it("free: 3 件で上限メッセージと Premium (設定画面) へのリンクを出す", () => {
+    mockAuth("free");
+    mockStore({ splitTimes: [split(50, 30), split(100, 62), split(150, 95)] });
+    renderPanel();
+    expect(screen.getByText("Split limit (3) reached.")).toBeInTheDocument();
+    const link = screen.getByRole("link", { name: "Upgrade to Premium for unlimited splits" });
+    expect(link).toHaveAttribute("href", "/ja/settings");
+  });
+
+  it("guest: 1 件で上限メッセージとログインへのリンクを出す", () => {
+    mockAuth("guest");
+    mockStore({ splitTimes: [split(50, 30)] });
+    renderPanel();
+    expect(screen.getByText("Split limit (1) reached.")).toBeInTheDocument();
+    const link = screen.getByRole("link", { name: "Log in to record up to 3 splits" });
+    expect(link).toHaveAttribute("href", "/ja/login");
+  });
+
+  it("premium: 件数が多くても上限メッセージを出さない", () => {
+    mockAuth("premium");
+    mockStore({
+      splitTimes: [split(50, 30), split(100, 62), split(150, 95), split(200, 128)],
+    });
+    renderPanel();
+    expect(screen.queryByText(/Split limit/)).not.toBeInTheDocument();
   });
 });

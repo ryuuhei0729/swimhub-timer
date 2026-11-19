@@ -125,6 +125,7 @@ export default function SubscriptionSettings() {
 
   const premiumFeatures = [
     t("subscription.featureUnlimitedExport"),
+    t("subscription.featureUnlimitedSplits"),
     t("subscription.featureNoAds"),
     t("subscription.featureFreeTrial"),
   ];

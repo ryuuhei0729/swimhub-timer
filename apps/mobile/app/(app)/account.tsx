@@ -20,12 +20,13 @@ import { isAdPrivacyOptionsRequired, showAdPrivacyOptions } from "../../lib/ads/
 import { deleteAccount, ApiError } from "../../lib/api-client";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 import { PlanFeatureList } from "../../components/plan/PlanFeatureList";
+import { getEffectivePlan } from "@swimhub-timer/shared";
 
 export default function AccountScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { user, subscription, signOut, refreshSubscription, guestMode } = useAuth();
-  const plan = subscription?.plan ?? "free";
+  const plan = getEffectivePlan(subscription, guestMode);
   const [deleting, setDeleting] = useState(false);
   const [restoring, setRestoring] = useState(false);
   // EEA 等で広告の同意を取ったユーザーには、同意を後から変更できる入口が必要（UMP の要件）
@@ -232,7 +233,7 @@ export default function AccountScreen() {
               </>
             ) : (
               <>
-                <PlanFeatureList currentPlan={guestMode ? "guest" : plan} />
+                <PlanFeatureList currentPlan={plan} />
                 <Text style={styles.upgradePrompt}>{t("account.upgradePrompt")}</Text>
                 {guestMode ? (
                   <TouchableOpacity

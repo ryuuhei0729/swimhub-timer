@@ -20,6 +20,7 @@ import {
   getAvailableResolutions,
   shouldShowWatermark,
   checkIsPremium,
+  getEffectivePlan,
 } from "@swimhub-timer/shared";
 import type { ExportResolution } from "@swimhub-timer/shared";
 import {
@@ -82,7 +83,7 @@ export default function ExportScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { subscription, subscriptionResolved, guestMode, refreshSubscription } = useAuth();
-  const effectivePlan = guestMode ? "guest" : (subscription?.plan ?? "free");
+  const effectivePlan = getEffectivePlan(subscription, guestMode);
   const {
     videoUri,
     videoMetadata,
