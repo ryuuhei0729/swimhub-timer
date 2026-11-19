@@ -5,6 +5,7 @@ import { Platform } from "react-native";
 import { useTranslation } from "react-i18next";
 import { supabase } from "../lib/supabase";
 import { localizeAuthError } from "../utils/authErrorLocalizer";
+import { saveLastLoginMethod } from "../lib/lastLoginMethod";
 
 export interface AppleAuthResult {
   success: boolean;
@@ -104,6 +105,9 @@ export const useAppleAuth = (): UseAppleAuthReturn => {
         setError(localizeAuthError(signInError.message, t));
         return { success: false, error: signInError };
       }
+
+      // ログインはここで成立している（後続の名前更新の成否に左右されないよう先に記録する）
+      saveLastLoginMethod("apple");
 
       if (displayName) {
         await supabase.auth.updateUser({

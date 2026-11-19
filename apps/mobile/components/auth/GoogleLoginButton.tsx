@@ -7,6 +7,8 @@ interface GoogleLoginButtonProps {
   loading?: boolean;
   disabled?: boolean;
   label?: string;
+  /** 読み上げ用ラベル（省略時は表示ラベル） */
+  accessibilityLabel?: string;
 }
 
 function GoogleLogo() {
@@ -37,6 +39,7 @@ export function GoogleLoginButton({
   loading = false,
   disabled = false,
   label = "Googleでログイン",
+  accessibilityLabel,
 }: GoogleLoginButtonProps) {
   const isDisabled = disabled || loading;
 
@@ -50,7 +53,7 @@ export function GoogleLoginButton({
       onPress={onPress}
       disabled={isDisabled}
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
     >
       {loading ? (

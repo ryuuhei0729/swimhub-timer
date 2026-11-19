@@ -8,6 +8,8 @@ import { useGoogleAuth } from "../../hooks/useGoogleAuth";
 import { useAppleAuth } from "../../hooks/useAppleAuth";
 import { GoogleLoginButton } from "../../components/auth/GoogleLoginButton";
 import { AppleLoginButton } from "../../components/auth/AppleLoginButton";
+import { LastUsedBadge } from "../../components/auth/LastUsedBadge";
+import { loadLastLoginMethod, type LoginMethod } from "../../lib/lastLoginMethod";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 
 export default function LoginMethodScreen() {
@@ -27,8 +29,14 @@ export default function LoginMethodScreen() {
     isAvailable: isAppleAvailable,
   } = useAppleAuth();
   const [error, setError] = useState<string | null>(null);
+  // MMKV は同期読み出しなので初期値で読む
+  const [lastLoginMethod] = useState<LoginMethod | null>(loadLastLoginMethod);
 
   const isLoading = googleLoading || appleLoading;
+  // バッジは読み上げ対象外のため、該当ボタンの読み上げラベルに「直近で利用」を含める
+  const a11yLabel = (method: LoginMethod, label: string) =>
+    lastLoginMethod === method ? `${label}, ${t("auth.loginMethod.lastUsed")}` : label;
+
   const displayError = error || googleError || appleError;
 
   const handleGoogleLogin = async () => {
@@ -78,37 +86,48 @@ export default function LoginMethodScreen() {
 
         <View style={styles.buttonGroup}>
           {isAppleAvailable && (
-            <AppleLoginButton
-              onPress={handleAppleLogin}
-              loading={appleLoading}
-              disabled={isLoading}
-              label={t("auth.loginMethod.withApple")}
-            />
+            <View>
+              <AppleLoginButton
+                onPress={handleAppleLogin}
+                loading={appleLoading}
+                disabled={isLoading}
+                label={t("auth.loginMethod.withApple")}
+                accessibilityLabel={a11yLabel("apple", t("auth.loginMethod.withApple"))}
+              />
+              {lastLoginMethod === "apple" && <LastUsedBadge testID="login-last-used-apple" />}
+            </View>
           )}
 
-          <GoogleLoginButton
-            onPress={handleGoogleLogin}
-            loading={googleLoading}
-            disabled={isLoading}
-            label={t("auth.loginMethod.withGoogle")}
-          />
+          <View>
+            <GoogleLoginButton
+              onPress={handleGoogleLogin}
+              loading={googleLoading}
+              disabled={isLoading}
+              label={t("auth.loginMethod.withGoogle")}
+              accessibilityLabel={a11yLabel("google", t("auth.loginMethod.withGoogle"))}
+            />
+            {lastLoginMethod === "google" && <LastUsedBadge testID="login-last-used-google" />}
+          </View>
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.emailButton,
-              isLoading && styles.buttonDisabled,
-              pressed && !isLoading && styles.emailButtonPressed,
-            ]}
-            onPress={() => router.push("/(auth)/email-login")}
-            disabled={isLoading}
-            accessibilityRole="button"
-            accessibilityLabel={t("auth.loginMethod.withEmail")}
-          >
-            <View style={styles.buttonContent}>
-              <Ionicons name="mail-outline" size={20} color={colors.textSecondary} />
-              <Text style={styles.emailButtonText}>{t("auth.loginMethod.withEmail")}</Text>
-            </View>
-          </Pressable>
+          <View>
+            <Pressable
+              style={({ pressed }) => [
+                styles.emailButton,
+                isLoading && styles.buttonDisabled,
+                pressed && !isLoading && styles.emailButtonPressed,
+              ]}
+              onPress={() => router.push("/(auth)/email-login")}
+              disabled={isLoading}
+              accessibilityRole="button"
+              accessibilityLabel={a11yLabel("email", t("auth.loginMethod.withEmail"))}
+            >
+              <View style={styles.buttonContent}>
+                <Ionicons name="mail-outline" size={20} color={colors.textSecondary} />
+                <Text style={styles.emailButtonText}>{t("auth.loginMethod.withEmail")}</Text>
+              </View>
+            </Pressable>
+            {lastLoginMethod === "email" && <LastUsedBadge testID="login-last-used-email" />}
+          </View>
         </View>
 
         <Pressable
