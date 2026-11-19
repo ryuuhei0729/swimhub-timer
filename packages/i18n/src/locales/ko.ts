@@ -270,6 +270,7 @@ const ko: TranslationShape = {
       withEmail: "이메일로 로그인",
       noAccount: "계정이 없으신가요? ",
       signup: "회원가입",
+      lastUsed: "최근 사용",
     },
     emailLogin: "이메일로 로그인",
     emailSignup: "이메일로 회원가입",

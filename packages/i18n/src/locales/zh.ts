@@ -268,6 +268,7 @@ const zh: TranslationShape = {
       withEmail: "使用邮箱登录",
       noAccount: "还没有账户？",
       signup: "注册",
+      lastUsed: "最近使用",
     },
     emailLogin: "使用邮箱登录",
     emailSignup: "使用邮箱注册",

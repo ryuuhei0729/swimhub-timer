@@ -170,3 +170,52 @@ describe("GET /api/auth/callback (timer) — V-15/V-16", () => {
     expect(location(res)).toBe(`${ORIGIN}/ja/login?error=missing_code`);
   });
 });
+
+describe("GET /api/auth/callback (timer) — 「直近で利用」ログイン手法の記録", () => {
+  function lastLoginCookie(res: Response): string | undefined {
+    return res.headers.getSetCookie().find((c) => c.startsWith("swimhub_last_login_method="));
+  }
+
+  it("OAuth (code) でセッションが確立したら login_method を JS から読める Cookie に記録する", async () => {
+    exchangeCodeForSession.mockResolvedValue({ data: { session: { access_token: "t" } }, error: null });
+    const res = await GET(
+      makeRequest(`${ORIGIN}/api/auth/callback?code=pkce-code&login_method=apple`),
+    );
+    const cookie = lastLoginCookie(res);
+    expect(cookie).toContain("swimhub_last_login_method=apple");
+    expect(cookie).toContain("Max-Age=31536000");
+    expect(cookie).not.toMatch(/HttpOnly/i);
+    expect(location(res)).toBe(`${ORIGIN}/ja`);
+  });
+
+  it("コード交換に失敗した (ログイン失敗) 場合は記録しない", async () => {
+    exchangeCodeForSession.mockResolvedValue({ error: { message: "boom" } });
+    const res = await GET(
+      makeRequest(`${ORIGIN}/api/auth/callback?code=bad-code&login_method=google`),
+    );
+    expect(lastLoginCookie(res)).toBeUndefined();
+    expect(location(res)).toBe(`${ORIGIN}/ja/login?error=auth_failed`);
+  });
+
+  it("login_method が無い場合は記録しない", async () => {
+    exchangeCodeForSession.mockResolvedValue({ data: { session: { access_token: "t" } }, error: null });
+    const res = await GET(makeRequest(`${ORIGIN}/api/auth/callback?code=pkce-code`));
+    expect(lastLoginCookie(res)).toBeUndefined();
+  });
+
+  it("不正な login_method は記録しない", async () => {
+    exchangeCodeForSession.mockResolvedValue({ data: { session: { access_token: "t" } }, error: null });
+    const res = await GET(
+      makeRequest(`${ORIGIN}/api/auth/callback?code=pkce-code&login_method=evil%3B%20Domain%3Dx`),
+    );
+    expect(lastLoginCookie(res)).toBeUndefined();
+  });
+
+  it("メール確認 (token_hash) フローでは記録しない (ログイン手法の選択ではないため)", async () => {
+    verifyOtp.mockResolvedValue({ data: { session: { access_token: "t" } }, error: null });
+    const res = await GET(
+      makeRequest(`${ORIGIN}/api/auth/callback?token_hash=abc&type=signup&login_method=google`),
+    );
+    expect(lastLoginCookie(res)).toBeUndefined();
+  });
+});

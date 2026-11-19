@@ -271,6 +271,7 @@ const en: TranslationShape = {
       withEmail: "Sign in with Email",
       noAccount: "Don't have an account? ",
       signup: "Sign Up",
+      lastUsed: "Last used",
     },
     emailLogin: "Sign in with Email",
     emailSignup: "Sign up with Email",

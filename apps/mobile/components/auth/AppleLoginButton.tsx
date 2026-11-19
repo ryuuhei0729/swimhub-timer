@@ -7,6 +7,8 @@ interface AppleLoginButtonProps {
   loading?: boolean;
   disabled?: boolean;
   label?: string;
+  /** 読み上げ用ラベル（省略時は表示ラベル） */
+  accessibilityLabel?: string;
 }
 
 function AppleLogo() {
@@ -22,6 +24,7 @@ export function AppleLoginButton({
   loading = false,
   disabled = false,
   label = "Appleでログイン",
+  accessibilityLabel,
 }: AppleLoginButtonProps) {
   if (Platform.OS !== "ios") return null;
 
@@ -37,7 +40,7 @@ export function AppleLoginButton({
       onPress={onPress}
       disabled={isDisabled}
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
     >
       {loading ? (

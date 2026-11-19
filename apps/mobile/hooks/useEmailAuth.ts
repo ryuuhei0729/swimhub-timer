@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import { localizeAuthError } from "../utils/authErrorLocalizer";
 import { getRedirectUri } from "../lib/google-auth";
 import { setPasswordRecoveryPending } from "../lib/passwordRecovery";
+import { saveLastLoginMethod } from "../lib/lastLoginMethod";
 
 export function useEmailAuth() {
   const { t } = useTranslation();
@@ -22,6 +23,8 @@ export function useEmailAuth() {
         const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
         if (authError) {
           setError(localizeAuthError(authError.message, t));
+        } else {
+          saveLastLoginMethod("email");
         }
       } catch {
         setError(t("auth.errors.generic"));

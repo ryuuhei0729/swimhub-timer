@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { signInWithGoogle as sharedSignInWithGoogle, APP_SCHEME } from "../lib/google-auth";
 import { supabase } from "../lib/supabase";
 import { localizeAuthError } from "../utils/authErrorLocalizer";
+import { saveLastLoginMethod } from "../lib/lastLoginMethod";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -69,6 +70,7 @@ export const useGoogleAuth = (): UseGoogleAuthReturn => {
         return { success: false, error: result.error ?? new Error(localizedError) };
       }
 
+      saveLastLoginMethod("google");
       return { success: true };
     } catch (unexpectedException) {
       // 保険 (Reviewer 指摘): signInWithGoogle は「内部で例外を投げず常に

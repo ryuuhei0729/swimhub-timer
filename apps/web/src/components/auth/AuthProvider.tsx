@@ -7,6 +7,7 @@ import { useAuthState } from "@swimhub-timer/shared/hooks";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useEditorStore } from "@/stores/editor-store";
 import { clear as clearIdb } from "idb-keyval";
+import { LOGIN_METHOD_QUERY_PARAM, setLastLoginMethod } from "@/lib/lastLoginMethod";
 
 export type AuthContextValue = TimerWebAuthContextValue;
 
@@ -84,7 +85,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/api/auth/callback`,
+        // login_method はコールバックがログイン成功時に「直近で利用」を記録するために使う
+        redirectTo: `${window.location.origin}/api/auth/callback?${LOGIN_METHOD_QUERY_PARAM}=google`,
       },
     });
     if (error) throw error;
@@ -95,7 +97,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "apple",
       options: {
-        redirectTo: `${window.location.origin}/api/auth/callback`,
+        // login_method はコールバックがログイン成功時に「直近で利用」を記録するために使う
+        redirectTo: `${window.location.origin}/api/auth/callback?${LOGIN_METHOD_QUERY_PARAM}=apple`,
       },
     });
     if (error) throw error;
@@ -105,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const supabase = getSupabaseBrowserClient()!;
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
+    setLastLoginMethod("email");
   }, []);
 
   const signUpWithEmail = useCallback(async (email: string, password: string, name?: string) => {

@@ -272,6 +272,7 @@ const de: TranslationShape = {
       withEmail: "Mit E-Mail anmelden",
       noAccount: "Noch kein Konto? ",
       signup: "Registrieren",
+      lastUsed: "Zuletzt verwendet",
     },
     emailLogin: "Mit E-Mail anmelden",
     emailSignup: "Mit E-Mail registrieren",

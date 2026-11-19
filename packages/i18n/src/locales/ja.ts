@@ -268,6 +268,7 @@ const ja = {
       withEmail: "Emailでログイン",
       noAccount: "アカウントをお持ちでない方は",
       signup: "新規登録",
+      lastUsed: "直近で利用",
     },
     emailLogin: "メールでログイン",
     emailSignup: "メールで新規登録",
