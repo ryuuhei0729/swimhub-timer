@@ -14,8 +14,13 @@ jest.mock("expo-router", () => ({
   useRouter: () => ({ push: mockPush, back: jest.fn() }),
 }));
 
-let mockAuth: { subscription: { plan: string } | null; guestMode: boolean } = {
-  subscription: { plan: "premium" },
+let mockAuth: {
+  subscription: { plan: string; status: string | null } | null;
+  subscriptionResolved: boolean;
+  guestMode: boolean;
+} = {
+  subscription: { plan: "premium", status: "active" },
+  subscriptionResolved: true,
   guestMode: false,
 };
 jest.mock("../contexts/AuthProvider", () => ({
@@ -31,7 +36,7 @@ function seed(times: number[]) {
 
 describe("MarkAssignPanel", () => {
   beforeEach(() => {
-    mockAuth = { subscription: { plan: "premium" }, guestMode: false };
+    mockAuth = { subscription: { plan: "premium", status: "active" }, subscriptionResolved: true, guestMode: false };
     mockPush.mockClear();
   });
 
@@ -68,7 +73,7 @@ describe("MarkAssignPanel", () => {
   });
 
   it("guest plan: more laps than allowed disables confirm and links to sign-up", async () => {
-    mockAuth = { subscription: null, guestMode: true }; // guest: 1 split max
+    mockAuth = { subscription: null, subscriptionResolved: true, guestMode: true }; // guest: 1 split max
     seed([32, 64, 97]); // 2 laps + finish
     const { getByTestId, getByText } = await render(<MarkAssignPanel />);
     await fireEvent.press(getByTestId("mark-bulk-50"));
@@ -80,10 +85,59 @@ describe("MarkAssignPanel", () => {
   });
 
   it("guest plan: one lap + finish is within the limit", async () => {
-    mockAuth = { subscription: null, guestMode: true };
+    mockAuth = { subscription: null, subscriptionResolved: true, guestMode: true };
     seed([32, 64]);
     const { getByTestId } = await render(<MarkAssignPanel />);
     await fireEvent.press(getByTestId("mark-bulk-50"));
+    await fireEvent.press(getByTestId("mark-confirm"));
+    expect(useEditorStore.getState().isFinished).toBe(true);
+  });
+
+  it("free plan: three laps + finish is within the limit", async () => {
+    mockAuth = { subscription: { plan: "free", status: null }, subscriptionResolved: true, guestMode: false }; // free: 3 splits max
+    seed([32, 64, 97, 130]); // 3 laps + finish (200m)
+    const { getByTestId, queryByText } = await render(<MarkAssignPanel />);
+    await fireEvent.press(getByTestId("mark-bulk-50"));
+    expect(queryByText("markAssign.limitExceeded")).toBeNull();
+    await fireEvent.press(getByTestId("mark-confirm"));
+    expect(useEditorStore.getState().isFinished).toBe(true);
+  });
+
+  it("free plan: a fourth lap disables confirm and links to the paywall", async () => {
+    mockAuth = { subscription: { plan: "free", status: null }, subscriptionResolved: true, guestMode: false };
+    seed([32, 64, 97, 130, 163]); // 4 laps + finish (250m)
+    const { getByTestId, getByText } = await render(<MarkAssignPanel />);
+    await fireEvent.press(getByTestId("mark-bulk-50"));
+    await fireEvent.press(getByTestId("mark-confirm"));
+    expect(useEditorStore.getState().isFinished).toBe(false);
+
+    await fireEvent.press(getByText("markAssign.limitExceeded"));
+    expect(mockPush).toHaveBeenCalledWith("/(app)/paywall");
+  });
+
+  it("lapsed Premium (plan premium, status past_due) gets the free limit", async () => {
+    mockAuth = {
+      subscription: { plan: "premium", status: "past_due" },
+      subscriptionResolved: true,
+      guestMode: false,
+    };
+    seed([32, 64, 97, 130, 163]); // 4 laps + finish
+    const { getByTestId, getByText } = await render(<MarkAssignPanel />);
+    await fireEvent.press(getByTestId("mark-bulk-50"));
+    await fireEvent.press(getByTestId("mark-confirm"));
+    expect(useEditorStore.getState().isFinished).toBe(false);
+    await fireEvent.press(getByText("markAssign.limitExceeded"));
+    expect(mockPush).toHaveBeenCalledWith("/(app)/paywall");
+  });
+
+  it("does not apply the free limit before the subscription is known", async () => {
+    // A Premium user whose subscription is still loading (or failed to load)
+    // must not be locked to the free limit.
+    mockAuth = { subscription: null, subscriptionResolved: false, guestMode: false };
+    seed([32, 64, 97, 130, 163]); // 4 laps + finish
+    const { getByTestId, queryByText } = await render(<MarkAssignPanel />);
+    await fireEvent.press(getByTestId("mark-bulk-50"));
+    expect(queryByText("markAssign.limitExceeded")).toBeNull();
     await fireEvent.press(getByTestId("mark-confirm"));
     expect(useEditorStore.getState().isFinished).toBe(true);
   });
@@ -104,7 +158,7 @@ describe("MarkAssignPanel", () => {
 
 describe("MarkAssignPanel distance −/+ and keyboard Next", () => {
   beforeEach(() => {
-    mockAuth = { subscription: { plan: "premium" }, guestMode: false };
+    mockAuth = { subscription: { plan: "premium", status: "active" }, subscriptionResolved: true, guestMode: false };
   });
 
   const distances = () => useEditorStore.getState().capturedMarks!.map((m) => m.distance);
@@ -167,7 +221,7 @@ describe("MarkAssignPanel distance −/+ and keyboard Next", () => {
 
 describe("MarkAssignPanel with no times yet (e.g. an imported video)", () => {
   beforeEach(() => {
-    mockAuth = { subscription: { plan: "premium" }, guestMode: false };
+    mockAuth = { subscription: { plan: "premium", status: "active" }, subscriptionResolved: true, guestMode: false };
   });
 
   it("explains how to add times and hides bulk fill / confirm", async () => {
@@ -196,7 +250,7 @@ describe("MarkAssignPanel with no times yet (e.g. an imported video)", () => {
 
 describe("MarkAssignPanel memo", () => {
   beforeEach(() => {
-    mockAuth = { subscription: { plan: "premium" }, guestMode: false };
+    mockAuth = { subscription: { plan: "premium", status: "active" }, subscriptionResolved: true, guestMode: false };
   });
 
   it("a selected time's memo is carried into the confirmed splits (and the finish memo)", async () => {

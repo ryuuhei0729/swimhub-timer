@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import { useEditorStore } from "@/stores/editor-store";
 import { useAuth } from "@/hooks/useAuth";
 import { formatTime, getMaxSplitCount, COMMON_RACE_DISTANCES } from "@swimhub-timer/shared";
@@ -21,6 +23,8 @@ export function SplitsPanel() {
   const { t } = useTranslation();
   const { plan } = useAuth();
   const maxSplits = getMaxSplitCount(plan);
+  const params = useParams();
+  const locale = (params?.locale as string) || "ja";
   const {
     splitTimes,
     isFinished,
@@ -193,9 +197,21 @@ export function SplitsPanel() {
           {splitLimitReached && (
             <div className="flex items-start gap-2 p-2.5 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-lg">
               <Lock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-              <p className="text-[11px] text-amber-700 dark:text-amber-300">
-                {t("splits.limitReached", { max: maxSplits })}
-              </p>
+              <div className="space-y-0.5">
+                <p className="text-[11px] text-amber-700 dark:text-amber-300">
+                  {t("splits.limitReached", { max: maxSplits })}
+                </p>
+                {plan !== "premium" && (
+                  <Link
+                    href={plan === "guest" ? `/${locale}/login` : `/${locale}/settings`}
+                    className="text-[11px] font-medium text-amber-800 dark:text-amber-200 underline underline-offset-2"
+                  >
+                    {plan === "guest"
+                      ? t("splits.loginToRecordMore", { max: getMaxSplitCount("free") })
+                      : t("splits.upgradeToPremium")}
+                  </Link>
+                )}
+              </div>
             </div>
           )}
 

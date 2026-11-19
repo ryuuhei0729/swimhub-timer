@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { getAvailableResolutions, getMaxSplitCount, isActivePremium, shouldShowWatermark } from "../utils/subscription";
+import {
+  getAvailableResolutions,
+  getEffectivePlan,
+  getMaxSplitCount,
+  isActivePremium,
+  shouldShowWatermark,
+} from "../utils/subscription";
+import type { SubscriptionInfo } from "../types/auth";
 import type { UserPlan } from "../types/auth";
 
 const plans: UserPlan[] = ["guest", "free", "premium"];
@@ -29,8 +36,8 @@ describe("getMaxSplitCount", () => {
     expect(getMaxSplitCount("guest")).toBe(1);
   });
 
-  it("returns Infinity for free", () => {
-    expect(getMaxSplitCount("free")).toBe(Infinity);
+  it("returns 3 for free", () => {
+    expect(getMaxSplitCount("free")).toBe(3);
   });
 
   it("returns Infinity for premium", () => {
@@ -93,5 +100,45 @@ describe("isActivePremium", () => {
   it("returns true when premiumExpiresAt is in the future", () => {
     const futureDate = new Date(Date.now() + 86_400_000).toISOString();
     expect(isActivePremium("premium", "active", futureDate)).toBe(true);
+  });
+});
+
+describe("getEffectivePlan", () => {
+  const sub = (overrides: Partial<SubscriptionInfo>): SubscriptionInfo => ({
+    plan: "premium",
+    status: "active",
+    cancelAtPeriodEnd: false,
+    premiumExpiresAt: null,
+    trialEnd: null,
+    ...overrides,
+  });
+
+  it("returns guest in guest mode, whatever the subscription", () => {
+    expect(getEffectivePlan(sub({}), true)).toBe("guest");
+    expect(getEffectivePlan(null, true)).toBe("guest");
+  });
+
+  it("returns free when there is no subscription", () => {
+    expect(getEffectivePlan(null, false)).toBe("free");
+  });
+
+  it("returns premium for an active or trialing Premium subscription", () => {
+    expect(getEffectivePlan(sub({ status: "active" }), false)).toBe("premium");
+    expect(getEffectivePlan(sub({ status: "trialing" }), false)).toBe("premium");
+  });
+
+  it("returns free when plan is premium but the status is not active", () => {
+    expect(getEffectivePlan(sub({ status: "past_due" }), false)).toBe("free");
+    expect(getEffectivePlan(sub({ status: "expired" }), false)).toBe("free");
+    expect(getEffectivePlan(sub({ status: null }), false)).toBe("free");
+  });
+
+  it("returns free once premiumExpiresAt has passed", () => {
+    const past = new Date(Date.now() - 60_000).toISOString();
+    const future = new Date(Date.now() + 86_400_000).toISOString();
+    expect(getEffectivePlan(sub({ premiumExpiresAt: past }), false)).toBe("free");
+    expect(getEffectivePlan(sub({ premiumExpiresAt: future, cancelAtPeriodEnd: true }), false)).toBe(
+      "premium",
+    );
   });
 });

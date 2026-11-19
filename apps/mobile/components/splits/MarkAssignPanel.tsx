@@ -4,7 +4,7 @@ import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "expo-router";
-import { formatTime, getMaxSplitCount } from "@swimhub-timer/shared";
+import { formatTime, getEffectivePlan, getMaxSplitCount } from "@swimhub-timer/shared";
 import { useEditorStore } from "../../stores/editor-store";
 import { useAuth } from "../../contexts/AuthProvider";
 import {
@@ -37,9 +37,12 @@ const NUDGES = [
 export function MarkAssignPanel() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { subscription, guestMode } = useAuth();
-  const effectivePlan = guestMode ? "guest" : (subscription?.plan ?? "free");
-  const maxSplits = getMaxSplitCount(effectivePlan);
+  const { subscription, subscriptionResolved, guestMode } = useAuth();
+  const effectivePlan = getEffectivePlan(subscription, guestMode);
+  // Until the plan is known (loading, or the fetch failed), don't block: a
+  // missing subscription would otherwise read as "free" and lock Premium users
+  // to the free limit.
+  const maxSplits = subscriptionResolved ? getMaxSplitCount(effectivePlan) : Infinity;
 
   const marks = useEditorStore((s) => s.capturedMarks);
   const startTime = useEditorStore((s) => s.startTime);
@@ -311,7 +314,7 @@ export function MarkAssignPanel() {
           </Text>
           <Text style={styles.limitBannerLink}>
             {effectivePlan === "guest"
-              ? t("splits.loginToRecordMore")
+              ? t("splits.loginToRecordMore", { max: getMaxSplitCount("free") })
               : t("splits.upgradeToPremium")}
           </Text>
         </Pressable>

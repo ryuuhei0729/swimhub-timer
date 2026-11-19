@@ -15,7 +15,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import type { PurchasesPackage } from "react-native-purchases";
 import { useAuth } from "../../contexts/AuthProvider";
-import { checkIsPremium } from "@swimhub-timer/shared";
+import { checkIsPremium, getEffectivePlan } from "@swimhub-timer/shared";
 import { getOfferings, purchasePackage, restorePurchases } from "../../lib/revenucat";
 import { PlanComparisonTable } from "../../components/plan/PlanComparisonTable";
 
@@ -180,7 +180,7 @@ export default function PaywallScreen() {
         )}
 
         {/* プラン比較テーブル */}
-        <PlanComparisonTable currentPlan={guestMode ? "guest" : (subscription?.plan ?? "free")} />
+        <PlanComparisonTable currentPlan={getEffectivePlan(subscription, guestMode)} />
 
         {/* プラン選択 */}
         {!loadingOfferings && !hasPackages && (
