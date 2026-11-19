@@ -21,6 +21,11 @@ import {
 import type { StopwatchAnchor } from "@swimhub-timer/shared";
 import { FinishSummaryTable } from "../splits/FinishSummaryTable";
 import { computeSummaryStartT } from "../../lib/video/export-pipeline";
+import {
+  CARD_MIN_FONT_SIZE,
+  resizeHandleCorner,
+  resizeScale,
+} from "../../lib/overlay/resize-gesture";
 
 interface Props {
   videoWidth: number;
@@ -111,6 +116,10 @@ export function StopwatchOverlay({ videoWidth, videoHeight, hideVisuals = false 
   const timerDidMove = useRef(false);
   const timerGrantTime = useRef(0);
   const resizeStartFontSize = useRef(0);
+  // On-screen card size + anchor when a resize drag starts (Skia preview).
+  const resizeStart = useRef<{ width: number; height: number; anchor: StopwatchAnchor } | null>(
+    null,
+  );
   const summaryDidMove = useRef(false);
   const summaryGrantTime = useRef(0);
   const resizeStartSummaryScale = useRef(1);
@@ -222,10 +231,31 @@ export function StopwatchOverlay({ videoWidth, videoHeight, hideVisuals = false 
         onMoveShouldSetPanResponderCapture: () => true,
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
-          resizeStartFontSize.current =
-            useEditorStore.getState().stopwatchConfig.fontSize;
+          const st = useEditorStore.getState();
+          resizeStartFontSize.current = st.stopwatchConfig.fontSize;
+          const b = st.timerPreviewBounds;
+          resizeStart.current =
+            b && b.width > 0 && b.height > 0
+              ? { width: b.width, height: b.height, anchor: st.stopwatchConfig.anchor }
+              : null;
         },
         onPanResponderMove: (_, gestureState) => {
+          // Skia preview: scale the card about its anchor so the handle stays
+          // under the finger (see resizeScale). The card's size is
+          // proportional to fontSize, so scaling fontSize scales the card.
+          const start = resizeStart.current;
+          if (start) {
+            const s = resizeScale(
+              start.anchor,
+              start.width,
+              start.height,
+              gestureState.dx,
+              gestureState.dy,
+            );
+            const newSize = Math.max(CARD_MIN_FONT_SIZE, resizeStartFontSize.current * s);
+            updateStopwatchConfig({ fontSize: Math.round(newSize) });
+            return;
+          }
           // Up-right drag enlarges; down-left shrinks. Convert screen-pixel
           // drag to video-resolution font size using the current scale factor
           // so the gesture feels 1:1 with the rendered timer. No upper cap —
@@ -497,40 +527,56 @@ export function StopwatchOverlay({ videoWidth, videoHeight, hideVisuals = false 
           />
         )}
 
-        {!showSummaryNow && timerPreviewBounds && (
-          <View
-            style={{
-              position: "absolute",
-              left: timerPreviewBounds.x,
-              top: timerPreviewBounds.y - (editing ? pad : 0),
-              width: timerPreviewBounds.width + (editing ? pad : 0),
-              height: timerPreviewBounds.height + (editing ? pad : 0),
-            }}
-            pointerEvents="box-none"
-          >
-            <View
-              {...timerPanResponder.panHandlers}
-              style={{
-                position: "absolute",
-                left: 0,
-                top: editing ? pad : 0,
-                width: timerPreviewBounds.width,
-                height: timerPreviewBounds.height,
-                borderWidth: editing ? TIMER_EDIT_BORDER_WIDTH : 0,
-                borderColor: editing ? TIMER_EDIT_BORDER_COLOR : "transparent",
-              }}
-            />
-            {editing && (
+        {!showSummaryNow &&
+          timerPreviewBounds &&
+          (() => {
+            // The resize handle sits on the corner opposite the card's anchor
+            // (the corner that moves as it grows), overlapping it by `pad`.
+            const corner = resizeHandleCorner(config.anchor);
+            const onLeft = corner.endsWith("left");
+            const onTop = corner.startsWith("top");
+            const padX = editing && onLeft ? pad : 0;
+            const padY = editing && onTop ? pad : 0;
+            return (
               <View
-                {...resizePanResponder.panHandlers}
-                style={[styles.resizeHandle, { top: 0, right: 0 }]}
-                hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
+                style={{
+                  position: "absolute",
+                  left: timerPreviewBounds.x - padX,
+                  top: timerPreviewBounds.y - padY,
+                  width: timerPreviewBounds.width + (editing ? pad : 0),
+                  height: timerPreviewBounds.height + (editing ? pad : 0),
+                }}
+                pointerEvents="box-none"
               >
-                <Ionicons name="expand-outline" size={16} color="#FFFFFF" />
+                <View
+                  {...timerPanResponder.panHandlers}
+                  style={{
+                    position: "absolute",
+                    left: padX,
+                    top: padY,
+                    width: timerPreviewBounds.width,
+                    height: timerPreviewBounds.height,
+                    borderWidth: editing ? TIMER_EDIT_BORDER_WIDTH : 0,
+                    borderColor: editing ? TIMER_EDIT_BORDER_COLOR : "transparent",
+                  }}
+                />
+                {editing && (
+                  <View
+                    {...resizePanResponder.panHandlers}
+                    style={[
+                      styles.resizeHandle,
+                      onTop ? { top: 0 } : { bottom: 0 },
+                      onLeft ? { left: 0 } : { right: 0 },
+                    ]}
+                    hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
+                    testID="timer-resize-handle"
+                  >
+                    <Ionicons name="expand-outline" size={16} color="#FFFFFF" />
+                  </View>
+                )}
               </View>
-            )}
-          </View>
-        )}
+            );
+          })()}
 
         {showSummaryNow && summaryPreviewBounds && (
           <View
@@ -737,7 +783,7 @@ export function StopwatchOverlay({ videoWidth, videoHeight, hideVisuals = false 
                 {editing && (
                   <View
                     {...resizePanResponder.panHandlers}
-                    style={styles.resizeHandle}
+                    style={[styles.resizeHandle, { top: 0, right: 0 }]}
                     hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
                   >
                     <Ionicons name="expand-outline" size={16} color="#FFFFFF" />
@@ -806,7 +852,7 @@ export function StopwatchOverlay({ videoWidth, videoHeight, hideVisuals = false 
                 {summaryEditing && (
                   <View
                     {...summaryResizePanResponder.panHandlers}
-                    style={styles.resizeHandle}
+                    style={[styles.resizeHandle, { top: 0, right: 0 }]}
                     hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
                   >
                     <Ionicons name="expand-outline" size={16} color="#FFFFFF" />
@@ -912,10 +958,9 @@ function SplitBadge({
 }
 
 const styles = StyleSheet.create({
+  // Position (corner) is set where it's used.
   resizeHandle: {
     position: "absolute",
-    top: 0,
-    right: 0,
     width: RESIZE_HANDLE_SIZE,
     height: RESIZE_HANDLE_SIZE,
     borderRadius: RESIZE_HANDLE_SIZE / 2,

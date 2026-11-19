@@ -12,11 +12,14 @@ export interface WatermarkOptions {
   heightFactor?: number;
   /** Lower clamp for the font size in px. Web/default 12; mobile passes 16. */
   minFontSize?: number;
+  /** Corner to sit in. Default bottom-right (web); mobile puts its stopwatch
+   *  card bottom-right, so it moves the watermark bottom-left. */
+  corner?: "bottom-right" | "bottom-left";
 }
 
 /**
- * Render the "SwimHub Timer" watermark with an optional icon in the
- * bottom-right corner.
+ * Render the "SwimHub Timer" watermark with an optional icon in a bottom
+ * corner (bottom-right by default).
  */
 export function drawWatermark(
   ctx: OverlayContext,
@@ -24,8 +27,13 @@ export function drawWatermark(
   icon: OverlayImage | null,
   options: WatermarkOptions = {},
 ): void {
-  const { fontFamily = "sans-serif", fontWeight = "600", heightFactor = 0.04, minFontSize = 12 } =
-    options;
+  const {
+    fontFamily = "sans-serif",
+    fontWeight = "600",
+    heightFactor = 0.04,
+    minFontSize = 12,
+    corner = "bottom-right",
+  } = options;
   const fontSize = Math.max(minFontSize, Math.round(size.height * heightFactor));
   const margin = 0.03;
   const text = "SwimHub Timer";
@@ -39,8 +47,14 @@ export function drawWatermark(
   ctx.fillStyle = "white";
 
   const textWidth = ctx.measureText(text).width;
-  const textX = size.width * (1 - margin) - textWidth;
   const textY = size.height * (1 - margin);
+  // The icon sits left of the text either way; bottom-left starts the group
+  // (icon + gap + text) at the left margin.
+  const leftEdge = size.width * margin;
+  const textX =
+    corner === "bottom-left"
+      ? leftEdge + (icon ? iconSize + gap : 0)
+      : size.width * (1 - margin) - textWidth;
 
   if (icon) {
     const iconX = textX - gap - iconSize;

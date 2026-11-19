@@ -1,21 +1,14 @@
 import { useState, useCallback, useEffect } from "react";
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-  Text,
-  ToastAndroid,
-  Platform,
-  Alert,
-} from "react-native";
+import { View, StyleSheet, ScrollView, Pressable, Text, Platform } from "react-native";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { formatTime } from "@swimhub-timer/shared";
 import { useTranslation } from "react-i18next";
 import { VideoPlayer } from "../../components/video/VideoPlayer";
 import { SignalDetector } from "../../components/audio/SignalDetector";
 import { SplitsPanel } from "../../components/splits/SplitsPanel";
-import { TabBar } from "../../components/ui/TabBar";
+import { MarkAssignPanel } from "../../components/splits/MarkAssignPanel";
+import { AddMarkAtPlayheadBar } from "../../components/splits/AddMarkAtPlayheadBar";
+import { StepBanner, type EditorStep } from "../../components/ui/StepBanner";
 import { useEditorStore } from "../../stores/editor-store";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 
@@ -25,9 +18,19 @@ export default function EditorScreen() {
   const startTime = useEditorStore((s) => s.startTime);
   const isFinished = useEditorStore((s) => s.isFinished);
   const setDesignConfirmed = useEditorStore((s) => s.setDesignConfirmed);
-  const [activeTab, setActiveTab] = useState("signal");
-
-  const splitsLocked = startTime === null;
+  // Strict two-step flow (no tabs): set the start, then enter splits. Camera
+  // captures arrive with the start already set, so they open on step 2.
+  const [step, setStep] = useState<EditorStep>(() =>
+    useEditorStore.getState().startTime !== null ? "splits" : "start",
+  );
+  // Set when step 1 is re-entered from step 2 to fix an already-confirmed
+  // start: SignalDetector opens straight in "Change" mode and cancelling
+  // returns to step 2.
+  const [revisingStart, setRevisingStart] = useState(false);
+  // Both entry points (camera / imported video) build splits the same way:
+  // times (captured, or added at the playhead) get distances in the
+  // assignment panel. Once confirmed, SplitsPanel shows the result.
+  const showMarkAssign = !isFinished;
 
   // Design is locked to minimal-white and edited inline on the video, so the
   // legacy designConfirmed gate auto-passes once the start time is set.
@@ -35,46 +38,17 @@ export default function EditorScreen() {
     setDesignConfirmed(startTime !== null);
   }, [startTime, setDesignConfirmed]);
 
-  const TABS = [
-    {
-      key: "signal",
-      label: t("editor.tabSignal"),
-      icon: ({ color, size }: { color: string; size: number }) => (
-        <Ionicons name="radio-outline" size={size} color={color} />
-      ),
-    },
-    {
-      key: "splits",
-      label: t("editor.tabSplits"),
-      icon: ({ color, size }: { color: string; size: number }) => (
-        <Ionicons name="timer-outline" size={size} color={color} />
-      ),
-      disabled: splitsLocked,
-    },
-  ];
-
-  const showHint = useCallback((message: string) => {
-    if (Platform.OS === "android") {
-      ToastAndroid.show(message, ToastAndroid.SHORT);
-    } else {
-      Alert.alert("", message);
-    }
+  const goToSplits = useCallback(() => {
+    setRevisingStart(false);
+    setStep("splits");
   }, []);
 
-  const handleDisabledTabPress = useCallback(
-    (key: string) => {
-      if (key === "splits") {
-        showHint(t("editor.gateSignalRequired"));
-      }
-    },
-    [showHint, t],
-  );
-
-  const handleSignalConfirm = useCallback(() => {
-    setActiveTab("splits");
+  const goBackToStart = useCallback(() => {
+    setRevisingStart(true);
+    setStep("start");
   }, []);
 
-  const showExport = activeTab === "splits" && isFinished;
+  const showExport = step === "splits" && isFinished;
 
   return (
     <View style={styles.container}>
@@ -83,12 +57,13 @@ export default function EditorScreen() {
         <VideoPlayer />
       </View>
 
-      {/* Tab Bar */}
-      <TabBar
-        tabs={TABS}
-        activeKey={activeTab}
-        onSelect={setActiveTab}
-        onDisabledPress={handleDisabledTabPress}
+      {/* Which step we're on and what to do now (not tappable tabs) */}
+      <StepBanner
+        step={step}
+        finished={isFinished}
+        startLabel={startTime !== null ? formatTime(startTime) : null}
+        // A confirmed result is reopened via its own "Edit" first.
+        onEditStart={isFinished ? undefined : goBackToStart}
       />
 
       {/* Tab Content (bottom half).
@@ -96,25 +71,36 @@ export default function EditorScreen() {
           content inset by the keyboard height and auto-scrolls the focused
           TextInput into view. Android relies on the manifest's
           windowSoftInputMode=adjustResize. */}
-      {activeTab === "signal" ? (
+      {step === "start" ? (
         // Scrollable so the confirm button stays reachable on short screens
         // (the 16:9 video section leaves little room below the tab bar).
         <ScrollView style={styles.tabContent}>
-          <SignalDetector onConfirm={handleSignalConfirm} />
+          <SignalDetector
+            key={revisingStart ? "revise" : "initial"}
+            startInChangeMode={revisingStart}
+            onConfirm={goToSplits}
+            onCancelChange={revisingStart ? goToSplits : undefined}
+          />
         </ScrollView>
       ) : (
         <ScrollView
           style={styles.tabContent}
-          contentContainerStyle={styles.tabContentInner}
+          contentContainerStyle={[
+            styles.tabContentInner,
+            showMarkAssign && styles.tabContentInnerWithAddBar,
+          ]}
           keyboardShouldPersistTaps="handled"
           automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
           keyboardDismissMode="interactive"
         >
-          {activeTab === "splits" && <SplitsPanel />}
+          {showMarkAssign ? <MarkAssignPanel /> : <SplitsPanel />}
         </ScrollView>
       )}
 
       {/* Bottom action bar */}
+      {/* Always reachable while assigning captured times (pinned, not in the scroll). */}
+      {step === "splits" && showMarkAssign && <AddMarkAtPlayheadBar />}
+
       {showExport && (
         <View style={styles.exportBar}>
           <Pressable
@@ -143,6 +129,10 @@ const styles = StyleSheet.create({
   },
   tabContentInner: {
     paddingBottom: 100,
+  },
+  // Room for the taller pinned AddMarkAtPlayheadBar (seek row + add button).
+  tabContentInnerWithAddBar: {
+    paddingBottom: 170,
   },
   exportBar: {
     position: "absolute",

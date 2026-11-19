@@ -2,6 +2,7 @@ import { Platform } from "react-native";
 import type { StopwatchConfig, ExportSettings, SplitTime, ExportResolution } from "@swimhub-timer/shared";
 import { SUMMARY_DELAY_SECONDS, SPLIT_DISPLAY_DURATION_SECONDS } from "@swimhub-timer/shared";
 import type { StreamInformation } from "ffmpeg-kit-react-native";
+import { PhotoLibraryPermissionError } from "./photo-library-errors";
 // Minimum stretch of the existing video the summary must stay visible for.
 // If the recording was stopped within SUMMARY_DELAY_SECONDS of the finish
 // touch, the delayed transition would land past the end of the clip and the
@@ -1030,7 +1031,7 @@ export async function saveToPhotoLibrary(filePath: string): Promise<void> {
   const MediaLibrary = require("expo-media-library") as typeof import("expo-media-library");
   const { status } = await MediaLibrary.requestPermissionsAsync();
   if (status !== "granted") {
-    throw new Error("フォトライブラリへのアクセスが許可されていません");
+    throw new PhotoLibraryPermissionError();
   }
 
   await MediaLibrary.saveToLibraryAsync(filePath);

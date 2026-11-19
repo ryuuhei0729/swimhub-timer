@@ -5,6 +5,7 @@ import * as Linking from "expo-linking";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as Font from "expo-font";
+import * as ScreenOrientation from "expo-screen-orientation";
 import { ChakraPetch_700Bold } from "@expo-google-fonts/chakra-petch";
 import { AuthProvider, useAuth } from "../contexts/AuthProvider";
 import { supabase } from "../lib/supabase";
@@ -13,6 +14,8 @@ import { setPasswordRecoveryPending, usePasswordRecoveryPending } from "../lib/p
 import { colors } from "../lib/theme";
 import i18n from "../lib/i18n";
 import { localizeAuthError } from "../utils/authErrorLocalizer";
+import { ensureAdsReady } from "../lib/ads/ads-sdk";
+import { checkIsPremium } from "@swimhub-timer/shared";
 
 /**
  * Completes auth deep links (email confirmation / password reset).
@@ -270,14 +273,28 @@ function AuthGate() {
   return <Slot />;
 }
 
-export default function RootLayout() {
+/**
+ * 広告 SDK の準備（同意取得 → 初期化）を起動時に済ませておく。
+ * Google の推奨どおり同意情報は起動ごとに更新し、同意フォームが必要なら表示する。
+ * プランが確定するまで（ログイン画面・サブスク取得中）は待ち、Premium なら何もしない
+ * — 広告を出さないユーザーに同意フォームや SDK の通信を発生させないため。
+ */
+function AdsBootstrap() {
+  const { subscription, subscriptionResolved } = useAuth();
+  const isPremium = checkIsPremium(subscription);
   useEffect(() => {
-    try {
-      const mobileAds = require("react-native-google-mobile-ads").default;
-      mobileAds().initialize();
-    } catch {
-      // Ad module not available (e.g., running in Expo Go)
-    }
+    if (!subscriptionResolved || isPremium) return;
+    void ensureAdsReady();
+  }, [subscriptionResolved, isPremium]);
+  return null;
+}
+
+export default function RootLayout() {
+  // The app is portrait-only except the camera capture screen, which locks
+  // itself to landscape and restores this lock when it closes. The native
+  // config allows all orientations (needed for that screen), so lock here.
+  useEffect(() => {
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
   }, []);
 
   // Complete auth deep links (email confirmation / password reset): the cold-
@@ -297,6 +314,7 @@ export default function RootLayout() {
     <I18nProvider>
       <AuthProvider>
         <StatusBar style="dark" />
+        <AdsBootstrap />
         <AuthGate />
       </AuthProvider>
     </I18nProvider>

@@ -72,6 +72,14 @@ export interface TimerWebAuthContextValue {
 export interface TimerMobileAuthContextType extends BaseAuthState {
   isAuthenticated: boolean;
   subscription: SubscriptionInfo | null;
+  /**
+   * 現在のユーザーのプラン（Premium かどうか）が確定しているか。
+   * ゲストは常に true。ログイン中は Supabase からの取得が成功（または行なし＝無料）
+   * したときに true になり、取得中・取得失敗中は false のまま。
+   * false の間に subscription=null を「無料」と決めつけると、課金ユーザーに広告や
+   * 制限を出してしまうため、広告まわりはこの値を見て判定を保留する。
+   */
+  subscriptionResolved: boolean;
   guestMode: boolean;
   signOut: () => Promise<{ error: Error | null }>;
   continueAsGuest: () => void;

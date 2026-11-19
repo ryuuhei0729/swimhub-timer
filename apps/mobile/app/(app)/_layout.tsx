@@ -22,6 +22,10 @@ export default function AppLayout() {
           gestureEnabled: false,
         }}
       />
+      <Stack.Screen
+        name="capture"
+        options={{ headerShown: false, gestureEnabled: false, animation: "fade" }}
+      />
       <Stack.Screen name="export" options={{ title: t("common.export"), presentation: "modal" }} />
       <Stack.Screen
         name="account"

@@ -22,6 +22,8 @@ export const MOBILE_WATERMARK_OPTIONS = {
   fontWeight: "bold",
   heightFactor: 0.06,
   minFontSize: 16,
+  // The stopwatch card sits bottom-right by default (lib/overlay/stopwatch-card.ts).
+  corner: "bottom-left",
 } as const;
 
 export interface OverlayTypefaces {

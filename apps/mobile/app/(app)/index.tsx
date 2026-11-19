@@ -145,12 +145,12 @@ export default function ImportScreen() {
           ))}
         </View>
 
-        {/* Main CTA card */}
-        <View style={styles.ctaCard}>
+        {/* Two entry points, same size side by side */}
+        <View style={styles.ctaRow}>
           <Pressable
             style={({ pressed }) => [
-              styles.ctaTouchTarget,
-              pressed && styles.ctaTouchTargetPressed,
+              styles.ctaCard,
+              pressed && styles.ctaCardPressed,
               loading && styles.buttonDisabled,
             ]}
             onPress={pickVideo}
@@ -158,12 +158,25 @@ export default function ImportScreen() {
             testID="home-select-video-button"
           >
             <View style={styles.ctaIconCircle}>
-              <Ionicons name="videocam-outline" size={36} color={colors.primary} />
+              <Ionicons name="images-outline" size={28} color={colors.primary} />
             </View>
             <Text style={styles.ctaTitle}>
               {loading ? t("import.loading") : t("import.selectVideo")}
             </Text>
             <Text style={styles.ctaDescription}>{t("import.selectVideoDesc")}</Text>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [styles.ctaCard, pressed && styles.ctaCardPressed]}
+            onPress={() => router.push("/capture")}
+            disabled={loading}
+            testID="home-capture-button"
+          >
+            <View style={styles.ctaIconCircle}>
+              <Ionicons name="videocam-outline" size={28} color={colors.primary} />
+            </View>
+            <Text style={styles.ctaTitle}>{t("import.captureVideo")}</Text>
+            <Text style={styles.ctaDescription}>{t("import.captureVideoDesc")}</Text>
           </Pressable>
         </View>
 
@@ -276,31 +289,30 @@ const styles = StyleSheet.create({
   stepArrow: {
     marginBottom: 20,
   },
+  // The two entry points: equal-size cards side by side (stretch = same height).
+  ctaRow: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
   ctaCard: {
+    flex: 1,
     backgroundColor: colors.surface,
     borderRadius: radius.xl,
-    padding: spacing.xl,
-    width: "100%",
+    borderWidth: 1,
+    borderColor: colors.primaryBorder,
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.md,
     alignItems: "center",
-    gap: spacing.md,
+    gap: spacing.sm,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
-    marginBottom: spacing.md,
   },
-  ctaTouchTarget: {
-    width: "100%",
-    alignItems: "center",
-    paddingVertical: spacing.xl,
-    gap: spacing.md,
-    borderWidth: 2,
-    borderColor: colors.primaryBorder,
-    borderStyle: "dashed",
-    borderRadius: radius.lg,
-  },
-  ctaTouchTargetPressed: {
+  ctaCardPressed: {
     backgroundColor: colors.primaryMuted,
     borderColor: colors.primary,
   },
@@ -308,23 +320,25 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   ctaIconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: radius.xl,
+    width: 56,
+    height: 56,
+    borderRadius: radius.lg,
     backgroundColor: colors.primaryMuted,
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: spacing.xs,
   },
   ctaTitle: {
-    fontSize: fontSize.lg,
+    fontSize: fontSize.md,
     fontWeight: "700",
     color: colors.text,
+    textAlign: "center",
   },
   ctaDescription: {
-    fontSize: fontSize.sm,
+    fontSize: fontSize.xs,
     color: colors.muted,
     textAlign: "center",
-    lineHeight: 18,
+    lineHeight: 16,
   },
   guestHintRow: {
     alignItems: "center",
