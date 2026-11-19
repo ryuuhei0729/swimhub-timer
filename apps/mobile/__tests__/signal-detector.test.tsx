@@ -69,7 +69,7 @@ it("leaving with an edited candidate asks first; discarding keeps the old start"
   await act(async () => {
     await fireEvent.press(screen.getByTestId("signal-change"));
   });
-  await fireEvent.press(screen.getByText("+100ms"));
+  await fireEvent.press(screen.getByText("+0.1"));
   expect(useEditorStore.getState().detectedSignalTime).toBeCloseTo(3.1);
 
   await fireEvent.press(screen.getByTestId("signal-cancel-change"));
@@ -90,7 +90,7 @@ it("cancelling the discard prompt stays in Change mode", async () => {
   await act(async () => {
     await fireEvent.press(screen.getByTestId("signal-change"));
   });
-  await fireEvent.press(screen.getByText("+100ms"));
+  await fireEvent.press(screen.getByText("+0.1"));
   await fireEvent.press(screen.getByTestId("signal-cancel-change"));
   expect(screen.getByTestId("signal-cancel-change")).toBeTruthy();
   expect(screen.getByTestId("waveform")).toBeTruthy();
@@ -102,7 +102,7 @@ it("confirming in Change mode saves the new start", async () => {
   await act(async () => {
     await fireEvent.press(screen.getByTestId("signal-change"));
   });
-  await fireEvent.press(screen.getByText("+100ms"));
+  await fireEvent.press(screen.getByText("+0.1"));
   await fireEvent.press(screen.getByTestId("signal-confirm"));
   expect(useEditorStore.getState().startTime).toBeCloseTo(3.1);
   expect(screen.queryByTestId("waveform")).toBeNull();
@@ -155,4 +155,16 @@ it("an extraction for a video that is no longer loaded is discarded", async () =
     resolveExtract({ pcmData: new Float32Array(10), sampleRate: 10, duration: 1 });
   });
   expect(useEditorStore.getState().audioData).toBeNull();
+});
+
+it("startInChangeMode opens straight into Change; cancelling calls onCancelChange", async () => {
+  const onCancelChange = jest.fn();
+  const screen = await render(<SignalDetector startInChangeMode onCancelChange={onCancelChange} />);
+  await waitFor(() => expect(screen.getByTestId("waveform")).toBeTruthy());
+  expect(screen.queryByTestId("signal-change")).toBeNull();
+  expect(useEditorStore.getState().detectedSignalTime).toBe(3);
+
+  await fireEvent.press(screen.getByTestId("signal-cancel-change"));
+  expect(onCancelChange).toHaveBeenCalledTimes(1);
+  expect(useEditorStore.getState().startTime).toBe(3);
 });

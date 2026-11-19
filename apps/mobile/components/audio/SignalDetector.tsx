@@ -11,9 +11,17 @@ import { colors, spacing, radius, fontSize } from "../../lib/theme";
 
 interface SignalDetectorProps {
   onConfirm?: () => void;
+  /** Open directly in "Change" mode for an already-confirmed start. */
+  startInChangeMode?: boolean;
+  /** Called after leaving "Change" mode without saving. */
+  onCancelChange?: () => void;
 }
 
-export function SignalDetector({ onConfirm }: SignalDetectorProps) {
+export function SignalDetector({
+  onConfirm,
+  startInChangeMode = false,
+  onCancelChange,
+}: SignalDetectorProps) {
   const { t } = useTranslation();
   const {
     videoUri,
@@ -37,10 +45,23 @@ export function SignalDetector({ onConfirm }: SignalDetectorProps) {
   // "Change" mode for an already-confirmed start: the confirmed time stays in
   // the store (splits stay unlocked) until the user confirms a new one, and
   // leaving the mode discards the candidate.
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(
+    () => startInChangeMode && useEditorStore.getState().startTime !== null,
+  );
   // The waveform / detection UI (and the audio it needs) is only for choosing
   // a start: first time, or after "Change".
   const choosingStart = startTime === null || editing;
+
+  // Entering already in "Change" mode: put the candidate and the video on the
+  // confirmed start, as pressing "Change" would.
+  useEffect(() => {
+    const confirmed = useEditorStore.getState().startTime;
+    if (!startInChangeMode || confirmed === null) return;
+    setDetectedSignalTime(confirmed);
+    seekVideoAndPause(confirmed);
+    // Mount-only: re-running would clobber the candidate being edited.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const mountedRef = useRef(true);
   useEffect(() => {
@@ -154,6 +175,7 @@ export function SignalDetector({ onConfirm }: SignalDetectorProps) {
       seekVideoAndPause(startTime);
       setError(null);
       setEditing(false);
+      onCancelChange?.();
     };
     if (detectedSignalTime === null || detectedSignalTime === startTime) {
       discard();
@@ -231,10 +253,10 @@ export function SignalDetector({ onConfirm }: SignalDetectorProps) {
           <Text style={styles.tuneLabel}>{t("signal.fineTune")}</Text>
           <View style={styles.tuneRow}>
             {[
-              { label: "-100ms", delta: -0.1 },
-              { label: "-10ms", delta: -0.01 },
-              { label: "+10ms", delta: 0.01 },
-              { label: "+100ms", delta: 0.1 },
+              { label: "-0.1", delta: -0.1 },
+              { label: "-0.01", delta: -0.01 },
+              { label: "+0.01", delta: 0.01 },
+              { label: "+0.1", delta: 0.1 },
             ].map(({ label, delta }) => (
               <Pressable key={label} style={styles.tuneBtn} onPress={() => adjustSignal(delta)}>
                 <Text style={styles.tuneBtnText}>{label}</Text>

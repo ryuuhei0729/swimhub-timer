@@ -233,6 +233,16 @@ const ko: TranslationShape = {
     confirmDesign: "이 디자인으로 확정",
     gateSignalRequired: "먼저 출발을 감지하세요",
     gateDesignRequired: "먼저 디자인을 확정하세요",
+    stepProgress: "STEP {{current}} / {{total}}",
+    stepStartTitle: "출발을 정하세요",
+    stepStartDesc: "'자동 감지' 또는 파형을 탭해 선택 후 확정",
+    stepTune: "-0.1 / +0.01 로 미세 조정",
+    stepSplitsTitle: "스플릿을 입력하세요",
+    stepSplitsDesc: "각 시간에 거리를 넣고 확정",
+    stepDoneTitle: "측정 완료!",
+    stepDoneDesc: "확인하고 내보내세요",
+    startAt: "출발 {{time}}",
+    editStart: "출발 수정",
   },
 
   auth: {

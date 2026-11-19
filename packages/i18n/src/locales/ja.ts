@@ -231,6 +231,16 @@ const ja = {
     confirmDesign: "このデザインで確定",
     gateSignalRequired: "先にスタートを検出してください",
     gateDesignRequired: "先にデザインを確定してください",
+    stepProgress: "STEP {{current}} / {{total}}",
+    stepStartTitle: "スタートを決めよう",
+    stepStartDesc: "「自動検出」か波形タップで選んで確定",
+    stepTune: "-0.1 / +0.01 で微調整",
+    stepSplitsTitle: "スプリットを入れよう",
+    stepSplitsDesc: "各タイムに距離を入れて確定",
+    stepDoneTitle: "計測完了！",
+    stepDoneDesc: "確認して書き出そう",
+    startAt: "スタート {{time}}",
+    editStart: "スタートを修正",
   },
 
   auth: {

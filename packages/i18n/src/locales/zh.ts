@@ -231,6 +231,16 @@ const zh: TranslationShape = {
     confirmDesign: "以此设计确定",
     gateSignalRequired: "请先检测出发",
     gateDesignRequired: "请先确定设计",
+    stepProgress: "STEP {{current}} / {{total}}",
+    stepStartTitle: "确定出发",
+    stepStartDesc: "用“自动检测”或点击波形选择后确定",
+    stepTune: "用 -0.1 / +0.01 微调",
+    stepSplitsTitle: "输入分段",
+    stepSplitsDesc: "为每个时间填入距离后确定",
+    stepDoneTitle: "计时完成！",
+    stepDoneDesc: "确认后导出",
+    startAt: "出发 {{time}}",
+    editStart: "修改出发",
   },
 
   auth: {

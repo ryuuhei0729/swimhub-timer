@@ -234,6 +234,16 @@ const en: TranslationShape = {
     confirmDesign: "Confirm Design",
     gateSignalRequired: "Detect the start signal first",
     gateDesignRequired: "Confirm the design first",
+    stepProgress: "STEP {{current}} / {{total}}",
+    stepStartTitle: "Set the start",
+    stepStartDesc: "Auto Detect or tap the waveform, then confirm",
+    stepTune: "Fine-tune with -0.1 / +0.01",
+    stepSplitsTitle: "Enter splits",
+    stepSplitsDesc: "Add a distance to each time, then confirm",
+    stepDoneTitle: "All done!",
+    stepDoneDesc: "Check it and export",
+    startAt: "Start {{time}}",
+    editStart: "Fix start",
   },
 
   auth: {
