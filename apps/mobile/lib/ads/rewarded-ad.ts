@@ -32,6 +32,8 @@ export type AdState =
   | "loaded"
   | "showing"
   | "rewarded"
+  // Closed after earning the reward (the ad is no longer on screen).
+  | "closed"
   // User closed the ad before earning the reward (distinct from a load/show
   // failure). Must NOT grant free access — the caller offers the ad again.
   | "dismissed"
@@ -131,6 +133,8 @@ export function createRewardedAdController(): RewardedAdController | null {
             // Closed without earning the reward — the user dismissed it. Report
             // "dismissed" (not "error") so the export gate stays closed.
             setState("dismissed");
+          } else {
+            setState("closed");
           }
         }),
       );

@@ -110,7 +110,7 @@ it("同意フォームの操作時間はタイムアウトに含めない", asyn
   expect(controller.getState()).toBe("loaded");
 });
 
-it("報酬獲得前に閉じたら dismissed、報酬獲得後に閉じたら rewarded のまま", async () => {
+it("報酬獲得前に閉じたら dismissed、報酬獲得後に閉じたら closed", async () => {
   const { controller } = setup();
   controller.load();
   await jest.advanceTimersByTimeAsync(0);
@@ -125,8 +125,9 @@ it("報酬獲得前に閉じたら dismissed、報酬獲得後に閉じたら re
   lastAd().emit("loaded");
   await controller.show();
   lastAd().emit("earned_reward");
-  lastAd().emit("closed");
   expect(controller.getState()).toBe("rewarded");
+  lastAd().emit("closed");
+  expect(controller.getState()).toBe("closed");
 });
 
 it("読み込み済みのまま 50 分経つと失効前に読み直す", async () => {

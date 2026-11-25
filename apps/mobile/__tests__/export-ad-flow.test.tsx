@@ -4,6 +4,7 @@
  *  - 広告を選んだら書き出しを開始し、その待ち時間に広告を出す
  *  - 途中で閉じても自動で再表示しない（もう一度選んでもらう）
  *  - Premium（プラン未確定時は RevenueCat で確認）は選択肢も広告も出さない
+ *  - 書き出し完了の画面が出たらストアの評価を依頼する。広告が画面にある間は依頼しない
  */
 
 import { act, render, fireEvent, waitFor } from "@testing-library/react-native";
@@ -32,6 +33,11 @@ const FREE_AUTH = {
 let mockAuth = { ...FREE_AUTH };
 jest.mock("../contexts/AuthProvider", () => ({
   useAuth: () => mockAuth,
+}));
+
+const mockRequestStoreReviewOnce = jest.fn();
+jest.mock("../lib/storeReview", () => ({
+  requestStoreReviewOnce: () => mockRequestStoreReviewOnce(),
 }));
 
 const mockHasActiveEntitlement = jest.fn(async () => false);
@@ -234,4 +240,72 @@ it("プラン未確定で RevenueCat でも Premium でなければ、選択肢�
   const screen = await renderAndPressExport();
   await waitFor(() => expect(screen.getByText("exportScreen.watchAdAndSave")).toBeTruthy());
   expect(mockExportVideoWithStopwatch).not.toHaveBeenCalled();
+});
+
+describe("ストアの評価の依頼", () => {
+  it("Premium: 書き出しが完了したら依頼する (完了前は依頼しない)", async () => {
+    mockAuth = {
+      ...FREE_AUTH,
+      subscription: { plan: "premium", status: "active", premiumExpiresAt: null },
+    };
+    const screen = await render(<ExportScreen />);
+    expect(mockRequestStoreReviewOnce).not.toHaveBeenCalled();
+
+    await fireEvent.press(screen.getByText("exportScreen.startExport"));
+
+    await waitFor(() => expect(screen.getByText("exportScreen.saveToLibrary")).toBeTruthy());
+    expect(mockRequestStoreReviewOnce).toHaveBeenCalledTimes(1);
+  });
+
+  it("広告を見た場合: 報酬を得ても広告が閉じるまでは依頼せず、閉じたら依頼する", async () => {
+    const screen = await render(<ExportScreen />);
+    await act(async () => {
+      mockSetAdState("loaded");
+    });
+    await fireEvent.press(screen.getByText("exportScreen.startExport"));
+    await fireEvent.press(screen.getByText("exportScreen.watchAdAndSave"));
+    await waitFor(() => expect(mockExportVideoWithStopwatch).toHaveBeenCalledTimes(1));
+
+    await act(async () => {
+      mockSetAdState("rewarded");
+    });
+    await waitFor(() => expect(screen.getByText("exportScreen.saveToLibrary")).toBeTruthy());
+    expect(mockRequestStoreReviewOnce).not.toHaveBeenCalled();
+
+    await act(async () => {
+      mockSetAdState("closed");
+    });
+    await waitFor(() => expect(mockRequestStoreReviewOnce).toHaveBeenCalledTimes(1));
+  });
+
+  it("書き出し後に広告を途中で閉じ、もう一度選ぶ画面が出ている間は依頼しない", async () => {
+    const screen = await render(<ExportScreen />);
+    await act(async () => {
+      mockSetAdState("loaded");
+    });
+    await fireEvent.press(screen.getByText("exportScreen.startExport"));
+    await fireEvent.press(screen.getByText("exportScreen.watchAdAndSave"));
+    await waitFor(() => expect(mockExportVideoWithStopwatch).toHaveBeenCalledTimes(1));
+
+    await act(async () => {
+      mockSetAdState("dismissed");
+    });
+    await waitFor(() =>
+      expect(screen.getByText("exportScreen.adDismissedPrompt")).toBeTruthy(),
+    );
+
+    expect(mockRequestStoreReviewOnce).not.toHaveBeenCalled();
+  });
+
+  it("広告が読み込めず保存を許可したときは依頼する", async () => {
+    const screen = await renderAndPressExport();
+    await fireEvent.press(screen.getByText("exportScreen.watchAdAndSave"));
+    await act(async () => {
+      mockSetAdState("error");
+    });
+    await waitFor(() => expect(screen.getByText("exportScreen.saveToLibrary")).toBeTruthy(), {
+      timeout: 4000,
+    });
+    expect(mockRequestStoreReviewOnce).toHaveBeenCalledTimes(1);
+  });
 });

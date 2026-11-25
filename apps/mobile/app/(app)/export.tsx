@@ -36,6 +36,7 @@ import {
   type RewardedAdController,
 } from "../../lib/ads/rewarded-ad";
 import { hasActiveEntitlement } from "../../lib/revenucat";
+import { requestStoreReviewOnce } from "../../lib/storeReview";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 import {
   canGuestUseToday,
@@ -231,6 +232,13 @@ export default function ExportScreen() {
     setAdOptedIn(false);
     adControllerRef.current?.load();
   }, [adState]);
+
+  // 書き出し完了の画面が出たらストアの評価を依頼する (端末ごとに1回)。広告を見た場合は、
+  // 報酬を得てもまだ広告が画面にあるので、閉じる ("closed") まで待つ。
+  const adOnScreen = adState === "showing" || adState === "rewarded";
+  useEffect(() => {
+    if (canProceed && !adOnScreen) void requestStoreReviewOnce();
+  }, [canProceed, adOnScreen]);
 
   // Fallback: if the ad the user opted into genuinely fails to load/show, let
   // them save without it after a short delay (shows the "ad failed" note first).
