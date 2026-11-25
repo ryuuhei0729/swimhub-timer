@@ -14,6 +14,12 @@ jest.mock("react-native-mmkv", () => ({
   },
 }));
 
+// expo-store-review: ネイティブモジュールを読み込まない。既定は「使えない端末」
+jest.mock("expo-store-review", () => ({
+  isAvailableAsync: jest.fn(async () => false),
+  requestReview: jest.fn(async () => {}),
+}));
+
 jest.mock("react-native-purchases", () => ({
   __esModule: true,
   default: {
