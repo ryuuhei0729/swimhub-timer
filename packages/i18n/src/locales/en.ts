@@ -237,7 +237,7 @@ const en: TranslationShape = {
     stepProgress: "STEP {{current}} / {{total}}",
     stepStartTitle: "Set the start",
     stepStartDesc: "Use \"Auto-Detect\" or tap the waveform, then confirm",
-    stepTune: "Fine-tune with -0.1 / +0.01",
+    stepTune: "Fine-tune with ±0.1 / ±0.01",
     stepSplitsTitle: "Enter splits",
     stepSplitsDesc: "Add a distance to each time, then confirm",
     stepDoneTitle: "All done!",

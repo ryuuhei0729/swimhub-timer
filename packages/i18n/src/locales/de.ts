@@ -238,7 +238,7 @@ const de: TranslationShape = {
     stepProgress: "SCHRITT {{current}} / {{total}}",
     stepStartTitle: "Start festlegen",
     stepStartDesc: "Automatisch erkennen oder Wellenform antippen, dann bestätigen",
-    stepTune: "Mit -0.1 / +0.01 feinjustieren",
+    stepTune: "Mit ±0.1 / ±0.01 feinjustieren",
     stepSplitsTitle: "Zwischenzeiten eingeben",
     stepSplitsDesc: "Jeder Zeit eine Distanz zuweisen, dann bestätigen",
     stepDoneTitle: "Fertig!",
