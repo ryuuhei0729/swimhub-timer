@@ -1,4 +1,6 @@
 const ANDROID_VERSION = "1.0.0";
+const IOS_VERSION = "2.6.0";
+const EAS_PROJECT_ID = "f13631fc-c228-4b0f-be19-81e7d73942e9";
 
 // react-native-google-mobile-ads 16.2.2 のドキュメント記載のリスト
 const SK_AD_NETWORK_ITEMS = [
@@ -54,12 +56,21 @@ const SK_AD_NETWORK_ITEMS = [
   "3qcr597p9d.skadnetwork",
 ];
 
+// EAS Update の runtimeVersion は表示バージョンと同じ値をプラットフォームごとに直接書く。
+// runtimeVersion: { policy: "appVersion" } だと version から計算されるが、
+// eas update は EAS_BUILD_PLATFORM を設定しないため Android 分も iOS の version になり、
+// Android のビルド (ANDROID_VERSION) と一致せずアップデートが届かない。
+// ネイティブコードや config plugin を変えたリリースでは version を上げること
+// (runtimeVersion が同じ旧バイナリに、合わない JS が配られるのを防ぐ)。
 module.exports = () => {
   const isAndroid = process.env.EAS_BUILD_PLATFORM === "android";
   return {
     name: "SH Timer",
     slug: "swimhub-timer",
-    version: isAndroid ? ANDROID_VERSION : "2.6.0",
+    version: isAndroid ? ANDROID_VERSION : IOS_VERSION,
+    updates: {
+      url: `https://u.expo.dev/${EAS_PROJECT_ID}`,
+    },
     // "default" so iOS lists landscape in UISupportedInterfaceOrientations — the
     // camera capture screen locks itself to landscape. Everything else stays
     // portrait via expo-screen-orientation's initialOrientation (iOS) and the
@@ -74,6 +85,7 @@ module.exports = () => {
       backgroundColor: "#EFF6FF",
     },
     ios: {
+      runtimeVersion: IOS_VERSION,
       supportsTablet: true,
       bundleIdentifier: "com.swimhubtimer.app",
       usesAppleSignIn: true,
@@ -89,6 +101,7 @@ module.exports = () => {
       },
     },
     android: {
+      runtimeVersion: ANDROID_VERSION,
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: "#EFF6FF",
@@ -159,7 +172,7 @@ module.exports = () => {
     extra: {
       router: {},
       eas: {
-        projectId: "f13631fc-c228-4b0f-be19-81e7d73942e9",
+        projectId: EAS_PROJECT_ID,
       },
     },
     owner: "ryuuhei0729",

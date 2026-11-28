@@ -13,7 +13,9 @@
     "lint": "eslint",
     "type-check": "tsc --noEmit",
     "ios:bump-build": "plutil -replace CFBundleVersion -string $(($(plutil -extract CFBundleVersion raw ios/SHTimer/Info.plist) + 1)) ios/SHTimer/Info.plist && plutil -extract CFBundleVersion raw ios/SHTimer/Info.plist",
-    "build:ios:local": "pnpm ios:bump-build && eas build --platform ios --profile production --local"
+    "build:ios:local": "pnpm ios:bump-build && eas build --platform ios --profile production --local",
+    "ota:production": "node scripts/eas-update.js production",
+    "ota:preview": "node scripts/eas-update.js preview"
   },
   "dependencies": {
     "@expo-google-fonts/chakra-petch": "^0.4.1",
@@ -44,6 +46,7 @@
     "expo-sharing": "~55.0.20",
     "expo-status-bar": "~55.0.6",
     "expo-store-review": "~55.0.18",
+    "expo-updates": "~55.0.33",
     "expo-video": "~55.0.17",
     "expo-web-browser": "~55.0.16",
     "ffmpeg-kit-react-native": "github:jdarshan5/ffmpeg-kit-react-native#rn-binaries",

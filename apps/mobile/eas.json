@@ -24,6 +24,7 @@
     },
     "preview": {
       "distribution": "internal",
+      "channel": "preview",
       "ios": {
         "image": "macos-sequoia-15.6-xcode-26.2"
       },
@@ -55,6 +56,7 @@
     },
     "production": {
       "autoIncrement": true,
+      "channel": "production",
       "ios": {
         "image": "macos-sequoia-15.6-xcode-26.2",
         "distribution": "store"
